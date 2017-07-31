@@ -22,7 +22,7 @@ before_install:
 script:
  - ./sbt ++$TRAVIS_SCALA_VERSION test
  - ./sbt assembly
- - java -jar ./target/client-assembly-*.jar -f src/test/resources/SampleJavaFile.java
+ - java -jar ./target/scala-2.11/bblfsh-client-assembly-0.0.1.jar -f src/test/resources/SampleJavaFile.java
 
 after_failure:
  - docker logs bblfsh

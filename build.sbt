@@ -1,4 +1,4 @@
-name := "client"
+name := "bblfsh-client"
 organization := "org.bblfsh"
 version := "0.0.1"
 
