@@ -1,0 +1,22 @@
+dist: trusty
+sudo: false
+
+language: scala
+services:
+  - docker
+
+jdk:
+  - openjdk8
+
+scala:
+   - 2.11
+
+cache:
+  directories:
+    - $HOME/.m2
+
+before_install:
+ - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/server
+
+after_failure:
+ - docker logs bblfsh
