@@ -19,7 +19,7 @@ println(client.parse(filename, fileContent))
 
 Command line
 ```
-java -jar ./target/client-assembly-0.0.1.jar file.py
+java -jar ./target/client-assembly-0.0.1.jar -f file.py
 ```
 
 ### Build

@@ -21,6 +21,8 @@ before_install:
 
 script:
  - ./sbt ++$TRAVIS_SCALA_VERSION test
+ - ./sbt assembly
+ - java -jar ./target/client-assembly-*.jar -f src/test/resources/SampleJavaFile.java
 
 after_failure:
  - docker logs bblfsh
