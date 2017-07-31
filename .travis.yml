@@ -9,14 +9,18 @@ jdk:
   - openjdk8
 
 scala:
-   - 2.11
+   - 2.11.11
 
 cache:
   directories:
-    - $HOME/.m2
+    - $HOME/.ivy2
+    - $HOME/.sbt
 
 before_install:
  - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/server
+
+script:
+ - ./sbt ++$TRAVIS_SCALA_VERSION test
 
 after_failure:
  - docker logs bblfsh
