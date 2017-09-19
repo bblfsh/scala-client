@@ -1,6 +1,6 @@
 package org.bblfsh.client
 
-import gopkg.in.bblfsh.sdk.v0.protocol.generated.{Encoding, ParseRequest, ProtocolServiceGrpc}
+import gopkg.in.bblfsh.sdk.v1.protocol.generated.{Encoding, ParseRequest, ProtocolServiceGrpc}
 import io.grpc.ManagedChannelBuilder
 
 

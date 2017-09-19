@@ -15,7 +15,7 @@ object ScalaClientCLI extends App {
 
   val fileName = cli.file().getName
   val client = BblfshClient(cli.bblfshServerHost(), cli.bblfshServerPort())
-  val fileContent = Source.fromFile(cli.file()).getLines.mkString
+  val fileContent = Source.fromFile(cli.file()).getLines.mkString("\n")
 
   val resp = client.parse(fileName, fileContent)
 
