@@ -3,6 +3,7 @@ organization := "org.bblfsh"
 version := "0.1.0"
 
 scalaVersion := "2.11.11"
+val libuastVersion = "v1.0.1"
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
 
@@ -71,4 +72,16 @@ publishTo := {
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
+getLibuast := {
+    import sys.process._
+    "curl -SL https://github.com/bblfsh/libuast/releases/download/v1.0.1/libuast-v1.0.1.tar.gz -o libuast.tar.gz" #&&
+    "tar zxf libuast.tar.gz" #&&
+    "mv libuast-v1.0.1 libuast" #&&
+    "rm -rf src/libuast" #&&
+    "mv libuast/src/ src/libuast" #&&
+    "rm -rf libuast" #&&
+    "rm libuast.tar.gz" !
 }
