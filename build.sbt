@@ -1,6 +1,6 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "0.1.0"
+version := "1.0.0"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.0.1"
@@ -13,7 +13,6 @@ PB.targets in Compile := Seq(
 PB.protoSources in Compile := Seq(file("src/main/proto"))
 
 libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
-
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
@@ -77,11 +76,12 @@ publishTo := {
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
     import sys.process._
-    "curl -SL https://github.com/bblfsh/libuast/releases/download/v1.0.1/libuast-v1.0.1.tar.gz -o libuast.tar.gz" #&&
+    f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
     "tar zxf libuast.tar.gz" #&&
-    "mv libuast-v1.0.1 libuast" #&&
-    "rm -rf src/libuast" #&&
-    "mv libuast/src/ src/libuast" #&&
+    f"mv libuast-$libuastVersion%s libuast" #&&
+    "rm -rf src/libuast-native" #&&
+    "mv libuast/src/ src/libuast-native" #&&
     "rm -rf libuast" #&&
     "rm libuast.tar.gz" !
 }
+mainClass := ((mainClass in Compile) dependsOn getLibuast).value

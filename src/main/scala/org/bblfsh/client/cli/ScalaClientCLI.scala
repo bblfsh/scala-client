@@ -5,6 +5,9 @@ import org.bblfsh.client.BblfshClient
 import scala.io.Source
 
 object ScalaClientCLI extends App {
+  // XXX path
+  System.load("/home/juanjux/sync/work/sourced/client-scala/src/main/scala/org/bblfsh/client/libuast/Libuast.so")
+
   val cli = new CLI(args)
   if (args.length < 1) {
     println("Usage: [--host <bblfshServerHost> --port <bblfshServerPort>] -f <path to file>")

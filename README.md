@@ -19,7 +19,7 @@ println(client.parse(filename, fileContent))
 
 Command line
 ```
-java -jar ./target/scala-2.11/bblfsh-client-assembly-0.0.1.jar -f file.py
+java -jar ./target/scala-2.11/bblfsh-client-assembly-1.0.0.jar -f file.py
 ```
 
 ### Build
