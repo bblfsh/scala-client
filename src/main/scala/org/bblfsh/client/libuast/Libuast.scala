@@ -10,4 +10,7 @@ class Libuast {
     //val fake: List[Node] = List()
     //fake
   //}
+  @native def readfield(node: Node, field: String): String
+  @native def readlen(node: Node, field: String): Int
+
 }

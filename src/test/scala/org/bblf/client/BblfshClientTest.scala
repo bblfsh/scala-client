@@ -6,20 +6,35 @@ import org.scalatest.FunSuite
 
 import scala.io.Source
 
-
 class BblfshClientTest extends FunSuite {
 
-  //val filename = "src/test/resources/python_file.py" // driver fails with "Exception: Could not determine Python version"
+  // XXX remove
+  def getFields(o: Any): Map[String, Any] = {
+    val fieldsAsPairs = for (field <- o.getClass.getDeclaredFields) yield {
+      field.setAccessible(true)
+      (field.getName, field.get(o)) 
+    }
+    Map(fieldsAsPairs :_*)
+  }
 
   test("Parse UAST for existing .java file") {
+    // XXX path
+    System.load("/home/juanjux/sync/work/sourced/client-scala/src/main/scala/org/bblfsh/client/libuast/Libuast.so")
+
     val client = BblfshClient("0.0.0.0", 9432)
     val filename = "src/test/resources/SampleJavaFile.java" // client read it, and encode to utf-8
     assert(new File(filename).exists())
     val fileContent = Source.fromFile(filename) .getLines.mkString
 
     val resp = client.parse(filename, fileContent)
-    // XXX
+    // move to other tests
     val filtered: Int = client.filter(42, "whatever")
+    print(getFields(resp.uast.get)) // XXX
+    var field = client.readfield(resp.uast.get, "internalType")
+
+    //val a: Nothing = resp.uast.get.children // XXX
+    var len = client.readlen(resp.uast.get, "children")
+    print("XXX lenchildren: ", len)
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)

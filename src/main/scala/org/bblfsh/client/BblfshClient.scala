@@ -34,6 +34,20 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     val libuast = new Libuast
     libuast.filter(node, query)
   }
+
+  // XXX make private for testing
+  def readfield(node: Node, field: String): String = { 
+    // XXX move to constructor
+    val libuast = new Libuast
+    libuast.readfield(node, field)
+  }
+
+  // XXX make private for testing
+  def readlen(node: Node, field: String): Int = {
+    // XXX move to constructor
+    val libuast = new Libuast
+    libuast.readlen(node, field)
+  } 
   // XXX return value
   //def filter(node: Node, query: String): List[Node] = {
     //val nodeList = Libuast.filter(node, query)
