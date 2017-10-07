@@ -29,12 +29,8 @@ class BblfshClientTest extends FunSuite {
     val resp = client.parse(filename, fileContent)
     // move to other tests
     val filtered: Int = client.filter(42, "whatever")
-    print(getFields(resp.uast.get)) // XXX
     var field = client.readfield(resp.uast.get, "internalType")
-
-    //val a: Nothing = resp.uast.get.children // XXX
-    var len = client.readlen(resp.uast.get, "children")
-    print("XXX lenchildren: ", len)
+    var len = client.readlen(resp.uast.get, "roles")
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)

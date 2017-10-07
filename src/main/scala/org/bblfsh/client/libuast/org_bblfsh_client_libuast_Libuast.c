@@ -11,71 +11,96 @@
 extern "C" {
 #endif
 
-// XXX coding conventions
-// XXX cache node class, fields, etc
+// TODO: adapt to coding conventions
+// TODO: cache node class, fields, etc
 
-// XXX remove
-static void _getClassName(JNIEnv *env, jobject obj)
+static const char *ACC_STR = "Ljava/lang/String;";
+static const char *ACC_VECTOR = "Lscala/collection/immutable/Vector;";
+static const char *CLS_VECTOR = "scala/collection/immutable/Vector";
+
+static JNIEnv *env;
+static Uast *ctx;
+
+// Helpers
+static const char *ReadStr(const jobject *node, const char *property)
 {
-    jclass cls = (*env)->GetObjectClass(env, obj);
-    // First get the class object
-    jmethodID mid = (*env)->GetMethodID(env, cls, "getClass", "()Ljava/lang/Class;");
-    jobject clsObj = (*env)->CallObjectMethod(env, obj, mid);
-
-    // Now get the class object's class descriptor
-    cls = (*env)->GetObjectClass(env, clsObj);
-
-    // Find the getName() method on the class object
-    mid = (*env)->GetMethodID(env, cls, "getName", "()Ljava/lang/String;");
-
-    // Call the getName() to get a jstring object back
-    jstring strObj = (jstring)(*env)->CallObjectMethod(env, clsObj, mid);
-
-    // Now get the c string from the java jstring object
-    const char* str = (*env)->GetStringUTFChars(env, strObj, NULL);
-
-    // Print the class name
-    printf("\nCalling class is: %s\n", str);
-
-    // Release the memory pinned char array
-    (*env)->ReleaseStringUTFChars(env, strObj, str);
-}
-
-static const char *ReadStr(JNIEnv *env, const jobject node, const char *property)
-{
-    jclass cls = (*env)->GetObjectClass(env, node);
-    jfieldID fid = (*env)->GetFieldID(env, cls, property, "Ljava/lang/String;");
+    jclass cls = (*env)->GetObjectClass(env, *node);
+    jfieldID fid = (*env)->GetFieldID(env, cls, property, ACC_STR);
     if (!fid)
         return NULL;
 
-    jstring jvstr = (jstring)(*env)->GetObjectField(env, node, fid);
+    jstring jvstr = (jstring)(*env)->GetObjectField(env, *node, fid);
+    if (!jvstr)
+        return NULL;
+
     const char *cstr = (*env)->GetStringUTFChars(env, jvstr, 0);
+    if (!cstr)
+        return NULL;
+
     // str must be copied to deref the java string befeore return
     const char *cstrdup = strdup(cstr);
+    if (!cstrdup)
+        return NULL;
+
     (*env)->ReleaseStringUTFChars(env, jvstr, cstr);
 
     return cstrdup;
 }
 
-static int ReadLen(JNIEnv *env, const jobject node, const char *property)
+static int ReadLen(const jobject *node, const char *property)
 {
-    jclass cls = (*env)->GetObjectClass(env, node);
-    jfieldID fid = (*env)->GetFieldID(env, cls, property,
-                                      "Lscala.collection.immutable.Vector;");
-    jobject children = (*env)->GetObjectField(env, node, fid);
-    if (!children)
+    jclass cls = (*env)->GetObjectClass(env, *node);
+    if (!cls)
+        return 0;
+    jfieldID childVecId = (*env)->GetFieldID(env, cls, property, ACC_VECTOR);
+    if (!childVecId)
         return 0;
 
-    // get the Vector length
-    // XXX CRASH
-    jclass vector_cls = (*env)->GetObjectClass(env, children);
-    jclass vector_cls = (*env)->FindClass(env, "scala.collection.immutable.Vector");
-    jfieldID lenid = (*env)->GetFieldID(env, vector_cls, "length",
-                                      "Lscala.collection.immutable.Vector;");
-    return (int)(*env)->GetIntField(env, children, lenid);
+    jobject childVector = (*env)->GetObjectField(env, *node, childVecId);
+    if (!childVector)
+        return 0;
+
+    // get the Vector length; gRPC child container nodes are maped to scala vectors
+    jclass vectorCls = (*env)->FindClass(env, CLS_VECTOR);
+    if (!vectorCls)
+        return 0;
+
+    // Get the size calling the "length" method on the Vector
+    jmethodID mLen = (*env)->GetMethodID(env, vectorCls, "length", "()I");
+    if (!mLen)
+        return 0;
+
+    jint len = (*env)->CallIntMethod(env, childVector, mLen);
+    return (int)len;
 }
 
-// Exported Java function
+// Node interface functions
+static const char *InternalType(const void *node)
+{
+    return ReadStr((jobject*)node, "internalType");
+}
+
+static const char *Token(const void *node)
+{
+    return ReadStr((jobject*)node, "token");
+}
+
+static int ChildrenSize(const void *node)
+{
+    return ReadLen((jobject*)node, "children");
+}
+
+static int RolesSize(const void *node)
+{
+    return ReadLen((jobject*)node, "roles");
+}
+
+// TODO: static void *ChildAt(const void *data, int index);
+// TODO: static int PropertiesSize(const void *data)
+// TODO: static const char *PropertyAt(const void *data, int index)
+
+// Exported Java functions
+// TODO, change the jint for a jobject* (the List returned)
 JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jint i, jstring s) {
 
@@ -87,7 +112,7 @@ JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_readfield
   (JNIEnv *env, jobject self, jobject node, jstring field) {
 
     const char *cfield = (*env)->GetStringUTFChars(env, field, 0);
-    const char *cvalue = ReadStr(env, node, cfield);
+    const char *cvalue = ReadStr(&node, cfield);
     (*env)->ReleaseStringUTFChars(env, field, cfield);
 
     return (*env)->NewStringUTF(env, cvalue);
@@ -98,7 +123,29 @@ JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_readlen
   (JNIEnv *env, jobject self, jobject node, jstring field) {
 
     const char *cfield = (*env)->GetStringUTFChars(env, field, 0);
-    return (jint)ReadLen(env, node, cfield);
+    return (jint)ReadLen(&node, cfield);
+}
+
+jint JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+    if ((*vm)->GetEnv(vm, (void **) &env, JNI_VERSION_1_8) != JNI_OK) {
+        return JNI_ERR;
+    }
+
+    NodeIface iface = {
+        .InternalType = InternalType,
+        .Token = Token,
+        .ChildrenSize = ChildrenSize,
+        .ChildAt = NULL, // XXX
+        .RolesSize = RolesSize,
+        .PropertiesSize = NULL, // XXX
+        .PropertyAt = NULL // XXX
+    };
+
+    // FIXME: undefined symbol
+    /*ctx = UastNew(iface);*/
+
+    return JNI_VERSION_1_8;
 }
 
 #ifdef __cplusplus
