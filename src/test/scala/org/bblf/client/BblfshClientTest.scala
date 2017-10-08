@@ -18,7 +18,7 @@ class BblfshClientTest extends FunSuite {
   }
 
   test("Parse UAST for existing .java file") {
-    // XXX path
+    // XXX hardcode path
     System.load("/home/juanjux/sync/work/sourced/client-scala/src/main/scala/org/bblfsh/client/libuast/Libuast.so")
 
     val client = BblfshClient("0.0.0.0", 9432)
@@ -27,14 +27,17 @@ class BblfshClientTest extends FunSuite {
     val fileContent = Source.fromFile(filename) .getLines.mkString
 
     val resp = client.parse(filename, fileContent)
+
     // move to other tests
-    val filtered: Int = client.filter(42, "whatever")
-    var field = client.readfield(resp.uast.get, "internalType")
-    var len = client.readlen(resp.uast.get, "roles")
+    //println(getFields(resp.uast.get)) // XXX
+
+    var internalType = client.readfield(resp.uast.get, "internalType")
+    var lenRoles = client.readlen(resp.uast.get, "roles")
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)
-    assert(filtered == 42)
+    assert(internalType == "CompilationUnit")
+    assert(lenRoles == 1)
   }
 
 }

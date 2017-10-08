@@ -13,9 +13,12 @@ extern "C" {
 
 // TODO: adapt to coding conventions
 // TODO: cache node class, fields, etc
+// TODO: apply stuff on https://www.ibm.com/developerworks/library/j-jni/index.html#exceptions
 
-static const char *ACC_STR = "Ljava/lang/String;";
-static const char *ACC_VECTOR = "Lscala/collection/immutable/Vector;";
+static const char *SIGN_STR = "Ljava/lang/String;";
+static const char *SIGN_SEQ = "Lscala/collection/Seq;";
+
+static const char *CLS_NODE = "gopkg/in/bblfsh/sdk/v1/uast/generated/Node";
 static const char *CLS_VECTOR = "scala/collection/immutable/Vector";
 
 static JNIEnv *env;
@@ -24,53 +27,66 @@ static Uast *ctx;
 // Helpers
 static const char *ReadStr(const jobject *node, const char *property)
 {
-    jclass cls = (*env)->GetObjectClass(env, *node);
-    jfieldID fid = (*env)->GetFieldID(env, cls, property, ACC_STR);
-    if (!fid)
+    jclass cls = (*env)->FindClass(env, CLS_NODE);
+    if ((*env)->ExceptionOccurred(env) || !cls)
+        return NULL;
+
+    jfieldID fid = (*env)->GetFieldID(env, cls, property, SIGN_STR);
+    if ((*env)->ExceptionOccurred(env) || !fid)
         return NULL;
 
     jstring jvstr = (jstring)(*env)->GetObjectField(env, *node, fid);
-    if (!jvstr)
+    if ((*env)->ExceptionOccurred(env) || !jvstr)
         return NULL;
 
     const char *cstr = (*env)->GetStringUTFChars(env, jvstr, 0);
-    if (!cstr)
+    if ((*env)->ExceptionOccurred(env) || !cstr)
         return NULL;
 
     // str must be copied to deref the java string befeore return
     const char *cstrdup = strdup(cstr);
-    if (!cstrdup)
+    if ((*env)->ExceptionOccurred(env) || !cstrdup)
         return NULL;
 
     (*env)->ReleaseStringUTFChars(env, jvstr, cstr);
+    if ((*env)->ExceptionOccurred(env))
+        return NULL;
 
     return cstrdup;
 }
 
 static int ReadLen(const jobject *node, const char *property)
 {
-    jclass cls = (*env)->GetObjectClass(env, *node);
-    if (!cls)
+    jclass cls = (*env)->FindClass(env, CLS_NODE);
+    if ((*env)->ExceptionOccurred(env) || !cls)
         return 0;
-    jfieldID childVecId = (*env)->GetFieldID(env, cls, property, ACC_VECTOR);
-    if (!childVecId)
+
+    // Note: printing the type from Scala to find the type needed for
+    // GetFieldID third argument using getClass.getName returns Vector but
+    // we've to use Seq. To find the right type to use do this from Scala:
+    // (instance).getClass.getDeclaredField("fieldName")
+    jfieldID childVecId = (*env)->GetFieldID(env, cls, property, SIGN_SEQ);
+    if ((*env)->ExceptionOccurred(env) || !childVecId)
         return 0;
 
     jobject childVector = (*env)->GetObjectField(env, *node, childVecId);
-    if (!childVector)
+    if ((*env)->ExceptionOccurred(env) || !childVector)
         return 0;
 
     // get the Vector length; gRPC child container nodes are maped to scala vectors
     jclass vectorCls = (*env)->FindClass(env, CLS_VECTOR);
-    if (!vectorCls)
+    if ((*env)->ExceptionOccurred(env) || !vectorCls)
         return 0;
 
     // Get the size calling the "length" method on the Vector
     jmethodID mLen = (*env)->GetMethodID(env, vectorCls, "length", "()I");
-    if (!mLen)
+    if ((*env)->ExceptionOccurred(env))
         return 0;
 
     jint len = (*env)->CallIntMethod(env, childVector, mLen);
+    if ((*env)->ExceptionOccurred(env))
+        return 0;
+
     return (int)len;
 }
 
@@ -143,7 +159,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     };
 
     // FIXME: undefined symbol
-    /*ctx = UastNew(iface);*/
+    ctx = UastNew(iface);
 
     return JNI_VERSION_1_8;
 }
