@@ -73,6 +73,8 @@ publishTo := {
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
+/*
+>>>>>>> Native module finished
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
     import sys.process._
@@ -85,3 +87,4 @@ getLibuast := {
     "rm libuast.tar.gz" !
 }
 mainClass := ((mainClass in Compile) dependsOn getLibuast).value
+*/

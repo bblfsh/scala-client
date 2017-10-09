@@ -15,8 +15,8 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     .usePlaintext(true)
     .maxInboundMessageSize(maxMsgSize)
     .build()
-
   private val stub = ProtocolServiceGrpc.blockingStub(channel)
+  private val libuast = new Libuast
 
   def parse(name: String, content: String, lang: String = "", 
             encoding: Encoding = Encoding.UTF8) = {
@@ -30,70 +30,61 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     parsed
   }
 
-  def filter(node: Int, query: String): Int = {
-    val libuast = new Libuast
-    libuast.filter(node, query)
-  }
-
   // XXX make private for testing
   def readfield(node: Node, field: String): String = { 
     // XXX move to constructor
-    val libuast = new Libuast
     libuast.readfield(node, field)
   }
 
   // XXX make private for testing
   def readlen(node: Node, field: String): Int = {
     // XXX move to constructor
-    val libuast = new Libuast
     libuast.readlen(node, field)
   } 
 
   // XXX make private for testing
   def InternalType(node: Node): String = {
-    val libuast = new Libuast
     libuast.InternalType(node)
   }
 
   // XXX make private for testing
   def Token(node: Node): String = {
-    val libuast = new Libuast
     libuast.Token(node)
   }
 
   // XXX make private for testing
   def ChildrenSize(node: Node): Int = {
-    val libuast = new Libuast
     libuast.ChildrenSize(node)
   }
 
   // XXX make private for testing
   def RolesSize(node: Node): Int = {
-    val libuast = new Libuast
     libuast.RolesSize(node)
   }
 
   // XXX make private for testing
   def ChildAt(node: Node, index: Int): Node = {
-    val libuast = new Libuast
     libuast.ChildAt(node, index)
   }
 
   // XXX make private for testing
   def PropertiesSize(node: Node): Int = {
-    val libuast = new Libuast
     libuast.PropertiesSize(node)
   }
 
   // XXX make private for testing
   def PropertyAt(node: Node, index: Int): String = {
-    val libuast = new Libuast
     libuast.PropertyAt(node, index)
   }
-  //def filter(node: Node, query: String): List[Node] = {
-    //val nodeList = Libuast.filter(node, query)
-    //nodeList
-  //}
+
+  // XXX make private for testing
+  def RoleAt(node: Node, index: Int): Int = {
+    libuast.RoleAt(node, index)
+  }
+
+  def filter(node: Node, query: String): List[Node] = {
+    libuast.filter(node, query)
+  }
 }
 
 object BblfshClient {

@@ -7,13 +7,12 @@
 extern "C" {
 #endif
 /*
- * Class:     org_bblfsh_client_libuast_Libuast
- * Method:    filter
+ * Class:   org_bblfsh_client_libuast_Libuast
+ * Method:  filter
  * Signature: (ILjava/lang/String;)Lscala/collection/immutable/List;
  */
-// XXX jobject return
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
-  (JNIEnv *, jobject, jint, jstring);
+  (JNIEnv *, jobject, jobject, jstring);
 
 JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_readfield
   (JNIEnv *, jobject, jobject, jstring);
@@ -41,6 +40,10 @@ JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_PropertiesSize
 
 JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_PropertyAt
   (JNIEnv *env, jobject self, jobject node, jint index);
+
+JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_RoleAt
+  (JNIEnv *env, jobject self, jobject node, jint index);
+
 #ifdef __cplusplus
 }
 #endif

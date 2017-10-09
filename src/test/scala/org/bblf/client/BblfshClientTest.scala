@@ -8,9 +8,9 @@ import scala.io.Source
 
 class BblfshClientTest extends FunSuite {
 
-  // XXX split into several tests
+  // XXX split into several tests and better filter() tests
   test("Parse UAST for existing .java file") {
-    // XXX hardcode path
+    // XXX hardcoded path
     System.load("/home/juanjux/sync/work/sourced/client-scala/src/main/scala/org/bblfsh/client/libuast/Libuast.so")
 
     val client = BblfshClient("0.0.0.0", 9432)
@@ -20,16 +20,18 @@ class BblfshClientTest extends FunSuite {
     val resp = client.parse(filename, fileContent)
 
     // move to other tests
-    var internalType = client.readfield(resp.uast.get, "internalType")
-    var lenRoles = client.readlen(resp.uast.get, "roles")
-    var internalType2 = client.InternalType(resp.uast.get)
-    var token = client.Token(resp.uast.get.children(0))
-    var childrenSize = client.ChildrenSize(resp.uast.get)
-    var rolesSize = client.RolesSize(resp.uast.get)
-    var propertiesSize = client.PropertiesSize(resp.uast.get.children(0))
-    var childAt = client.ChildAt(resp.uast.get, 0)
-    var propertyAt0 = client.PropertyAt(resp.uast.get.children(1), 0)
-    var propertyAt1 = client.PropertyAt(resp.uast.get.children(1), 1)
+    val internalType = client.readfield(resp.uast.get, "internalType")
+    val lenRoles = client.readlen(resp.uast.get, "roles")
+    val internalType2 = client.InternalType(resp.uast.get)
+    val token = client.Token(resp.uast.get.children(0))
+    val childrenSize = client.ChildrenSize(resp.uast.get)
+    val rolesSize = client.RolesSize(resp.uast.get)
+    val propertiesSize = client.PropertiesSize(resp.uast.get.children(0))
+    val childAt = client.ChildAt(resp.uast.get, 0)
+    val propertyAt0 = client.PropertyAt(resp.uast.get.children(1), 0)
+    val propertyAt1 = client.PropertyAt(resp.uast.get.children(1), 1)
+    val roleAt = client.RoleAt(resp.uast.get, 0);
+    var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)
@@ -44,6 +46,7 @@ class BblfshClientTest extends FunSuite {
     // gRPC load properties in an unsorted map so these could come in any order
     assert(propertyAt0 == "internalRole" || propertyAt0 == "interface")
     assert(propertyAt1 == "internalRole" || propertyAt1 == "interface")
+    assert(roleAt == 34)
+    assert(filtered.length == 3)
   }
-
 }
