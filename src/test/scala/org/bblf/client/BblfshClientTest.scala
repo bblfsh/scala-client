@@ -28,7 +28,8 @@ class BblfshClientTest extends FunSuite {
     var rolesSize = client.RolesSize(resp.uast.get)
     var propertiesSize = client.PropertiesSize(resp.uast.get.children(0))
     var childAt = client.ChildAt(resp.uast.get, 0)
-    var propertyAt = client.PropertyAt(resp.uast.get.children(1), 0)
+    var propertyAt0 = client.PropertyAt(resp.uast.get.children(1), 0)
+    var propertyAt1 = client.PropertyAt(resp.uast.get.children(1), 1)
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)
@@ -40,7 +41,9 @@ class BblfshClientTest extends FunSuite {
     assert(rolesSize == lenRoles)
     assert(childAt.internalType == "PackageDeclaration")
     assert(propertiesSize == 1)
-    assert(propertyAt == "internalRoles")
+    // gRPC load properties in an unsorted map so these could come in any order
+    assert(propertyAt0 == "internalRole" || propertyAt0 == "interface")
+    assert(propertyAt1 == "internalRole" || propertyAt1 == "interface")
   }
 
 }

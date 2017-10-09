@@ -1,7 +1,6 @@
 #include "org_bblfsh_client_libuast_Libuast.h"
 
 #include "uast.h"
-#include "jni_md.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -12,15 +11,23 @@
 extern "C" {
 #endif
 
-// TODO: adapt to coding conventions
+// TODO: coding conventions
 // TODO: check https://www.ibm.com/developerworks/library/j-jni/index.html
+// TODO: try to cache the Node FindClass result and maybe others
+// TODO: factorize stuff
 
-// Type signatures. To get the signature of all methods from a class do:
+// Type signatures; to get the signature of all methods from a class do:
 // javap -s -p SomeClass.class
+// To create a Java version of this module from the same codebase, #ifdefs should
+// be sprinkled here to get the equivalent Java types.
 static const char *SIGN_OBJECT = "Ljava/lang/Object;";
 static const char *SIGN_STR = "Ljava/lang/String;";
 static const char *SIGN_SEQ = "Lscala/collection/Seq;";
 static const char *SIGN_MAP = "Lscala/collection/immutable/Map;";
+
+// Method signatures. Same as above: use javap to get them from a .class
+static const char *SIGN_APPLY = "(I)Ljava/lang/Object;";
+static const char *SIGN_TOLIST = "()Lscala/collection/immutable/List;";
 
 static const char *CLS_NODE = "gopkg/in/bblfsh/sdk/v1/uast/generated/Node";
 static const char *CLS_SEQ = "scala/collection/Seq";
@@ -32,10 +39,38 @@ static Uast *ctx;
 static const jclass *NODE_JCLASS;
 
 // Helpers
-jint IntMethod(const char *name, const char *signature, const jclass cls,
+
+jobject *ToObjectPtr(jobject *object)
+{
+    jobject *copy = malloc(sizeof(jobject));
+    memcpy(copy, object, sizeof(jobject));
+    return copy;
+}
+
+const char *AsNativeStr(jstring jstr)
+{
+    const char *tmp = (*env)->GetStringUTFChars(env, jstr, 0);
+    if ((*env)->ExceptionOccurred(env) || !tmp)
+        return NULL;
+
+    // str must be copied to deref the java string before return
+    const char *cstr = strdup(tmp);
+
+    (*env)->ReleaseStringUTFChars(env, jstr, tmp);
+    if ((*env)->ExceptionOccurred(env))
+        return NULL;
+
+    return cstr;
+}
+
+jint IntMethod(const char *method, const char *signature, const char *className,
                const jobject *object)
 {
-    jmethodID mId = (*env)->GetMethodID(env, cls, name, signature);
+    jclass cls = (*env)->FindClass(env, className);
+    if ((*env)->ExceptionOccurred(env) || !cls)
+        return 0;
+
+    jmethodID mId = (*env)->GetMethodID(env, cls, method, signature);
     if ((*env)->ExceptionOccurred(env))
         return 0;
 
@@ -46,22 +81,27 @@ jint IntMethod(const char *name, const char *signature, const jclass cls,
     return res;
 }
 
-jobject ApplyMethod(const jclass cls, const jobject object, int index)
+jobject ObjectMethod(const char *method, const char *signature, const char *typeName,
+                     const jobject object, ...)
 {
-    jmethodID mApply = (*env)->GetMethodID(env, cls, "apply", "(I)Ljava/lang/Object;");
-    if ((*env)->ExceptionOccurred(env))
+    jclass cls = (*env)->FindClass(env, typeName);
+    if ((*env)->ExceptionOccurred(env) || !cls)
         return NULL;
 
-    jobject res = (*env)->CallObjectMethod(env, object, mApply, index);
-    if ((*env)->ExceptionOccurred(env))
+    jmethodID mId = (*env)->GetMethodID(env, cls, method, signature);
+    if ((*env)->ExceptionOccurred(env) || !mId)
         return NULL;
 
+    va_list varargs;
+    va_start(varargs, object);
+    jobject res = (*env)->CallObjectMethodV(env, object, mId, varargs);
+    va_end(varargs);
     return res;
 }
 
-jobject GetNodeSeqField(const jobject *node, const char *property)
+jobject ObjectField(const char *typeName, const jobject *obj, const char *field, const char *signature)
 {
-    jclass cls = (*env)->FindClass(env, CLS_NODE);
+    jclass cls = (*env)->FindClass(env, typeName);
     if ((*env)->ExceptionOccurred(env) || !cls)
         return NULL;
 
@@ -69,33 +109,15 @@ jobject GetNodeSeqField(const jobject *node, const char *property)
     // GetFieldID third argument using getClass.getName returns Vector but this
     // only works with the Seq trait. To find the right type to use do this
     // from Scala: (instance).getClass.getDeclaredField("fieldName")
-    jfieldID childVecId = (*env)->GetFieldID(env, cls, property, SIGN_SEQ);
-    if ((*env)->ExceptionOccurred(env) || !childVecId)
+    jfieldID valueId = (*env)->GetFieldID(env, cls, field, signature);
+    if ((*env)->ExceptionOccurred(env) || !valueId)
         return NULL;
 
-    jobject childSeq = (*env)->GetObjectField(env, *node, childVecId);
-    if ((*env)->ExceptionOccurred(env) || !childSeq)
+    jobject value = (*env)->GetObjectField(env, *obj, valueId);
+    if ((*env)->ExceptionOccurred(env) || !value)
         return NULL;
 
-    return childSeq;
-}
-
-// XXX factorize with above
-jobject GetNodeProperties(const jobject *node)
-{
-    jclass cls = (*env)->FindClass(env, CLS_NODE);
-    if ((*env)->ExceptionOccurred(env) || !cls)
-        return NULL;
-
-    jfieldID propsMapId = (*env)->GetFieldID(env, cls, "properties", SIGN_MAP);
-    if ((*env)->ExceptionOccurred(env) || !propsMapId)
-        return NULL;
-
-    jobject propsMap = (*env)->GetObjectField(env, *node, propsMapId);
-    if ((*env)->ExceptionOccurred(env) || !propsMap)
-        return NULL;
-
-    return propsMap;
+    return value;
 }
 
 static const char *ReadStr(const jobject *node, const char *property)
@@ -104,28 +126,11 @@ static const char *ReadStr(const jobject *node, const char *property)
     if ((*env)->ExceptionOccurred(env) || !cls)
         return NULL;
 
-    jfieldID fid = (*env)->GetFieldID(env, cls, property, SIGN_STR);
-    if ((*env)->ExceptionOccurred(env) || !fid)
-        return NULL;
-
-    jstring jvstr = (jstring)(*env)->GetObjectField(env, *node, fid);
+    jstring jvstr = (jstring)ObjectField(CLS_NODE, node, property, SIGN_STR);
     if ((*env)->ExceptionOccurred(env) || !jvstr)
         return NULL;
 
-    const char *cstr = (*env)->GetStringUTFChars(env, jvstr, 0);
-    if ((*env)->ExceptionOccurred(env) || !cstr)
-        return NULL;
-
-    // str must be copied to deref the java string befeore return
-    const char *cstrdup = strdup(cstr);
-    if ((*env)->ExceptionOccurred(env) || !cstrdup)
-        return NULL;
-
-    (*env)->ReleaseStringUTFChars(env, jvstr, cstr);
-    if ((*env)->ExceptionOccurred(env))
-        return NULL;
-
-    return cstrdup;
+    return AsNativeStr(jvstr);
 }
 
 static int ReadLen(const jobject *node, const char *property)
@@ -134,16 +139,11 @@ static int ReadLen(const jobject *node, const char *property)
     if ((*env)->ExceptionOccurred(env) || !cls)
         return 0;
 
-    jobject childSeq = GetNodeSeqField(node, property);
+    jobject childSeq = ObjectField(CLS_NODE, node, property, SIGN_SEQ);
     if ((*env)->ExceptionOccurred(env) || !cls)
         return 0;
 
-    // get the Seq length; gRPC child container nodes are maped to scala Seqs
-    jclass seqCls = (*env)->FindClass(env, CLS_SEQ);
-    if ((*env)->ExceptionOccurred(env) || !seqCls)
-        return 0;
-
-    return (int)IntMethod("length", "()I", seqCls, &childSeq);
+    return (int)IntMethod("length", "()I", CLS_SEQ, &childSeq);
 }
 
 // Node interface functions
@@ -170,101 +170,67 @@ static int RolesSize(const void *node)
 void *ChildAt(const void *data, int index)
 {
     jobject *node = (jobject *)data;
-    jobject childSeq = GetNodeSeqField(node, "children");
+    jobject childSeq = ObjectField(CLS_NODE, node, "children", SIGN_SEQ);
     if ((*env)->ExceptionOccurred(env))
         return NULL;
 
-    // Call the apply(i) method, jni style
-    jclass seqCls = (*env)->FindClass(env, CLS_SEQ);
-    if ((*env)->ExceptionOccurred(env) || !seqCls)
+    jobject child = ObjectMethod("apply", SIGN_APPLY, CLS_SEQ, childSeq, index);
+    if ((*env)->ExceptionOccurred(env) || !child)
         return NULL;
 
-    jobject child = ApplyMethod(seqCls, childSeq, index);
-    if ((*env)->ExceptionOccurred(env))
-        return NULL;
-
-    jobject *childCopy = malloc(sizeof(jobject));
-    memcpy(childCopy, &child, sizeof(child));
-    return childCopy;
+    return ToObjectPtr(&child);
 }
 
 static int PropertiesSize(const void *data)
 {
     jobject *node = (jobject *)data;
-    // XXX error control
-    jobject propsMap = GetNodeProperties(node);
-    jclass mapCls = (*env)->FindClass(env, CLS_MAP);
-    if ((*env)->ExceptionOccurred(env) || !mapCls)
+    jobject propsMap = ObjectField(CLS_NODE, node, "properties", SIGN_MAP);
+    if ((*env)->ExceptionOccurred(env) || !propsMap)
         return 0;
 
-    return (int)IntMethod("size", "()I", mapCls, &propsMap);
+    return (int)IntMethod("size", "()I", CLS_MAP, &propsMap);
 }
 
-// XXX error control, this should reshot the exception
 static const char *PropertyAt(const void *data, int index)
 {
     jobject *node = (jobject *)data;
-    jobject propsMap = GetNodeProperties(node);
-    if ((*env)->ExceptionOccurred(env) || !mapCls)
-        return NULL;
-
-    jclass mapCls = (*env)->FindClass(env, CLS_MAP);
-    if ((*env)->ExceptionOccurred(env) || !mapCls)
+    jobject propsMap = ObjectField(CLS_NODE, node, "properties", SIGN_MAP);
+    if ((*env)->ExceptionOccurred(env) || !propsMap)
         return NULL;
 
     // Convert to List
-    jmethodID mToListId = (*env)->GetMethodID(env, mapCls, "toList",
-                                            "()Lscala/collection/immutable/List;");
-    if ((*env)->ExceptionOccurred(env) || !mToListId)
+    jobject list = ObjectMethod("toList", SIGN_TOLIST, CLS_MAP, propsMap);
+    if ((*env)->ExceptionOccurred(env) || !list)
         return NULL;
 
-    jobject list = (*env)->CallObjectMethod(env, propsMap, mToListId);
-
-    // Call apply on the list to get the index tuple
-    jclass listCls = (*env)->FindClass(env, CLS_SEQ);
-    if ((*env)->ExceptionOccurred(env) || !listCls)
-        return NULL;
-
-    jobject kvTuple = ApplyMethod(listCls, list, index);
-    if ((*env)->ExceptionOccurred(env) || !tupleCls)
+    // Get the key/value tuple at the "index" position. The tuple is given as a Seq.
+    jobject kvTuple = ObjectMethod("apply", SIGN_APPLY, CLS_SEQ, list, index);
+    if ((*env)->ExceptionOccurred(env) || !kvTuple)
         return NULL;
 
     // Get the "_1" field and convert to char*
-    jclass tupleCls = (*env)->FindClass(env, CLS_TUPLE2);
-    if ((*env)->ExceptionOccurred(env) || !tupleCls)
-        return NULL;
-
-    jfieldID firstId = (*env)->GetFieldID(env, tupleCls, "_1", SIGN_OBJECT);
-    if ((*env)->ExceptionOccurred(env) || !firstId)
-        return NULL;
-
-    jobject key = (*env)->GetObjectField(env, kvTuple, firstId);
+    jobject key = ObjectField(CLS_TUPLE2, &kvTuple, "_1", SIGN_OBJECT);
     if ((*env)->ExceptionOccurred(env) || !key)
         return NULL;
 
-    const char *cstr = (*env)->GetStringUTFChars(env, key, 0);
-    if ((*env)->ExceptionOccurred(env) || !cstr)
-        return NULL;
-
-    return cstr;
+    return AsNativeStr(key);
 }
 
 // Exported Java functions
-// TODO, change the jint for a jobject* (the List returned)
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jint i, jstring s) {
 
-    return i;
 }
 
 // for testing
 JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_readfield
   (JNIEnv *env, jobject self, jobject node, jstring field) {
 
-    const char *cfield = (*env)->GetStringUTFChars(env, field, 0);
-    const char *cvalue = ReadStr(&node, cfield);
-    (*env)->ReleaseStringUTFChars(env, field, cfield);
+    const char *cfield = AsNativeStr(field);
+    if (!cfield)
+        return NULL;
 
+    const char *cvalue = ReadStr(&node, cfield);
     return (*env)->NewStringUTF(env, cvalue);
 }
 
@@ -272,8 +238,9 @@ JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_readfield
 JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_readlen
   (JNIEnv *env, jobject self, jobject node, jstring field) {
 
-    const char *cfield = (*env)->GetStringUTFChars(env, field, 0);
-    return (jint)ReadLen(&node, cfield);
+    const char *cstr = AsNativeStr(field);
+    // XXX if cstr is NULL here, throw exception
+    return (jint)ReadLen(&node, cstr);
 }
 
 JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_InternalType

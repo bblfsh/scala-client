@@ -12,7 +12,7 @@ extern "C" {
  * Signature: (ILjava/lang/String;)Lscala/collection/immutable/List;
  */
 // XXX jobject return
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *, jobject, jint, jstring);
 
 JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_readfield
