@@ -48,7 +48,48 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     val libuast = new Libuast
     libuast.readlen(node, field)
   } 
-  // XXX return value
+
+  // XXX make private for testing
+  def InternalType(node: Node): String = {
+    val libuast = new Libuast
+    libuast.InternalType(node)
+  }
+
+  // XXX make private for testing
+  def Token(node: Node): String = {
+    val libuast = new Libuast
+    libuast.Token(node)
+  }
+
+  // XXX make private for testing
+  def ChildrenSize(node: Node): Int = {
+    val libuast = new Libuast
+    libuast.ChildrenSize(node)
+  }
+
+  // XXX make private for testing
+  def RolesSize(node: Node): Int = {
+    val libuast = new Libuast
+    libuast.RolesSize(node)
+  }
+
+  // XXX make private for testing
+  def ChildAt(node: Node, index: Int): Node = {
+    val libuast = new Libuast
+    libuast.ChildAt(node, index)
+  }
+
+  // XXX make private for testing
+  def PropertiesSize(node: Node): Int = {
+    val libuast = new Libuast
+    libuast.PropertiesSize(node)
+  }
+
+  // XXX make private for testing
+  def PropertyAt(node: Node, index: Int): String = {
+    val libuast = new Libuast
+    libuast.PropertyAt(node, index)
+  }
   //def filter(node: Node, query: String): List[Node] = {
     //val nodeList = Libuast.filter(node, query)
     //nodeList

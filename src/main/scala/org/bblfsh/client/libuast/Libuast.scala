@@ -12,5 +12,12 @@ class Libuast {
   //}
   @native def readfield(node: Node, field: String): String
   @native def readlen(node: Node, field: String): Int
+  @native def InternalType(node: Node): String
+  @native def Token(node: Node): String
+  @native def ChildrenSize(node: Node): Int
+  @native def RolesSize(node: Node): Int
+  @native def ChildAt(node: Node, index: Int): Node
+  @native def PropertiesSize(node: Node): Int
+  @native def PropertyAt(node: Node, index: Int): String
 
 }
