@@ -8,9 +8,6 @@ extern "C" {
 
 #include "uast.h"
 
-// TODO: move the helper functions to utils.c/h and the binding to binding.c/h
-// TODO: include guards
-
 JNIEnv *env;
 static Uast *ctx;
 extern NodeIface iface;
