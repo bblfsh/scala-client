@@ -19,7 +19,8 @@ class BblfshClientTest extends FunSuite {
     val fileContent = Source.fromFile(filename) .getLines.mkString
     val resp = client.parse(filename, fileContent)
 
-    // move to other tests
+    // move to other tests, reading from Node
+    /*
     val internalType = client.readfield(resp.uast.get, "internalType")
     val lenRoles = client.readlen(resp.uast.get, "roles")
     val internalType2 = client.InternalType(resp.uast.get)
@@ -31,10 +32,12 @@ class BblfshClientTest extends FunSuite {
     val propertyAt0 = client.PropertyAt(resp.uast.get.children(1), 0)
     val propertyAt1 = client.PropertyAt(resp.uast.get.children(1), 1)
     val roleAt = client.RoleAt(resp.uast.get, 0);
+    */
     var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
 
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)
+    /*
     assert(internalType == "CompilationUnit")
     assert(internalType2 == internalType)
     assert(token == "package")
@@ -47,6 +50,7 @@ class BblfshClientTest extends FunSuite {
     assert(propertyAt0 == "internalRole" || propertyAt0 == "interface")
     assert(propertyAt1 == "internalRole" || propertyAt1 == "interface")
     assert(roleAt == 34)
+    */
     assert(filtered.length == 3)
   }
 }

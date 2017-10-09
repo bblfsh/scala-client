@@ -1,8 +1,10 @@
-#include <jni.h>
 /* Header for class org_bblfsh_client_libuast_Libuast */
 
 #ifndef _Included_org_bblfsh_client_libuast_Libuast
 #define _Included_org_bblfsh_client_libuast_Libuast
+
+#include <jni.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

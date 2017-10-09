@@ -30,58 +30,6 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     parsed
   }
 
-  // XXX make private for testing
-  def readfield(node: Node, field: String): String = { 
-    // XXX move to constructor
-    libuast.readfield(node, field)
-  }
-
-  // XXX make private for testing
-  def readlen(node: Node, field: String): Int = {
-    // XXX move to constructor
-    libuast.readlen(node, field)
-  } 
-
-  // XXX make private for testing
-  def InternalType(node: Node): String = {
-    libuast.InternalType(node)
-  }
-
-  // XXX make private for testing
-  def Token(node: Node): String = {
-    libuast.Token(node)
-  }
-
-  // XXX make private for testing
-  def ChildrenSize(node: Node): Int = {
-    libuast.ChildrenSize(node)
-  }
-
-  // XXX make private for testing
-  def RolesSize(node: Node): Int = {
-    libuast.RolesSize(node)
-  }
-
-  // XXX make private for testing
-  def ChildAt(node: Node, index: Int): Node = {
-    libuast.ChildAt(node, index)
-  }
-
-  // XXX make private for testing
-  def PropertiesSize(node: Node): Int = {
-    libuast.PropertiesSize(node)
-  }
-
-  // XXX make private for testing
-  def PropertyAt(node: Node, index: Int): String = {
-    libuast.PropertyAt(node, index)
-  }
-
-  // XXX make private for testing
-  def RoleAt(node: Node, index: Int): Int = {
-    libuast.RoleAt(node, index)
-  }
-
   def filter(node: Node, query: String): List[Node] = {
     libuast.filter(node, query)
   }
