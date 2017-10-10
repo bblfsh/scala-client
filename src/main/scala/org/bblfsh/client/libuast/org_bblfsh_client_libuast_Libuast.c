@@ -31,7 +31,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   if ((*env)->ExceptionOccurred(env) || !nodeList)
     return NULL;
 
-  for (int i= 0; i < len; i++) {
+  int i;
+  for (i= 0; i < len; i++) {
     jobject *n = (jobject *) NodeAt(nodes, i);
     if (!n)
       continue;

@@ -80,6 +80,8 @@ val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
     import sys.process._
 
+    println("Downloading libuast...")
+
     f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
     "tar zxf libuast.tar.gz" #&&
     f"mv libuast-$libuastVersion%s libuast" #&&
@@ -94,13 +96,15 @@ val compileLibuast = TaskKey[Unit]("compileLibuast", "Compile libUAST")
 compileLibuast := {
     import sys.process._
 
+    println("Compiling libuast bindings...")
+
     var javaHome = System.getenv("JAVA_HOME")
     if (javaHome == null) 
         javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
         
     val xml2Conf = "xml2-config --cflags --libs" !!
 
-    "gcc -shared -Wall -fPIC -O2 " +
+    "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
