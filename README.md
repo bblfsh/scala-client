@@ -1,4 +1,4 @@
-## Babelfish Scala client [![Build Status](https://travis-ci.org/bzz/client-scala.svg?branch=master)](https://travis-ci.org/bzz/client-scala)
+## Babelfish Scala client [![Build Status](https://travis-ci.org/bblfsh/client-scala.svg?branch=master)](https://travis-ci.org/bblfsh/client-scala)
 
 This a pure Scala implementation of [Babelfish](https://doc.bblf.sh/) client.
 It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code generation.
