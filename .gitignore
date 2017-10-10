@@ -3,3 +3,7 @@
 target
 *~
 .idea
+src/libuast-native
+.history
+Libuast.so
+build/*
