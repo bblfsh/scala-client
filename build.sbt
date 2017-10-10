@@ -45,7 +45,6 @@ licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 pomIncludeRepository := (_ => false)
 
 crossPaths := false
-autoScalaLibrary := false
 publishMavenStyle := true
 exportJars := true
 
@@ -63,23 +62,6 @@ useGpg := false
 pgpSecretRing := baseDirectory.value / ".gnupg" / "secring.gpg"
 pgpPublicRing := baseDirectory.value / ".gnupg" / "pubring.gpg"
 pgpPassphrase := Some(SONATYPE_PASSPHRASE.toArray)
-
-libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test
-
-unmanagedBase := baseDirectory.value / "lib"
-unmanagedClasspath in Test += baseDirectory.value / "shared"
-unmanagedClasspath in Runtime += baseDirectory.value / "shared"
-unmanagedClasspath in Compile += baseDirectory.value / "shared"
-testOptions += Tests.Argument(TestFrameworks.JUnit)
-
-publishArtifact in (Compile, packageBin) := false
-
-artifact in (Compile, assembly) := {
-  val art = (artifact in (Compile, assembly)).value
-  art.copy(`classifier` = None)
-}
-
-addArtifact(artifact in (Compile, assembly), assembly)
 
 isSnapshot := version.value endsWith "SNAPSHOT"
 
