@@ -19,10 +19,18 @@ cache:
 before_install:
  - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/server
 
+before_script:
+ - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
+ - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
+
 script:
  - ./sbt ++$TRAVIS_SCALA_VERSION test
  - ./sbt assembly
  - java -jar ./target/scala-2.11/bblfsh-client-assembly-0.1.0.jar -f src/test/resources/SampleJavaFile.java
+ - if [[ -z "$TRAVIS_TAG" ]]; then echo "Skipping this build for non-tag builds."; exit 0; fi
+ - ./sbt publishLocal
+ - ./sbt publishSigned
+ - ./sbt sonatypeRelease
 
 after_failure:
  - docker logs bblfsh
