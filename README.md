@@ -5,18 +5,21 @@ It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code ge
 
 ### Installation
 
+#### Manual
 ```
+git clone https://github.com/bblfsh/client-scala.git
+cd client-scala
 ./sbt assembly
 ```
 
 gRPC/protobuf are re-generate from `src/main/proto` on every `./sbt compile` and
-are stored under `./target/scala-2.11/src_managed/`. 
+are stored under `./target/src_managed/`. 
 
 The jar file and the native module are generated in the `build/` directory. If 
 you move the jar file to some other path, the native (`.so` or `.dylib`) 
 library must be in the same path.
 
-If the build fails because it can find the `jni.h` header file, run it with:
+If the build fails because it can't find the `jni.h` header file, run it with:
 
 ```
 ./sbt -java_path /usr/lib/jvm/java-8-openjdk-amd64 assembly
@@ -24,9 +27,28 @@ If the build fails because it can find the `jni.h` header file, run it with:
 
 Changing the JDK directory to the one right for your system.
 
-*Note: currently only Linux is supported, check [this
-issue](https://github.com/bblfsh/client-scala/issues/7) for MacOS support*.
+*Note: currently only Linux is supported, check [#7](https://github.com/bblfsh/client-scala/issues/7) for MacOS support*.
 
+#### Apache Maven
+
+`bblfsh-client` package is available thorugh [maven central](http://search.maven.org/#search%7Cga%7C1%7Cbblfsh),
+so it be used easily added as a dependency in various package management systems.
+Examples of how to handle it for most commons systems are included below,
+for other systems just look at maven central's dependency information.
+
+```xml
+<dependency>
+    <groupId>org.bblfsh</groupId>
+    <artifactId>bblfsh-client</artifactId>
+    <version>${client_version}</version>
+</dependency>
+```
+
+#### Scala SBT
+
+```
+libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
+```
 
 ### Dependencies
 
