@@ -19,7 +19,6 @@ cache:
 before_install:
  - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/server
  - sudo apt-get install -y libxml2-dev
- - sudo apt-get install -y openjdk-6-jdk
 
 script:
  - ./sbt assembly test

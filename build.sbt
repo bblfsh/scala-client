@@ -104,7 +104,9 @@ compileLibuast := {
         
     val xml2Conf = "xml2-config --cflags --libs" !!
 
-    "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
+    "mkdir ./build" !
+
+    val out:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
@@ -115,7 +117,9 @@ compileLibuast := {
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c " +
-        xml2Conf + " " !
+        xml2Conf + " " !!
+
+    println("GCC output:\n" + out)
 }
 mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
 
