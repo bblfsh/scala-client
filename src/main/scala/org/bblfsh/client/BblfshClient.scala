@@ -3,9 +3,8 @@ package org.bblfsh.client
 import org.bblfsh.client.libuast.Libuast
 
 import gopkg.in.bblfsh.sdk.v1.protocol.generated.{Encoding, ParseRequest, 
-                                                  ProtocolServiceGrpc}
+                                                  ProtocolServiceGrpc, ParseResponse}
 import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
-import gopkg.in.bblfsh.sdk.v1.protocol.generated.ParseResponse
 
 import io.grpc.ManagedChannelBuilder
 

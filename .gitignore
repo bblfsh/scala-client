@@ -6,3 +6,4 @@ target
 src/libuast-native
 .history
 Libuast.so
+build/*

@@ -6,7 +6,6 @@ import java.nio.file.Paths
 
 class Libuast {
   var jarPath = getClass.getProtectionDomain.getCodeSource.getLocation.getPath.toString
-  var x = getClass.getProtectionDomain.getCodeSource.getLocation.getClass.getName
 
   //mainClass returns the jar file in the path, testing doesn't
   if (jarPath.endsWith(".jar")) {
