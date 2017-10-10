@@ -16,6 +16,7 @@ PB.targets in Compile := Seq(
 PB.protoSources in Compile := Seq(file("src/main/proto"))
 
 libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
+libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
 
@@ -104,14 +105,14 @@ compileLibuast := {
         
     val xml2Conf = "xml2-config --cflags --libs" !!
 
-    "mkdir ./build" !
+    "mkdir ./lib" !
 
     val out:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
         "-Isrc/libuast-native/  " +
-        "-o build/libscalauast.so " + 
+        "-o lib/libscalauast.so " + 
         "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
         "src/main/scala/org/bblfsh/client/libuast/utils.c " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
@@ -123,17 +124,7 @@ compileLibuast := {
 }
 mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
 
-val testsAddLib = TaskKey[Unit]("testAddLib", "Copy native lib to test")
-testsAddLib := {
-    import sys.process._
-
-    val scalaMinor = scalaVersion.value.slice(0,4)
-    val testDir = "target/scala-" + scalaMinor + "/classes"
-
-    f"mkdir -p $testDir%s" !!
-
-    f"cp build/libscalauast.so $testDir%s" !!
-
-    "cp build/libscalauast.so target/" !!
+mappings in (Compile, packageBin) += {
+  (baseDirectory.value / "lib" / "libscalauast.so") -> "lib/libscalauast.so"
 }
-test := ((test in Test) dependsOn testsAddLib).value
+
