@@ -113,7 +113,7 @@ compileLibuast := {
         "src/libuast-native/roles.c " +
         xml2Conf + " " !
 }
-mainClass := ((mainClass in Compile) dependsOn (getLibuast, compileLibuast)).value
+mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
 
 val testsAddLib = TaskKey[Unit]("testAddLib", "Copy native lib to test")
 testsAddLib := {
@@ -121,6 +121,8 @@ testsAddLib := {
 
     val scalaMinor = scalaVersion.value.slice(0,4)
     val testDir = "target/scala-" + scalaMinor + "/classes"
+
+    f"mkdir -p $testDir%s" !!
 
     f"cp build/libscalauast.so $testDir%s" !!
 

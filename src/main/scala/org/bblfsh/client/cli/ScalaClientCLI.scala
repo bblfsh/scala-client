@@ -17,12 +17,12 @@ object ScalaClientCLI extends App {
   val fileName = cli.file().getName
   val client = BblfshClient(cli.bblfshServerHost(), cli.bblfshServerPort())
   val fileContent = Source.fromFile(cli.file()).getLines.mkString("\n")
-  val query = cli.query
+  val query = cli.query()
   val resp = client.parse(fileName, fileContent)
 
   if (resp.errors.isEmpty) {
-    if (query != None) {
-      println(client.filter(resp.uast.get, query.get.get))
+    if (query != null && query != "") {
+      println(client.filter(resp.uast.get, query))
     } else {
       println(resp.uast.get)
     }
