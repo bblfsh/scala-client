@@ -5,7 +5,10 @@ version := "1.0.0"
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.0.1"
 
+
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
+
+target in assembly := file("build")
 
 PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
@@ -73,11 +76,10 @@ publishTo := {
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
 
-/*
->>>>>>> Native module finished
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
     import sys.process._
+
     f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
     "tar zxf libuast.tar.gz" #&&
     f"mv libuast-$libuastVersion%s libuast" #&&
@@ -86,5 +88,42 @@ getLibuast := {
     "rm -rf libuast" #&&
     "rm libuast.tar.gz" !
 }
-mainClass := ((mainClass in Compile) dependsOn getLibuast).value
-*/
+
+// TODO: MacOS support.
+val compileLibuast = TaskKey[Unit]("compileLibuast", "Compile libUAST")
+compileLibuast := {
+    import sys.process._
+
+    var javaHome = System.getenv("JAVA_HOME")
+    if (javaHome == null) 
+        javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
+        
+    val xml2Conf = "xml2-config --cflags --libs" !!
+
+    "gcc -shared -Wall -fPIC -O2 " +
+        "-I/usr/include " +
+        "-I" + javaHome + "/include/ " +
+        "-I" + javaHome + "/include/linux " +
+        "-Isrc/libuast-native/  " +
+        "-o build/libscalauast.so " + 
+        "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
+        "src/main/scala/org/bblfsh/client/libuast/utils.c " +
+        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
+        "src/libuast-native/uast.c " +
+        "src/libuast-native/roles.c " +
+        xml2Conf + " " !
+}
+mainClass := ((mainClass in Compile) dependsOn (getLibuast, compileLibuast)).value
+
+val testsAddLib = TaskKey[Unit]("testAddLib", "Copy native lib to test")
+testsAddLib := {
+    import sys.process._
+
+    val scalaMinor = scalaVersion.value.slice(0,4)
+    val testDir = "target/scala-" + scalaMinor + "/classes"
+
+    f"cp build/libscalauast.so $testDir%s" !!
+
+    "cp build/libscalauast.so target/" !!
+}
+test := ((test in Test) dependsOn testsAddLib).value

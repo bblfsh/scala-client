@@ -98,15 +98,15 @@ static uint16_t RoleAt(const void *data, int index)
 
 Uast *CreateUast()
 {
-  Uast *ctx = UastNew((NodeIface){
-      .InternalType = InternalType,
-      .Token = Token,
-      .ChildrenSize = ChildrenSize,
-      .ChildAt = ChildAt,
-      .RolesSize = RolesSize,
-      .RoleAt = RoleAt,
-      .PropertiesSize = PropertiesSize,
-      .PropertyAt = PropertyAt
+  return UastNew((NodeIface){
+    .InternalType = InternalType,
+    .Token = Token,
+    .ChildrenSize = ChildrenSize,
+    .ChildAt = ChildAt,
+    .RolesSize = RolesSize,
+    .RoleAt = RoleAt,
+    .PropertiesSize = PropertiesSize,
+    .PropertyAt = PropertyAt
   });
 }
 

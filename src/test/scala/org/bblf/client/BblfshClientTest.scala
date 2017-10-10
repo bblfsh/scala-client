@@ -16,8 +16,6 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
   var resp: ParseResponse = _
 
   before {
-    // XXX hardcoded path
-    System.load("/home/juanjux/sync/work/sourced/client-scala/src/main/scala/org/bblfsh/client/libuast/Libuast.so")
     resp = client.parse(fileName, fileContent)
   }
 
@@ -49,7 +47,5 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
   test("Simple XPath query") {
     var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
     assert(filtered.length == 3)
-
-  // TODO: add more queries
   }
 }
