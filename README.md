@@ -93,13 +93,13 @@ println(client.filter(resp.uast.get, "//Import[@roleImport]"))
 Command line:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.0.jar -f file.py
+java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py
 ```
 
 or if you want to use a XPath query:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.0.jar -f file.py -q "//Import[@roleImport]" 
+java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py -q "//Import[@roleImport]" 
 ```
 ### License
 
