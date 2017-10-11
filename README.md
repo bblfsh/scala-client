@@ -29,7 +29,7 @@ If the build fails because it can't find the `jni.h` header file, run it with:
 Changing the JDK directory to the one right for your system.
 
 *Note: currently only Linux is supported, check
-[#7](https://github.com/bblfsh/client-scala/issues/7) for MacOS support*.
+[#7] for MacOS support*.
 
 #### Apache Maven
 
@@ -47,7 +47,7 @@ at Maven central's dependency information.
 </dependency>
 ```
 
-#### Scala' sbt
+#### Scala sbt
 
 ```
 libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
