@@ -1,7 +1,8 @@
 ## Babelfish Scala client [![Build Status](https://travis-ci.org/bblfsh/client-scala.svg?branch=master)](https://travis-ci.org/bblfsh/client-scala)
 
-This a pure Scala implementation of [Babelfish](https://doc.bblf.sh/) client.
-It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code generation.
+This a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
+It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code
+generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries. 
 
 ### Installation
 
@@ -12,8 +13,8 @@ cd client-scala
 ./sbt assembly
 ```
 
-gRPC/protobuf are re-generate from `src/main/proto` on every `./sbt compile` and
-are stored under `./target/src_managed/`. 
+gRPC/protobuf files are re-generate from `src/main/proto` on every `./sbt compile`
+and are stored under `./target/src_managed/`. 
 
 The jar file and the native module are generated in the `build/` directory. If 
 you move the jar file to some other path, the native (`.so` or `.dylib`) 
@@ -27,14 +28,16 @@ If the build fails because it can't find the `jni.h` header file, run it with:
 
 Changing the JDK directory to the one right for your system.
 
-*Note: currently only Linux is supported, check [#7](https://github.com/bblfsh/client-scala/issues/7) for MacOS support*.
+*Note: currently only Linux is supported, check
+[#7] for MacOS support*.
 
 #### Apache Maven
 
-`bblfsh-client` package is available thorugh [maven central](http://search.maven.org/#search%7Cga%7C1%7Cbblfsh),
-so it be used easily added as a dependency in various package management systems.
-Examples of how to handle it for most commons systems are included below,
-for other systems just look at maven central's dependency information.
+The `bblfsh-client` package is available thorugh [Maven
+central](http://search.maven.org/#search%7Cga%7C1%7Cbblfsh), so it can be easily
+added as a dependency in various package management systems.  Examples of how to
+handle it for most commons systems are included below; for other systems just look
+at Maven central's dependency information.
 
 ```xml
 <dependency>
@@ -44,7 +47,7 @@ for other systems just look at maven central's dependency information.
 </dependency>
 ```
 
-#### Scala SBT
+#### Scala sbt
 
 ```
 libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
@@ -61,10 +64,8 @@ sudo apt install libxml2-dev openjdk-8 openjdk-8-jdk-headless
 
 ### Usage
 
-
-A small example of how to parse a Python file and extract the import declarations from the UAST.
-
-If you don't have a bblfsh server running you can execute it using the following command:
+If you don't have a bblfsh server running you can execute it using the following
+command:
 
 ```
 docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/server
@@ -89,7 +90,8 @@ println(resp.uast.get)
 println(client.filter(resp.uast.get, "//Import[@roleImport]"))
 ```
 
-Command line
+Command line:
+
 ```
 java -jar build/bblfsh-client-assembly-1.0.0.jar -f file.py
 ```
