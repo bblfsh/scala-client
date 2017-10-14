@@ -23,13 +23,12 @@ library must be in the same path.
 If the build fails because it can't find the `jni.h` header file, run it with:
 
 ```
-./sbt -java_path /usr/lib/jvm/java-8-openjdk-amd64 assembly
+./sbt -java-home /usr/lib/jvm/java-8-openjdk-amd64 assembly
 ```
 
 Changing the JDK directory to the one right for your system.
 
-*Note: currently only Linux is supported, check
-[#7] for MacOS support*.
+*Note: currently only Linux is supported, check #7 for MacOS support*.
 
 #### Apache Maven
 
