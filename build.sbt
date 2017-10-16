@@ -1,6 +1,6 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.0.1"
+version := "1.1.0"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.2.0"
@@ -92,7 +92,6 @@ getLibuast := {
     "rm libuast.tar.gz" !
 }
 
-// TODO: MacOS support.
 val compileLibuast = TaskKey[Unit]("compileLibuast", "Compile libUAST")
 compileLibuast := {
     import sys.process._
@@ -107,7 +106,7 @@ compileLibuast := {
 
     "mkdir ./lib" !
 
-    val out:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
+    val cmdLinux:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
@@ -118,13 +117,45 @@ compileLibuast := {
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c " +
-        xml2Conf + " " !!
+        xml2Conf + " "
+    println(cmdLinux)
+    val outLinux = cmdLinux !!
 
-    println("GCC output:\n" + out)
+    println("GCC-Linux output:\n" + outLinux)
+
+    val osxHome = System.getenv("OSXCROSS_PATH")
+
+    if (osxHome != null && !osxHome.isEmpty) {
+
+        // Compile the lib
+        val cmdDarwin = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
+            "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
+            "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
+            "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
+            "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
+            "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
+            "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
+            "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
+            "src/main/scala/org/bblfsh/client/libuast/utils.c " +
+            "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
+            "src/libuast-native/uast.c src/libuast-native/roles.c"
+        println(cmdDarwin)
+        val outDarwin = cmdDarwin !!
+
+        println("Clang-Darwin output:\n" + outDarwin)
+
+    } else {
+        println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
+
+    }
 }
-mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
 
 mappings in (Compile, packageBin) += {
-  (baseDirectory.value / "lib" / "libscalauast.so") -> "lib/libscalauast.so"
+    (baseDirectory.value / "lib" / "libscalauast.so") -> "lib/libscalauast.so"
 }
+mappings in (Compile, packageBin) += {
+    (baseDirectory.value / "lib" / "libscalauast.dylib") -> "lib/libscalauast.dylib"
+}
+
+mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
 
