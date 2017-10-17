@@ -33,10 +33,34 @@ const char *CLS_TUPLE2 = "scala/Tuple2";
 const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 
-extern JNIEnv *env;
+extern JavaVM *jvm;
+
+JNIEnv *getJNIEnv()
+{
+  JNIEnv *pEnv = NULL;
+
+  switch ((*jvm)->GetEnv(jvm, (void **)&pEnv, JNI_VERSION_1_8))
+  {
+    case JNI_OK:
+      // Thread is ready to use, nothing to do
+      break;
+
+    case JNI_EDETACHED:
+      // Thread is detached, need to attach
+      (*jvm)->AttachCurrentThread(jvm, (void **)&pEnv, NULL);
+      break;
+  }
+
+  return pEnv;
+}
 
 const char *AsNativeStr(jstring jstr)
 {
+
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   const char *tmp = (*env)->GetStringUTFChars(env, jstr, 0);
   if ((*env)->ExceptionOccurred(env) || !tmp)
     return NULL;
@@ -61,6 +85,10 @@ jobject *ToObjectPtr(jobject *object)
 jint IntMethod(const char *method, const char *signature, const char *className,
          const jobject *object)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return 0;
+
   jclass cls = (*env)->FindClass(env, className);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return 0;
@@ -79,6 +107,10 @@ jint IntMethod(const char *method, const char *signature, const char *className,
 jobject ObjectMethod(const char *method, const char *signature, const char *typeName,
            const jobject object, ...)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jclass cls = (*env)->FindClass(env, typeName);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return NULL;
@@ -98,6 +130,10 @@ jobject ObjectMethod(const char *method, const char *signature, const char *type
 jobject ObjectField(const char *typeName, const jobject *obj, const char *field,
           const char *signature)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jclass cls = (*env)->FindClass(env, typeName);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return NULL;
@@ -119,6 +155,10 @@ jobject ObjectField(const char *typeName, const jobject *obj, const char *field,
 
 jobject NewJavaObject(const char *className, const char *initSign, ...)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jclass cls = (*env)->FindClass(env, className);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return NULL;
@@ -139,6 +179,10 @@ jobject NewJavaObject(const char *className, const char *initSign, ...)
 
 const char *ReadStr(const jobject *node, const char *property)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jclass cls = (*env)->FindClass(env, CLS_NODE);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return NULL;
@@ -152,6 +196,10 @@ const char *ReadStr(const jobject *node, const char *property)
 
 int ReadLen(const jobject *node, const char *property)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return 0;
+
   jclass cls = (*env)->FindClass(env, CLS_NODE);
   if ((*env)->ExceptionOccurred(env) || !cls)
     return 0;

@@ -48,4 +48,18 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
     var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
     assert(filtered.length == 3)
   }
+
+  test("XPath query with threads") {
+    val th = new Thread(new Runnable {
+      def run() {
+        var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
+        assert(filtered.length == 3)
+      }
+    })
+    th.start
+
+    th.synchronized {
+      th.wait
+    }
+  }
 }

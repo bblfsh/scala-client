@@ -26,6 +26,8 @@ extern const char *CLS_TUPLE2;
 extern const char *CLS_LIST;
 extern const char *CLS_MUTLIST;
 
+JNIEnv *getJNIEnv();
+
 jobject *ToObjectPtr(jobject*);
 
 const char *AsNativeStr(jstring);

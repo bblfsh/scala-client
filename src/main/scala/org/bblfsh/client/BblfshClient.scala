@@ -31,9 +31,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   }
 
   def filter(node: Node, query: String): List[Node] = {
-    Libuast.synchronized {
-      libuast.filter(node, query)
-    }
+    libuast.filter(node, query)
   }
 }
 
