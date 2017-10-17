@@ -7,8 +7,6 @@ extern "C" {
 #include <stdint.h>
 #include <jni.h>
 
-extern JNIEnv *env;
-
 static const char *InternalType(const void *node)
 {
   return ReadStr((const jobject*)node, "internalType");
@@ -31,6 +29,10 @@ static int RolesSize(const void *node)
 
 static void *ChildAt(const void *data, int index)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jobject *node = (jobject *)data;
   jobject childSeq = ObjectField(CLS_NODE, node, "children", SIGN_SEQ);
   if ((*env)->ExceptionOccurred(env))
@@ -45,6 +47,10 @@ static void *ChildAt(const void *data, int index)
 
 static int PropertiesSize(const void *data)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return 0;
+
   jobject *node = (jobject *)data;
   jobject propsMap = ObjectField(CLS_NODE, node, "properties", SIGN_MAP);
   if ((*env)->ExceptionOccurred(env) || !propsMap)
@@ -55,6 +61,10 @@ static int PropertiesSize(const void *data)
 
 static const char *PropertyAt(const void *data, int index)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return NULL;
+
   jobject *node = (jobject *)data;
   jobject propsMap = ObjectField(CLS_NODE, node, "properties", SIGN_MAP);
   if ((*env)->ExceptionOccurred(env) || !propsMap)
@@ -80,6 +90,10 @@ static const char *PropertyAt(const void *data, int index)
 
 static uint16_t RoleAt(const void *data, int index)
 {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return 0;
+
   jobject *node = (jobject *)data;
   jobject roleSeq = ObjectField(CLS_NODE, node, "roles", SIGN_SEQ);
   if ((*env)->ExceptionOccurred(env) || !roleSeq)
