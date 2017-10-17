@@ -59,7 +59,6 @@ exit:
   if (nodes)
     NodesFree(nodes);
 
-  (*jvm)->DetachCurrentThread(jvm);
   jobject immList = NULL;
 
   if (nodeList) {
