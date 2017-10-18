@@ -10,21 +10,30 @@ extern "C" {
 // Defined in utils.c
 extern const char *SIGN_OBJECT;
 extern const char *SIGN_STR;
+extern const char *SIGN_OPTION;
 extern const char *SIGN_SEQ;
 extern const char *SIGN_MAP;
+
 extern const char *SIGN_APPLY;
 extern const char *SIGN_TOLIST;
 extern const char *SIGN_TOIMMLIST;
 extern const char *SIGN_LISTINIT;
 extern const char *SIGN_APPEND;
 extern const char *SIGN_PLUSEQ;
+extern const char *SIGN_OPTION_GET;
+extern const char *SIGN_SORTED;
+extern const char *SIGN_KEYS;
+
 extern const char *CLS_NODE;
+extern const char *CLS_POSITION;
 extern const char *CLS_ROLE;
+extern const char *CLS_OPTION;
 extern const char *CLS_SEQ;
 extern const char *CLS_MAP;
 extern const char *CLS_TUPLE2;
 extern const char *CLS_LIST;
 extern const char *CLS_MUTLIST;
+extern const char *CLS_ITERABLE;
 
 JNIEnv *getJNIEnv();
 
@@ -34,9 +43,13 @@ const char *AsNativeStr(jstring);
 
 jint IntMethod(const char *, const char *, const char *, const jobject *);
 
+jboolean BooleanMethod(const char *, const char *, const char *, const jobject *);
+
 jobject ObjectMethod(const char *, const char *, const char *, const jobject , ...);
 
 jobject ObjectField(const char *, const jobject *, const char *, const char *);
+
+jint IntField(const char *, const jobject *, const char *);
 
 jobject NewJavaObject(const char *, const char *, ...);
 

@@ -33,6 +33,54 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   def filter(node: Node, query: String): List[Node] = {
     libuast.filter(node, query)
   }
+
+  // XXX remove
+  def hasstartposition(node: Node): Boolean = {
+    libuast.hasstartposition(node)
+  }
+
+  // XXX remove
+  def hasendposition(node: Node): Boolean = {
+    libuast.hasendposition(node)
+  }
+
+  // XXX remove
+  def propertykeyat(node: Node, index: Int): String = {
+    libuast.propertykeyat(node, index)
+  }
+  // XXX remove
+  def propertyvalueat(node: Node, index: Int): String = {
+    libuast.propertyvalueat(node, index)
+  }
+
+  // XXX remove
+  def startoffset(node: Node): Int = {
+    libuast.startoffset(node)
+  }
+
+  // XXX remove
+  def startline(node: Node): Int = {
+    libuast.startline(node)
+  }
+
+  // XXX remove
+  def startcol(node: Node): Int = {
+    libuast.startcol(node)
+  }
+  
+  def endoffset(node: Node): Int = {
+    libuast.endoffset(node)
+  }
+
+  // XXX remove
+  def endline(node: Node): Int = {
+    libuast.endline(node)
+  }
+
+  // XXX remove
+  def endcol(node: Node): Int = {
+    libuast.endcol(node)
+  }
 }
 
 object BblfshClient {
