@@ -1,6 +1,6 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.2.1"
+version := "1.2.2"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.2.0"
