@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 #include "org_bblfsh_client_libuast_Libuast.h"
-#include "utils.h"
+#include "jni_utils.h"
 #include "nodeiface.h"
 
 #include "uast.h"
@@ -23,7 +23,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     goto exit;
 
   jobject *node = &obj;
-  nodeList = NewJavaObject(CLS_MUTLIST, "()V");
+  nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
   if ((*env)->ExceptionOccurred(env) || !nodeList) {
     nodeList = NULL;
     goto exit;
@@ -49,7 +49,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     if (!n)
       continue;
 
-    ObjectMethod("$plus$eq", SIGN_PLUSEQ, CLS_MUTLIST, nodeList, *n);
+    ObjectMethod(env, "$plus$eq", METHOD_LIST_PLUSEQ, CLS_MUTLIST, &nodeList, *n);
     if ((*env)->ExceptionOccurred(env))
       goto exit;
   }
@@ -62,7 +62,7 @@ exit:
 
   if (nodeList) {
     // Convert to immutable list
-    immList = ObjectMethod("toList", SIGN_TOIMMLIST, CLS_LIST, nodeList);
+    immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
   (*env)->MonitorExit(env, self);
@@ -74,57 +74,6 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   jvm = vm;
   ctx = CreateUast();
   return JNI_VERSION_1_8;
-}
-
-// XXX remove
-JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_libuast_Libuast_hasstartposition
-  (JNIEnv *env, jobject self, jobject obj) {
-  return _HasPosition(&obj, "startPosition");
-}
-
-JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_libuast_Libuast_hasendposition
-  (JNIEnv *env, jobject self, jobject obj) {
-  return _HasPosition(&obj, "endPosition");
-}
-
-JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_propertykeyat
-  (JNIEnv *env, jobject self, jobject obj, jint index) {
-  return (*env)->NewStringUTF(env, PropertyKeyAt(&obj, (int)index));
-}
-
-JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_propertyvalueat
-  (JNIEnv *env, jobject self, jobject obj, jint index) {
-  return (*env)->NewStringUTF(env, PropertyValueAt(&obj, (int)index));
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_startoffset
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)StartOffset(&obj);
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_startline
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)StartLine(&obj);
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_startcol
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)StartCol(&obj);
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_endoffset
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)EndOffset(&obj);
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_endline
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)EndLine(&obj);
-}
-
-JNIEXPORT jint JNICALL Java_org_bblfsh_client_libuast_Libuast_endcol
-  (JNIEnv *env, jobject self, jobject obj) {
-  return (jint)EndCol(&obj);
 }
 #ifdef __cplusplus
 }

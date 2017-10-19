@@ -39,16 +39,4 @@ class Libuast {
   }
 
   @native def filter(node: Node, query: String): List[Node]
-
-  // XXX remove
-  @native def hasstartposition(node: Node): Boolean
-  @native def hasendposition(node: Node): Boolean
-  @native def propertyvalueat(node: Node, index: Int): String
-  @native def propertykeyat(node: Node, index: Int): String
-  @native def startoffset(node: Node): Int
-  @native def startline(node: Node): Int
-  @native def startcol(node: Node): Int
-  @native def endoffset(node: Node): Int
-  @native def endline(node: Node): Int
-  @native def endcol(node: Node): Int
 }

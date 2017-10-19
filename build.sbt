@@ -113,7 +113,7 @@ compileLibuast := {
         "-Isrc/libuast-native/  " +
         "-o lib/libscalauast.so " + 
         "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-        "src/main/scala/org/bblfsh/client/libuast/utils.c " +
+        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c " +
