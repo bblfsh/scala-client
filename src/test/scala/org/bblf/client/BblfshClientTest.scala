@@ -33,7 +33,6 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
     assert(children.length == 2)
   }
 
-
   test("Get the token") {
     assert(resp.uast.get.children.head.token == "package")
   }
@@ -62,4 +61,72 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
       th.wait
     }
   }
+
+  test("XPath filter properties") {
+    val filtered = client.filter(resp.uast.get, "//*[@internalRole='types']");
+    assert(filtered.length == 1)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@internalRole='foo']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter StartOffset") {
+    val filtered = client.filter(resp.uast.get, "//*[@startOffset='24']");
+    assert(filtered.length == 1)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@startOffset='44']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter StartLine") {
+    val filtered = client.filter(resp.uast.get, "//*[@startLine='1']");
+    assert(filtered.length == 17)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@startLine='100']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter StartCol") {
+    val filtered = client.filter(resp.uast.get, "//*[@startCol='25']");
+    assert(filtered.length == 1)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@startCol='999']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter EndOffset") {
+    val filtered = client.filter(resp.uast.get, "//*[@endOffset='44']");
+    assert(filtered.length == 1)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@endOffset='999']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter EndLine") {
+    val filtered = client.filter(resp.uast.get, "//*[@endLine='1']");
+    assert(filtered.length == 16)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@endLine='100']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Xpath filter EndCol") {
+    val filtered = client.filter(resp.uast.get, "//*[@endCol='45']");
+    assert(filtered.length == 1)
+    val filteredNeg = client.filter(resp.uast.get, "//*[@endCol='999']");
+    assert(filteredNeg.length == 0)
+  }
+
+  test("Get the start position") {
+    val childWithPos = resp.uast.get.children(1)
+    val startPos = childWithPos.startPosition
+    assert(!startPos.isEmpty)
+    assert(startPos.get.offset == 24)
+    assert(startPos.get.line == 1)
+    assert(startPos.get.col == 25)
+  }
+
+  test("Get the end position") {
+    val childWithPos = resp.uast.get.children(1).children.head
+    val endPos = childWithPos.endPosition
+    assert(!endPos.isEmpty)
+    assert(endPos.get.offset == 44)
+    assert(endPos.get.line == 1)
+    assert(endPos.get.col == 45)
+  }
 }
+

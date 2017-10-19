@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-#include "utils.h"
-
 #include "uast.h"
 
 Uast *CreateUast();

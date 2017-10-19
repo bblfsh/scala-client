@@ -1,9 +1,9 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.2.2"
+version := "1.3.0"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.2.0"
+val libuastVersion = "v1.3.0"
 
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
@@ -113,7 +113,7 @@ compileLibuast := {
         "-Isrc/libuast-native/  " +
         "-o lib/libscalauast.so " + 
         "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-        "src/main/scala/org/bblfsh/client/libuast/utils.c " +
+        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c " +

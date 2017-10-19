@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 #include "org_bblfsh_client_libuast_Libuast.h"
-#include "utils.h"
+#include "jni_utils.h"
 #include "nodeiface.h"
 
 #include "uast.h"
@@ -15,8 +15,7 @@ extern NodeIface iface;
 //// Exported Java functions ////
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
-  (JNIEnv *env, jobject self, jobject obj, jstring query)
-{
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
   Nodes *nodes = NULL;
   jobject nodeList = NULL;
 
@@ -24,7 +23,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     goto exit;
 
   jobject *node = &obj;
-  nodeList = NewJavaObject(CLS_MUTLIST, "()V");
+  nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
   if ((*env)->ExceptionOccurred(env) || !nodeList) {
     nodeList = NULL;
     goto exit;
@@ -50,7 +49,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     if (!n)
       continue;
 
-    ObjectMethod("$plus$eq", SIGN_PLUSEQ, CLS_MUTLIST, nodeList, *n);
+    ObjectMethod(env, "$plus$eq", METHOD_LIST_PLUSEQ, CLS_MUTLIST, &nodeList, *n);
     if ((*env)->ExceptionOccurred(env))
       goto exit;
   }
@@ -63,7 +62,7 @@ exit:
 
   if (nodeList) {
     // Convert to immutable list
-    immList = ObjectMethod("toList", SIGN_TOIMMLIST, CLS_LIST, nodeList);
+    immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
   (*env)->MonitorExit(env, self);
@@ -71,14 +70,11 @@ exit:
   return immList;
 }
 
-
-jint JNI_OnLoad(JavaVM *vm, void *reserved)
-{
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   jvm = vm;
   ctx = CreateUast();
   return JNI_VERSION_1_8;
 }
-
 #ifdef __cplusplus
 }
 #endif
