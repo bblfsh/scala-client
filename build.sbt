@@ -136,7 +136,7 @@ compileLibuast := {
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
             "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
             "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-            "src/main/scala/org/bblfsh/client/libuast/utils.c " +
+            "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
             "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
             "src/libuast-native/uast.c src/libuast-native/roles.c"
         println(cmdDarwin)
