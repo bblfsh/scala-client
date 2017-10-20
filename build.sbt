@@ -106,17 +106,26 @@ compileLibuast := {
 
     "mkdir ./lib" !
 
+    val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
+        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
+        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
+        "src/main/scala/org/bblfsh/client/libuast/alloclist.c " +
+        "src/libuast-native/uast.c " +
+        "src/libuast-native/roles.c "
+
     val cmdLinux:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
         "-Isrc/libuast-native/  " +
         "-o lib/libscalauast.so " + 
-        "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
-        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-        "src/libuast-native/uast.c " +
-        "src/libuast-native/roles.c " +
+        sourceFiles +
+        /*"src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +*/
+        /*"src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +*/
+        /*"src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +*/
+        /*"src/main/scala/org/bblfsh/client/libuast/alloclist.c " +*/
+        /*"src/libuast-native/uast.c " +*/
+        /*"src/libuast-native/roles.c " +*/
         xml2Conf + " "
     println(cmdLinux)
     val outLinux = cmdLinux !!
@@ -135,10 +144,12 @@ compileLibuast := {
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
             "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
-            "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-            "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
-            "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-            "src/libuast-native/uast.c src/libuast-native/roles.c"
+            sourceFiles
+            /*"src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +*/
+            /*"src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +*/
+            /*"src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +*/
+            /*"src/main/scala/org/bblfsh/client/libuast/alloclist.c " +*/
+            /*"src/libuast-native/uast.c src/libuast-native/roles.c"*/
         println(cmdDarwin)
         val outDarwin = cmdDarwin !!
 

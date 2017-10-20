@@ -51,7 +51,7 @@ static const jstring _PropertyItemAt(const void *_node, int index, kv item) {
   return (jstring)value;
 }
 
-jobject _GetPositionObject(const void *_node, const char *posname) {
+static jobject _GetPositionObject(const void *_node, const char *posname) {
   JNIEnv *env = getJNIEnv();
   if (!env)
     return NULL;

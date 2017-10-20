@@ -5,10 +5,14 @@ extern "C" {
 #include "org_bblfsh_client_libuast_Libuast.h"
 #include "jni_utils.h"
 #include "nodeiface.h"
+#include "alloclist.h"
 
 #include "uast.h"
 
 JavaVM *jvm;
+AllocList allocList;
+static const int ALLOCLIST_SIZE = 128;
+
 static Uast *ctx;
 extern NodeIface iface;
 
@@ -21,6 +25,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
 
   if ((*env)->MonitorEnter(env, self) != JNI_OK)
     goto exit;
+
+  initAllocList(&allocList, ALLOCLIST_SIZE);
 
   jobject *node = &obj;
   nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
@@ -55,6 +61,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   }
 
 exit:
+  freeAllocList(&allocList);
+
   if (nodes)
     NodesFree(nodes);
 
