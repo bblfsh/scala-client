@@ -128,30 +128,5 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
     assert(endPos.get.line == 1)
     assert(endPos.get.col == 45)
   }
-
-  test("Test non increasing memory usage with filter()") {
-    System.gc()
-
-    def someFilter() = {
-      val node = resp.uast.get
-      client.filter(node, "//QualifiedName[@roleExpression]")
-      client.filter(node, "//*[@endLine='1']");
-      client.filter(node, "//*[@internalRole='types']");
-    }
-
-    def getMemUsage = {
-      System.gc()
-      Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
-    }
-    someFilter
-    val initialUsage = getMemUsage
-
-    for (a<-1 to 10000) {
-      someFilter
-    }
-
-    val finalUsage = getMemUsage
-    assert(finalUsage <= initialUsage * 1.03)
-  }
 }
 

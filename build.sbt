@@ -109,7 +109,7 @@ compileLibuast := {
     val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
         "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-        "src/main/scala/org/bblfsh/client/libuast/alloclist.c " +
+        "src/main/scala/org/bblfsh/client/libuast/allocvector.c " +
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c "
 

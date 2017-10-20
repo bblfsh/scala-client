@@ -40,7 +40,7 @@ const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
 
-extern AllocList allocList;
+extern AllocVector allocVector;
 extern JavaVM *jvm;
 
 //// JNI helpers
@@ -87,7 +87,7 @@ const char *AsNativeStr(jstring jstr) {
 jobject *ToObjectPtr(jobject *object) {
   jobject *copy = malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
-  trackAllocatedJObject(&allocList, copy);
+  trackAllocatedJObject(&allocVector, copy);
   return copy;
 }
 
