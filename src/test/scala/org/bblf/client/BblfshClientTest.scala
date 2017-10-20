@@ -62,17 +62,6 @@ class BblfshClientTest extends FunSuite with BeforeAndAfter {
     }
   }
 
-  test("XPath chained filters") {
-    var filtered = client.filter(resp.uast.get, "//QualifiedName[@roleExpression]")
-    filtered.foreach(println)
-    var filtered2 = client.filter(filtered.head, "//QualifiedName[@roleExpression]")
-    filtered2.foreach(println)
-    var filtered3 = client.filter(filtered2.head, "//*[@internalRole='types']");
-    filtered3.foreach(println)
-    // XXX enable
-    //assert(filtered2.length == 2)
-  }
-
   test("XPath filter properties") {
     val filtered = client.filter(resp.uast.get, "//*[@internalRole='types']");
     assert(filtered.length == 1)

@@ -5,14 +5,11 @@ extern "C" {
 #include "org_bblfsh_client_libuast_Libuast.h"
 #include "jni_utils.h"
 #include "nodeiface.h"
-#include "allocvector.h"
+#include "objtrack.h"
 
 #include "uast.h"
-// XXX
-#include <stdio.h>
 
 JavaVM *jvm;
-extern AllocVector *allocVector;
 
 static Uast *ctx;
 extern NodeIface iface;
@@ -21,12 +18,8 @@ extern NodeIface iface;
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jobject obj, jstring query) {
-  printf("XXX filter start\n");
   Nodes *nodes = NULL;
   jobject nodeList = NULL;
-
-  if ((*env)->MonitorEnter(env, self) != JNI_OK)
-    goto exit;
 
   jobject *node = &obj;
   nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
@@ -61,7 +54,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   }
 
 exit:
-  freeAllocVector(&allocVector);
+  freeObjects();
 
   if (nodes)
     NodesFree(nodes);
@@ -73,9 +66,6 @@ exit:
     immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
-  (*env)->MonitorExit(env, self);
-
-  printf("XXX filter end\n");
   return immList;
 }
 
