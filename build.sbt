@@ -129,7 +129,6 @@ compileLibuast := {
     val osxHome = System.getenv("OSXCROSS_PATH")
 
     if (osxHome != null && !osxHome.isEmpty) {
-
         // Compile the lib
         val cmdDarwin = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
             "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
@@ -146,7 +145,6 @@ compileLibuast := {
 
     } else {
         println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
-
     }
 }
 

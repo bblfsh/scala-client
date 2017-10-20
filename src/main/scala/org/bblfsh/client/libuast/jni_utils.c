@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 #include "jni_utils.h"
-#include "alloclist.h"
+#include "allocvector.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
 
-extern AllocVector allocVector;
+extern AllocVector *allocVector;
 extern JavaVM *jvm;
 
 //// JNI helpers
@@ -87,7 +87,7 @@ const char *AsNativeStr(jstring jstr) {
 jobject *ToObjectPtr(jobject *object) {
   jobject *copy = malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
-  trackAllocatedJObject(&allocVector, copy);
+  trackAllocatedJObject(allocVector, copy);
   return copy;
 }
 

@@ -8,32 +8,58 @@ extern "C" {
 
 #include <stdlib.h>
 
-void initAllocVector(AllocVector *l) {
+// XXX
+#include <stdio.h>
+
+struct _AllocVector{
+  jobject **vector;
+  size_t used;
+  size_t size;
+};
+
+AllocVector *allocVector;
+
+static void initAllocVector(AllocVector **vPtr) {
   int initialSize = 128;
 
-  l->vector = (jobject **)malloc(initialSize * sizeof(jobject*));
-  l->used = 0;
-  l->size = initialSize;
+  *vPtr = (AllocVector *)malloc(sizeof(AllocVector));
+  *vPtr->vector = (jobject **)malloc(initialSize * sizeof(jobject*));
+  *vPtr->used = 0;
+  *vPtr->size = initialSize;
 }
 
-void trackAllocatedJObject(AllocVector *l, jobject *obj) {
-  if (l->used == l->size) {
-    l->size *= 2;
-    l->vector = (jobject **)realloc(l->vector, l->size * sizeof(jobject*));
+void trackAllocatedJObject(AllocVector *v, jobject *obj) {
+  printf("XXX 1\n");
+  if (v == NULL || v->vector == NULL) {
+    printf("XXX 2\n");
+    initAllocVector();
   }
-  l->vector[l->used++] = obj;
+
+  printf("XXX 3\n");
+  if (v->used == v->size) {
+    printf("XXX 4\n");
+    v->size *= 2;
+    printf("XXX 5\n");
+    v->vector = (jobject **)realloc(v->vector, v->size * sizeof(jobject*));
+    printf("XXX 6\n");
+  }
+  printf("XXX 7\n");
+  v->vector[v->used++] = obj;
+  printf("XXX 8\n");
 }
 
-void freeAllocVector(AllocVector *l) {
+void freeAllocVector(AllocVector **vPtr) {
   int i;
-  for (i=0; i < l->used; i++) {
-    free(l->vector[i]);
-    l->vector[i] = NULL;
+  for (i=0; i < *vPtr->used; i++) {
+    free(*vPtr->vector[i]);
+    *vPtr->vector[i] = NULL;
   }
 
-  free(l->vector);
-  l->vector = NULL;
-  l->used = l->size = 0;
+  free(*vPtr->vector);
+  *vPtr->vector = NULL;
+
+  free(*vPtr);
+  *vPtr = NULL;
 }
 
 #ifdef __cplusplus

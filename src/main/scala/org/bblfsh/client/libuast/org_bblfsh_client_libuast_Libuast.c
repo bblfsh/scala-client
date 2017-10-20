@@ -8,9 +8,11 @@ extern "C" {
 #include "allocvector.h"
 
 #include "uast.h"
+// XXX
+#include <stdio.h>
 
 JavaVM *jvm;
-AllocVector allocVector;
+extern AllocVector *allocVector;
 
 static Uast *ctx;
 extern NodeIface iface;
@@ -19,13 +21,12 @@ extern NodeIface iface;
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jobject obj, jstring query) {
+  printf("XXX filter start\n");
   Nodes *nodes = NULL;
   jobject nodeList = NULL;
 
   if ((*env)->MonitorEnter(env, self) != JNI_OK)
     goto exit;
-
-  initAllocVector(&allocVector);
 
   jobject *node = &obj;
   nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
@@ -74,6 +75,7 @@ exit:
 
   (*env)->MonitorExit(env, self);
 
+  printf("XXX filter end\n");
   return immList;
 }
 

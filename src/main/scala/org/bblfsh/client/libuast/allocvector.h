@@ -8,18 +8,12 @@ extern "C" {
 #include <jni.h>
 
 // struct to track (malloc)ated objects
-typedef struct {
-  jobject **vector;
-  size_t used;
-  size_t size;
-} AllocVector;
+typedef struct _AllocVector AllocVector;
+extern AllocVector *allocVector;
 
+void trackAllocatedJObject(AllocVector *, jobject *);
 
-void initAllocVector(AllocVector *l);
-
-void trackAllocatedJObject(AllocVector *l, jobject *obj);
-
-void freeAllocVector(AllocVector *l);
+void freeAllocVector(AllocVector **);
 
 #ifdef __cplusplus
 }
