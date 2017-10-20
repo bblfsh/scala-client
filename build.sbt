@@ -1,6 +1,6 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.3.2"
+version := "1.3.3"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.3.0"
@@ -120,12 +120,6 @@ compileLibuast := {
         "-Isrc/libuast-native/  " +
         "-o lib/libscalauast.so " + 
         sourceFiles +
-        /*"src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +*/
-        /*"src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +*/
-        /*"src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +*/
-        /*"src/main/scala/org/bblfsh/client/libuast/alloclist.c " +*/
-        /*"src/libuast-native/uast.c " +*/
-        /*"src/libuast-native/roles.c " +*/
         xml2Conf + " "
     println(cmdLinux)
     val outLinux = cmdLinux !!
@@ -145,11 +139,6 @@ compileLibuast := {
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
             "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
             sourceFiles
-            /*"src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +*/
-            /*"src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +*/
-            /*"src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +*/
-            /*"src/main/scala/org/bblfsh/client/libuast/alloclist.c " +*/
-            /*"src/libuast-native/uast.c src/libuast-native/roles.c"*/
         println(cmdDarwin)
         val outDarwin = cmdDarwin !!
 

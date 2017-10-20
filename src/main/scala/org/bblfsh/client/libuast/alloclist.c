@@ -17,7 +17,7 @@ void initAllocList(AllocList *l, size_t initialSize) {
 void trackAllocatedJObject(AllocList *l, jobject *obj) {
   if (l->used == l->size) {
     l->size *= 2;
-    l->list = (jobject **)realloc(l->list, l->size * sizeof(int));
+    l->list = (jobject **)realloc(l->list, l->size * sizeof(jobject*));
   }
   l->list[l->used++] = obj;
 }
@@ -26,6 +26,7 @@ void freeAllocList(AllocList *l) {
   int i;
   for (i=0; i < l->used; i++) {
     free(l->list[i]);
+    l->list[i] = NULL;
   }
 
   free(l->list);
