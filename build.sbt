@@ -1,6 +1,6 @@
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.3.2"
+version := "1.3.3"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.3.0"
@@ -106,17 +106,20 @@ compileLibuast := {
 
     "mkdir ./lib" !
 
+    val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
+        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
+        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
+        "src/main/scala/org/bblfsh/client/libuast/objtrack.c " +
+        "src/libuast-native/uast.c " +
+        "src/libuast-native/roles.c "
+
     val cmdLinux:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
         "-I/usr/include " +
         "-I" + javaHome + "/include/ " +
         "-I" + javaHome + "/include/linux " +
         "-Isrc/libuast-native/  " +
         "-o lib/libscalauast.so " + 
-        "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
-        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-        "src/libuast-native/uast.c " +
-        "src/libuast-native/roles.c " +
+        sourceFiles +
         xml2Conf + " "
     println(cmdLinux)
     val outLinux = cmdLinux !!
@@ -126,7 +129,6 @@ compileLibuast := {
     val osxHome = System.getenv("OSXCROSS_PATH")
 
     if (osxHome != null && !osxHome.isEmpty) {
-
         // Compile the lib
         val cmdDarwin = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
             "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
@@ -135,10 +137,7 @@ compileLibuast := {
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
             "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
-            "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-            "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
-            "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-            "src/libuast-native/uast.c src/libuast-native/roles.c"
+            sourceFiles
         println(cmdDarwin)
         val outDarwin = cmdDarwin !!
 
@@ -146,7 +145,6 @@ compileLibuast := {
 
     } else {
         println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
-
     }
 }
 

@@ -3,6 +3,7 @@ extern "C" {
 #endif
 
 #include "jni_utils.h"
+#include "objtrack.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -85,6 +86,7 @@ const char *AsNativeStr(jstring jstr) {
 jobject *ToObjectPtr(jobject *object) {
   jobject *copy = malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
+  trackObject(copy);
   return copy;
 }
 

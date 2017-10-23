@@ -5,10 +5,12 @@ extern "C" {
 #include "org_bblfsh_client_libuast_Libuast.h"
 #include "jni_utils.h"
 #include "nodeiface.h"
+#include "objtrack.h"
 
 #include "uast.h"
 
 JavaVM *jvm;
+
 static Uast *ctx;
 extern NodeIface iface;
 
@@ -18,9 +20,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jobject obj, jstring query) {
   Nodes *nodes = NULL;
   jobject nodeList = NULL;
-
-  if ((*env)->MonitorEnter(env, self) != JNI_OK)
-    goto exit;
 
   jobject *node = &obj;
   nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
@@ -43,8 +42,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   if ((*env)->ExceptionOccurred(env) || !nodeList)
     goto exit;
 
-  int i;
-  for (i= 0; i < len; i++) {
+  for (int i= 0; i < len; i++) {
     jobject *n = (jobject *) NodeAt(nodes, i);
     if (!n)
       continue;
@@ -55,6 +53,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   }
 
 exit:
+  freeObjects();
+
   if (nodes)
     NodesFree(nodes);
 
@@ -64,8 +64,6 @@ exit:
     // Convert to immutable list
     immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
-
-  (*env)->MonitorExit(env, self);
 
   return immList;
 }
