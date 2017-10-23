@@ -42,8 +42,7 @@ void freeObjects() {
   if (_allocVector == NULL)
     return; // No object ever tracked thus not initialized
 
-  int i;
-  for (i=0; i < _allocVector->used; i++) {
+  for (int i=0; i < _allocVector->used; i++) {
     free(_allocVector->vector[i]);
     _allocVector->vector[i] = NULL;
   }
