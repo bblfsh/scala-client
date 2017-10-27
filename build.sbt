@@ -122,14 +122,17 @@ compileLibuast := {
         sourceFiles +
         xml2Conf + " "
     println(cmdLinux)
-    val outLinux = cmdLinux !!
 
-    println("GCC-Linux output:\n" + outLinux)
+    val outLinux = cmdLinux !
 
+    if (outLinux != 0) {
+      throw new IllegalStateException("Linux build failed (see previous messages)")
+    }
+
+    // cross-compile the lib for macOS
     val osxHome = System.getenv("OSXCROSS_PATH")
 
     if (osxHome != null && !osxHome.isEmpty) {
-        // Compile the lib
         val cmdDarwin = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
             "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
             "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
@@ -138,10 +141,12 @@ compileLibuast := {
             "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
             "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
             sourceFiles
-        println(cmdDarwin)
-        val outDarwin = cmdDarwin !!
 
-        println("Clang-Darwin output:\n" + outDarwin)
+        val outDarwin = cmdDarwin !
+
+        if (outDarwin != 0) {
+          throw new IllegalStateException("macOS build failed (see previous messages)")
+        }
 
     } else {
         println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
