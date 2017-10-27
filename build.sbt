@@ -1,3 +1,5 @@
+import sys.process._
+
 name := "bblfsh-client"
 organization := "org.bblfsh"
 version := "1.3.4"
@@ -98,12 +100,6 @@ compileLibuast := {
 
     println("Compiling libuast bindings...")
 
-    var javaHome = System.getenv("JAVA_HOME")
-    if (javaHome == null) 
-        javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
-        
-    val xml2Conf = "xml2-config --cflags --libs" !!
-
     "mkdir ./lib" !
 
     val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
@@ -113,39 +109,60 @@ compileLibuast := {
         "src/libuast-native/uast.c " +
         "src/libuast-native/roles.c "
 
-    val cmdLinux:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
-        "-I/usr/include " +
-        "-I" + javaHome + "/include/ " +
-        "-I" + javaHome + "/include/linux " +
-        "-Isrc/libuast-native/  " +
-        "-o lib/libscalauast.so " + 
-        sourceFiles +
-        xml2Conf + " "
-    println(cmdLinux)
-    val outLinux = cmdLinux !!
+    compileLinux(sourceFiles)
+    compileMacOS(sourceFiles)
+}
 
-    println("GCC-Linux output:\n" + outLinux)
+def compileLinux(sourceFiles: String) = {
+  import sys.process._
 
-    val osxHome = System.getenv("OSXCROSS_PATH")
+  var javaHome = System.getenv("JAVA_HOME")
+  if (javaHome == null) {
+    javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
+  }
+  val xml2Conf = "xml2-config --cflags --libs" !!
 
-    if (osxHome != null && !osxHome.isEmpty) {
-        // Compile the lib
-        val cmdDarwin = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
-            "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
-            "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
-            "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
-            "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
-            "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
-            "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
-            sourceFiles
-        println(cmdDarwin)
-        val outDarwin = cmdDarwin !!
+  val cmd:String = "gcc -shared -Wall -fPIC -O2 -std=gnu99 " +
+    "-I/usr/include " +
+    "-I" + javaHome + "/include/ " +
+    "-I" + javaHome + "/include/linux " +
+    "-Isrc/libuast-native/  " +
+    "-o lib/libscalauast.so " + 
+    sourceFiles +
+    xml2Conf + " "
 
-        println("Clang-Darwin output:\n" + outDarwin)
+  checkedProcess(cmd, "macOS build")
+}
 
-    } else {
-        println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
-    }
+def compileMacOS(sourceFiles: String): Unit = {
+  val osxHome = System.getenv("OSXCROSS_PATH")
+
+  if (osxHome == null || osxHome.isEmpty) {
+    println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
+    return
+  }
+
+  val cmd = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
+      "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
+      "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
+      "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
+      "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
+      "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
+      "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
+      sourceFiles
+
+  checkedProcess(cmd, "macOS build")
+} 
+
+def checkedProcess(cmd: String, name: String) {
+  import sys.process._
+
+  println(cmd)
+  val out = cmd !
+
+  if (out != 0) {
+    throw new IllegalStateException(name + " failed (see previous messages)")
+  }
 }
 
 mappings in (Compile, packageBin) += {
