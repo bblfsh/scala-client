@@ -100,6 +100,10 @@ or if you want to use a XPath query:
 ```
 java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py -q "//Import[@roleImport]" 
 ```
+
+Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)
+guide section to learn more about babelfish clients and their query language.
+
 ### License
 
 Apache 2.0
