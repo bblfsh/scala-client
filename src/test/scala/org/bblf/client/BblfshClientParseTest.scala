@@ -10,7 +10,7 @@ import org.scalatest.BeforeAndAfter
 import java.io.File
 import scala.io.Source
 
-class BblfshClientTest extends FunSuite with BeforeAndAfter {
+class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
 
   val client = BblfshClient("0.0.0.0", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
