@@ -29,7 +29,9 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     parsed
   }
 
-  // proxy to the static method for backward compatibility
+  /**
+   * Proxy for Bblfsh.filter / Node.filter, provided for backward compatibility.
+   */
   def filter(node: Node, query: String): List[Node] = {
     BblfshClient.filter(node, query)
   }
