@@ -10,7 +10,7 @@ import org.scalatest.BeforeAndAfter
 import java.io.File
 import scala.io.Source
 
-class BblfshClientParseNativeTest extends FunSuite with BeforeAndAfter {
+class BblfshClientNativeParseTest extends FunSuite with BeforeAndAfter {
 
   val client = BblfshClient("0.0.0.0", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
@@ -19,7 +19,7 @@ class BblfshClientParseNativeTest extends FunSuite with BeforeAndAfter {
   var rootNode: String = _
 
   before {
-    resp = client.parseNative(fileName, fileContent)
+    resp = client.nativeParse(fileName, fileContent)
     
     rootNode = resp.ast
   }

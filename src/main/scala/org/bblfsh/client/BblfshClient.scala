@@ -30,7 +30,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     stub.parse(req)
   }
 
-  def parseNative(name: String, content: String, lang: String = "",
+  def nativeParse(name: String, content: String, lang: String = "",
                   encoding: Encoding = Encoding.UTF8): NativeParseResponse = {
     // assume content is already encoded in one of:
     // https://github.com/bblfsh/sdk/blob/master/protocol/protocol.go#L68
