@@ -2,8 +2,10 @@ package org.bblfsh.client
 
 import org.bblfsh.client.libuast.Libuast
 
-import gopkg.in.bblfsh.sdk.v1.protocol.generated.{Encoding, ParseRequest, 
-                                                  ProtocolServiceGrpc, ParseResponse}
+import gopkg.in.bblfsh.sdk.v1.protocol.generated.{Encoding, ProtocolServiceGrpc,
+                                                  ParseRequest, ParseResponse,
+                                                  NativeParseRequest, NativeParseResponse,
+                                                  VersionRequest, VersionResponse}
 import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 
 import io.grpc.ManagedChannelBuilder
@@ -25,8 +27,23 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
                            content = content,
                            language = BblfshClient.normalizeLanguage(lang),
                            encoding = encoding)
-    val parsed = stub.parse(req)
-    parsed
+    stub.parse(req)
+  }
+
+  def parseNative(name: String, content: String, lang: String = "",
+                  encoding: Encoding = Encoding.UTF8): NativeParseResponse = {
+    // assume content is already encoded in one of:
+    // https://github.com/bblfsh/sdk/blob/master/protocol/protocol.go#L68
+    val req = NativeParseRequest(filename = name,
+                                 content = content,
+                                 language = BblfshClient.normalizeLanguage(lang),
+                                 encoding = encoding)
+    stub.nativeParse(req)
+  }
+
+  def version(): VersionResponse = {
+    val req = VersionRequest()
+    stub.version(req)
   }
 
   /**
@@ -41,7 +58,7 @@ object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024
   private val libuast = new Libuast
 
-  def apply(host: String, port: Int, 
+  def apply(host: String, port: Int,
             maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE): BblfshClient =
     new BblfshClient(host, port, maxMsgSize)
 
