@@ -9,7 +9,7 @@ import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 import io.grpc.ManagedChannelBuilder
 
 
-class BblfshClient(host: String, port: Int, maxMsgSize: Int) { 
+class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   private val channel = ManagedChannelBuilder
     .forAddress(host, port)
     .usePlaintext(true)
