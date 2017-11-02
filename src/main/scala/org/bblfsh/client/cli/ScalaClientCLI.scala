@@ -22,7 +22,7 @@ object ScalaClientCLI extends App {
 
   if (resp.errors.isEmpty) {
     if (query != null && query != "") {
-      println(client.filter(resp.uast.get, query))
+      println(BblfshClient.filter(resp.uast.get, query))
     } else {
       println(resp.uast.get)
     }
