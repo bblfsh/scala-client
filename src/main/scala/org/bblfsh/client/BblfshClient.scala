@@ -9,17 +9,16 @@ import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 import io.grpc.ManagedChannelBuilder
 
 
-class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
+class BblfshClient(host: String, port: Int, maxMsgSize: Int) { 
   private val channel = ManagedChannelBuilder
     .forAddress(host, port)
     .usePlaintext(true)
     .maxInboundMessageSize(maxMsgSize)
     .build()
   private val stub = ProtocolServiceGrpc.blockingStub(channel)
-  private val libuast = new Libuast
 
   def parse(name: String, content: String, lang: String = "", 
-            encoding: Encoding = Encoding.UTF8) = {
+            encoding: Encoding = Encoding.UTF8): ParseResponse = {
     // assume content is already encoded in one of:
     // https://github.com/bblfsh/sdk/blob/master/protocol/protocol.go#L68
     val req = ParseRequest(filename = name,
@@ -30,13 +29,15 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     parsed
   }
 
-  def filter(node: Node, query: String): List[Node] = Libuast.synchronized {
-    libuast.filter(node, query)
+  // proxy to the static method for backward compatibility
+  def filter(node: Node, query: String): List[Node] = {
+    BblfshClient.filter(node, query)
   }
 }
 
 object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024
+  private val libuast = new Libuast
 
   def apply(host: String, port: Int, 
             maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE): BblfshClient =
@@ -52,6 +53,16 @@ object BblfshClient {
       .replace(" ", "-")
       .replace("+", "p")
       .replace("#", "sharp")
+  }
+
+  def filter(node: Node, query: String): List[Node] = Libuast.synchronized {
+    libuast.filter(node, query)
+  }
+
+  implicit class NodeMethods(val node: Node) {
+    def filter(query: String): List[Node] = {
+      BblfshClient.filter(node, query)
+    }
   }
 }
 
