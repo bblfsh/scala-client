@@ -7,7 +7,7 @@ extern "C" {
 
 #include <jni.h>
 
-void trackObject(jobject *);
+void trackObject(void *);
 
 void freeObjects();
 

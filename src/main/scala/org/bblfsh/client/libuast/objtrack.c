@@ -9,7 +9,7 @@ extern "C" {
 #include <stdlib.h>
 
 typedef struct {
-  jobject **vector;
+  void **vector;
   size_t used;
   size_t size;
 } AllocVector;
@@ -20,20 +20,20 @@ static void initAllocVector() {
   const int initialSize = 128;
 
   _allocVector = (AllocVector *)malloc(sizeof(AllocVector));
-  _allocVector->vector = (jobject **)malloc(initialSize * sizeof(jobject*));
+  _allocVector->vector = (void **)malloc(initialSize * sizeof(void*));
   _allocVector->used = 0;
   _allocVector->size = initialSize;
 }
 
-void trackObject(jobject *obj) {
+void trackObject(void *obj) {
   if (_allocVector == NULL || _allocVector->vector == NULL) {
     initAllocVector();
   }
 
   if (_allocVector->used == _allocVector->size) {
     _allocVector->size *= 2;
-    _allocVector->vector = (jobject **)realloc(_allocVector->vector,
-                           _allocVector->size * sizeof(jobject*));
+    _allocVector->vector = (void **)realloc(_allocVector->vector,
+                           _allocVector->size * sizeof(void*));
   }
   _allocVector->vector[_allocVector->used++] = obj;
 }

@@ -75,6 +75,7 @@ const char *AsNativeStr(jstring jstr) {
 
   // str must be copied to deref the java string before return
   const char *cstr = strdup(tmp);
+  trackObject((void *)cstr);
 
   (*env)->ReleaseStringUTFChars(env, jstr, tmp);
   if ((*env)->ExceptionOccurred(env))
@@ -86,7 +87,7 @@ const char *AsNativeStr(jstring jstr) {
 jobject *ToObjectPtr(jobject *object) {
   jobject *copy = malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
-  trackObject(copy);
+  trackObject((void *)copy);
   return copy;
 }
 
