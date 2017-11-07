@@ -5,7 +5,7 @@ organization := "org.bblfsh"
 version := "1.5.1"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.3.0"
+val libuastVersion = "v1.4.1"
 
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
