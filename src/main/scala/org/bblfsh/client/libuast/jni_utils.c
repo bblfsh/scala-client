@@ -239,6 +239,18 @@ int ReadLen(const jobject *node, const char *property) {
   return (int)IntMethod(env, "length", "()I", CLS_SEQ, &childSeq);
 }
 
+void ThrowException(const char* message) {
+  JNIEnv *env = getJNIEnv();
+  if (!env)
+    return;
+
+  jclass jcls = (*env)->FindClass(env, "java/lang/Exception");
+  if ((*env)->ExceptionCheck(env) == JNI_TRUE)
+    return;
+
+  (*env)->ThrowNew(env, jcls, message);
+}
+
 #ifdef __cplusplus
 }
 #endif
