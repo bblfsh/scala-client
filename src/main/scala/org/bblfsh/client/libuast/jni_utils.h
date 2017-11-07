@@ -55,6 +55,8 @@ const char *ReadStr(const jobject *, const char *);
 
 int ReadLen(const jobject *, const char *);
 
+void ThrowException(const char *);
+
 #ifdef __cplusplus
 }
 #endif

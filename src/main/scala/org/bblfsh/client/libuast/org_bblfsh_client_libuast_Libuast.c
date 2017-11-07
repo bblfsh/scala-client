@@ -23,33 +23,33 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
 
   jobject *node = &obj;
   nodeList = NewJavaObject(env, CLS_MUTLIST, "()V");
-  if ((*env)->ExceptionOccurred(env) || !nodeList) {
+  if ((*env)->ExceptionCheck(env) == JNI_TRUE || !nodeList) {
     nodeList = NULL;
     goto exit;
   }
 
   const char *cstr = AsNativeStr(query);
-  if ((*env)->ExceptionOccurred(env) || !cstr)
+  if ((*env)->ExceptionCheck(env) == JNI_TRUE || !cstr) {
     goto exit;
+  }
 
   nodes = UastFilter(ctx, node, cstr);
-  if (!nodes)
+  if (!nodes) {
+    ThrowException(LastError());
     goto exit;
+  }
 
-  int len = NodesSize(nodes);
-
-  // Instantiate a MutableList and append the elements
-  if ((*env)->ExceptionOccurred(env) || !nodeList)
-    goto exit;
-
-  for (int i= 0; i < len; i++) {
+  for (int i = 0; i < NodesSize(nodes); i++) {
     jobject *n = (jobject *) NodeAt(nodes, i);
-    if (!n)
-      continue;
+    if (!n) {
+      ThrowException("Unable to access a node");
+      goto exit;
+    }
 
     ObjectMethod(env, "$plus$eq", METHOD_LIST_PLUSEQ, CLS_MUTLIST, &nodeList, *n);
-    if ((*env)->ExceptionOccurred(env))
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE) {
       goto exit;
+    }
   }
 
 exit:

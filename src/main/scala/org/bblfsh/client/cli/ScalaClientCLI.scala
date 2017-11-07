@@ -3,6 +3,7 @@ package org.bblfsh.client.cli
 import org.bblfsh.client.BblfshClient
 
 import scala.io.Source
+import scala.util.control.NonFatal
 
 object ScalaClientCLI extends App {
 
@@ -22,7 +23,11 @@ object ScalaClientCLI extends App {
 
   if (resp.errors.isEmpty) {
     if (query != null && query != "") {
-      println(BblfshClient.filter(resp.uast.get, query))
+      try {
+        println(BblfshClient.filter(resp.uast.get, query))
+      } catch {
+        case NonFatal(e) => print(f"Filter error: $e")
+      }
     } else {
       println(resp.uast.get)
     }
