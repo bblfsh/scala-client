@@ -2,7 +2,7 @@ import sys.process._
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.5.1"
+version := "1.5.2"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.4.1"
