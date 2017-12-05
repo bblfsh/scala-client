@@ -5,7 +5,7 @@ organization := "org.bblfsh"
 version := "1.5.3"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.4.1"
+val libuastVersion = "v1.5.0"
 
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
@@ -106,7 +106,7 @@ compileLibuast := {
         "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
         "src/main/scala/org/bblfsh/client/libuast/objtrack.c " +
-        "src/libuast-native/uast.c " +
+        "src/libuast-native/uast.cc " +
         "src/libuast-native/roles.c "
 
     compileLinux(sourceFiles)
