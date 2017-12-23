@@ -32,6 +32,7 @@ extern const char *CLS_MAP;
 extern const char *CLS_LIST;
 extern const char *CLS_MUTLIST;
 extern const char *CLS_ITERABLE;
+extern const char *CLS_LONG;
 
 JNIEnv *getJNIEnv();
 
@@ -40,6 +41,9 @@ jobject *ToObjectPtr(jobject*);
 const char *AsNativeStr(jstring);
 
 jint IntMethod(JNIEnv *, const char *, const char *, const char *, const jobject *);
+
+jlong LongMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
+               const jobject *object);
 
 jboolean BooleanMethod(JNIEnv *, const char *, const char *, const char *, const jobject *);
 

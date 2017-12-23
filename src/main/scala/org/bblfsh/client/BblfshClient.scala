@@ -78,6 +78,10 @@ object BblfshClient {
     libuast.filter(node, query)
   }
 
+  def iterator(node: Node, treeOrder: Int): Libuast.UastIterator = {
+    libuast.iterator(node, treeOrder)
+  }
+
   implicit class NodeMethods(val node: Node) {
     def filter(query: String): List[Node] = {
       BblfshClient.filter(node, query)

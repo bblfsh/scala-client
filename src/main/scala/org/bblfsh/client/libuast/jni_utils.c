@@ -39,6 +39,8 @@ const char *CLS_MAP = "scala/collection/Map";
 const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
+// XXX
+const char *CLS_LONG = "java/lang/Long";
 
 extern JavaVM *jvm;
 
@@ -91,7 +93,6 @@ jobject *ToObjectPtr(jobject *object) {
   return copy;
 }
 
-
 static jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                    const char *className, const jobject *object) {
   jclass cls = (*env)->FindClass(env, className);
@@ -121,13 +122,30 @@ static jfieldID FieldID(JNIEnv *env, const char *className, const char *field,
 
   return fId;
 }
+
 jint IntMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
                const jobject *object) {
   jmethodID mId = MethodID(env, method, signature, className, object);
   if ((*env)->ExceptionOccurred(env) || !mId)
     return 0;
 
+  printf("XXX IntMethod CRASH HERE, object ptr: %p, mId: %p\n", object, mId);
+  // XXX the object doesnt have the same addr here as in the previous calls
   jint res = (*env)->CallIntMethod(env, *object, mId);
+  if ((*env)->ExceptionOccurred(env)) {
+    return 0;
+  }
+
+  return res;
+}
+
+jlong LongMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
+               const jobject *object) {
+  jmethodID mId = MethodID(env, method, signature, className, object);
+  if ((*env)->ExceptionOccurred(env) || !mId)
+    return 0;
+
+  jlong res = (*env)->CallLongMethod(env, *object, mId);
   if ((*env)->ExceptionOccurred(env))
     return 0;
 
@@ -232,9 +250,11 @@ int ReadLen(const jobject *node, const char *property) {
   if ((*env)->ExceptionOccurred(env) || !cls)
     return 0;
 
+  printf("XXX jni_utils: CRASH HERE, node ptr: %p\n", node);
   jobject childSeq = ObjectField(env, CLS_NODE, node, property, TYPE_SEQ);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  if ((*env)->ExceptionOccurred(env) || !childSeq) {
     return 0;
+  }
 
   return (int)IntMethod(env, "length", "()I", CLS_SEQ, &childSeq);
 }

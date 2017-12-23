@@ -105,11 +105,12 @@ static const char *Token(const void *node) {
   return ReadStr((jobject*)node, "token");
 }
 
-static int ChildrenSize(const void *node) {
+static size_t ChildrenSize(const void *node) {
+  printf("XXX CRASH HERE node ptr in ChildrenSize: %p\n", node);
   return ReadLen((jobject*)node, "children");
 }
 
-static int RolesSize(const void *node) {
+static size_t RolesSize(const void *node) {
   return ReadLen((jobject*)node, "roles");
 }
 
@@ -130,7 +131,7 @@ static void *ChildAt(const void *_node, int index) {
   return ToObjectPtr(&child);
 }
 
-static int PropertiesSize(const void *_node) {
+static size_t PropertiesSize(const void *_node) {
   JNIEnv *env = getJNIEnv();
   if (!env)
     return 0;

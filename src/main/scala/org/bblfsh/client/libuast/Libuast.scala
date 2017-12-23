@@ -1,6 +1,7 @@
 package org.bblfsh.client.libuast
 
 import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
+import scala.collection.Iterator
 import java.io.File
 import java.nio.file.Paths
 
@@ -8,6 +9,36 @@ import org.apache.commons.io.{IOUtils, FileUtils}
 
 object Libuast {
   final var loaded = false
+
+  class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
+    private var closed = false
+    private var iterPtr: Long = newIterator(node, treeOrder)
+
+    def getXXXIter(): Long = {
+      iterPtr
+    }
+
+    override def hasNext(): Boolean = {
+      !closed && iterPtr.longValue != 0
+    }
+
+    override def next(): Node = {
+      println("XXX iterPtr on next: ")
+      println(iterPtr)
+      nextIterator(iterPtr)
+    }
+
+    def close() = {
+      if (!closed) {
+        disposeIterator(iterPtr)
+        closed = true
+      }
+    }
+
+    @native def newIterator(node: Node, treeOrder: Int): Long
+    @native def nextIterator(ptr: Long): Node
+    @native def disposeIterator(ptr: Long)
+  }
 
   // Extract the native module from the jar
   private final def loadBinaryLib(name: String) = {
@@ -39,6 +70,10 @@ class Libuast {
     if (!Libuast.loaded) {
       Libuast.loadBinaryLib("libscalauast")
     }
+  }
+
+  def iterator(node: Node, treeOrder: Int) = {
+    new Libuast.UastIterator(node, treeOrder)
   }
 
   @native def filter(node: Node, query: String): List[Node]
