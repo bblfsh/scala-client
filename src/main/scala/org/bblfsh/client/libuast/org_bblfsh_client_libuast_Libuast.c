@@ -2,62 +2,113 @@
 #include "jni_utils.h"
 #include "nodeiface.h"
 #include "objtrack.h"
-#include "stdio.h" // XXX
+
+#include <stdio.h> // XXX
 
 #include "uast.h"
 
+// XXX remove
 JavaVM *jvm;
-
 static Uast *ctx;
-extern NodeIface iface;
 
 //// Exported Java functions ////
 
-// 00024 = "$" in .class files == Inner class reference
-JNIEXPORT jlong JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_newIterator
-  (JNIEnv *env, jobject self, jobject obj, int treeOrder) {
+jobject *copyReferencedNode(JNIEnv *env, jobject node) {
+  // jobject itself is a opaque struct with a pointer and the pointed obj is deallocated
+  // at the end so we need to increase the global ref and copy the returned jobject
+  // XXX Delete Ref after usage,
+  jobject ref = (*env)->NewGlobalRef(env, node);
+  if ((*env)->ExceptionCheck(env) == JNI_TRUE || !ref) {
+    return NULL;
+  }
 
-    /*void *node = (void *)&obj;*/
-    void *node = ToObjectPtr(&obj);
-    UastIterator *iter = UastIteratorNew(ctx, node, (TreeOrder)treeOrder);
-    printf("XXX scala_c, iter: %ld\n", iter);
+  jobject *nodeptr = malloc(sizeof(jobject));
+  memcpy(nodeptr, &ref, sizeof(jobject));
+  // XXX needs a specific version for iterators so allocs doesn't get mixer with filter's
+  // ones
+  trackObject((void *)nodeptr);
+  return nodeptr;
+}
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_iterate
+  (JNIEnv *env, jobject self, jobject obj, jint treeOrder, jint iterations) {
+
+    UastIterator *iter = UastIteratorNew(ctx, &obj, (TreeOrder)treeOrder);
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE) {
+      return NULL;
+    }
     if (!iter) {
       ThrowException(LastError());
       return 0;
     }
 
-    return (jlong) iter;
+    jobject *next = NULL;
+
+    for (int i = 0; i <= iterations; i++) {
+      next = (jobject *)UastIteratorNext(iter);
+      if (next == NULL) {
+        break; // Return Optional Null instead
+      }
+    }
+
+    UastIteratorFree(iter);
+    return *next;
+}
+
+// 00024 = "$" in .class files == Inner class reference
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_newIterator
+  (JNIEnv *env, jobject self, jobject obj, int treeOrder) {
+
+    jobject *nodeptr = copyReferencedNode(env, obj);
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE || !nodeptr) {
+      return NULL;
+    }
+
+    UastIterator *iter = UastIteratorNew(ctx, nodeptr, (TreeOrder)treeOrder);
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE) {
+      return NULL;
+    }
+    if (!iter) {
+      ThrowException(LastError());
+      return 0;
+    }
+
+    return (*env)->NewDirectByteBuffer(env, iter, 0);
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_nextIterator
-  (JNIEnv *env, jobject self, jlong iteratorPtr) {
+  (JNIEnv *env, jobject self, jobject iteratorPtr) {
 
-    UastIterator *iter = (UastIterator*) iteratorPtr;
-    printf("XXX JNI::next CRASH HERE, iter: %ld\n", iter);
-    return *((jobject *)UastIteratorNext(iter));
-    /*jobject *node = (jobject *)UastIteratorNext(iter);*/
-    /*if (!node) {*/
-      /*printf("XXX K1\n");*/
-      /*ThrowException("Could not get next Node in interation");*/
-      /*return NULL;*/
-    /*}*/
+    UastIterator *iter = (UastIterator*) (*env)->GetDirectBufferAddress(env, iteratorPtr);
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE) {
+      return NULL;
+    }
+    if (!iter) {
+      ThrowException("Could not recover native iterator from UastIterator");
+      return NULL;
+    }
 
-    /*printf("XXX K2, need to copy the C node to a Java object\n");*/
-    /*return node;*/
+    jobject *retNode = (jobject *)UastIteratorNext(iter);
+    if (!retNode) printf("XXX retNode is null\n");
+    return *retNode;
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_disposeIterator
-  (JNIEnv *env, jobject self, jlong iteratorPtr) {
+  (JNIEnv *env, jobject self, jobject iteratorPtr) {
 
-    UastIterator *iter = (UastIterator*) iteratorPtr;
+    printf("XXX disposeIterator\n");
+    UastIterator *iter = (UastIterator*) (*env)->GetDirectBufferAddress(env, iteratorPtr);
+    if ((*env)->ExceptionCheck(env) == JNI_TRUE) {
+      return NULL;
+    }
     if (!iter) {
-      // leak, but nothing we can do about it
       ThrowException("Could not recover native iterator from UastIterator");
       return;
     }
 
     UastIteratorFree(iter);
-    freeObjects();
+    // XXX re-enable with specific version for iterators
+    /*freeObjects();*/
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter

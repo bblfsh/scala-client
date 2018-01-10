@@ -39,8 +39,6 @@ const char *CLS_MAP = "scala/collection/Map";
 const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
-// XXX
-const char *CLS_LONG = "java/lang/Long";
 
 extern JavaVM *jvm;
 
@@ -64,24 +62,28 @@ JNIEnv *getJNIEnv() {
 }
 
 const char *AsNativeStr(jstring jstr) {
-  if (!jstr)
+  if (!jstr) {
     return NULL;
+  }
 
   JNIEnv *env = getJNIEnv();
-  if (!env)
+  if (!env) {
     return NULL;
+  }
 
   const char *tmp = (*env)->GetStringUTFChars(env, jstr, 0);
-  if ((*env)->ExceptionOccurred(env) || !tmp)
+  if ((*env)->ExceptionOccurred(env) || !tmp) {
     return NULL;
+  }
 
   // str must be copied to deref the java string before return
   const char *cstr = strdup(tmp);
   trackObject((void *)cstr);
 
   (*env)->ReleaseStringUTFChars(env, jstr, tmp);
-  if ((*env)->ExceptionOccurred(env))
+  if ((*env)->ExceptionOccurred(env)) {
     return NULL;
+  }
 
   return cstr;
 }
@@ -125,12 +127,11 @@ static jfieldID FieldID(JNIEnv *env, const char *className, const char *field,
 
 jint IntMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
                const jobject *object) {
+
   jmethodID mId = MethodID(env, method, signature, className, object);
   if ((*env)->ExceptionOccurred(env) || !mId)
     return 0;
 
-  printf("XXX IntMethod CRASH HERE, object ptr: %p, mId: %p\n", object, mId);
-  // XXX the object doesnt have the same addr here as in the previous calls
   jint res = (*env)->CallIntMethod(env, *object, mId);
   if ((*env)->ExceptionOccurred(env)) {
     return 0;
@@ -184,12 +185,14 @@ jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
 jobject ObjectField(JNIEnv *env, const char *className, const jobject *obj,
                     const char *field, const char *typeSignature) {
   jfieldID valueId = FieldID(env, className, field, typeSignature);
-  if ((*env)->ExceptionOccurred(env) || !valueId)
+  if ((*env)->ExceptionOccurred(env) || !valueId) {
     return NULL;
+  }
 
   jobject value = (*env)->GetObjectField(env, *obj, valueId);
-  if ((*env)->ExceptionOccurred(env) || !value)
+  if ((*env)->ExceptionOccurred(env) || !value) {
     return NULL;
+  }
 
   return value;
 }
@@ -235,8 +238,9 @@ const char *ReadStr(const jobject *node, const char *property) {
     return NULL;
 
   jstring jvstr = (jstring)ObjectField(env, CLS_NODE, node, property, TYPE_STR);
-  if ((*env)->ExceptionOccurred(env) || !jvstr)
+  if ((*env)->ExceptionOccurred(env) || !jvstr) {
     return NULL;
+  }
 
   return AsNativeStr(jvstr);
 }
@@ -250,7 +254,6 @@ int ReadLen(const jobject *node, const char *property) {
   if ((*env)->ExceptionOccurred(env) || !cls)
     return 0;
 
-  printf("XXX jni_utils: CRASH HERE, node ptr: %p\n", node);
   jobject childSeq = ObjectField(env, CLS_NODE, node, property, TYPE_SEQ);
   if ((*env)->ExceptionOccurred(env) || !childSeq) {
     return 0;

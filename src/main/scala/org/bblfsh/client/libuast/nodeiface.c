@@ -106,7 +106,6 @@ static const char *Token(const void *node) {
 }
 
 static size_t ChildrenSize(const void *node) {
-  printf("XXX CRASH HERE node ptr in ChildrenSize: %p\n", node);
   return ReadLen((jobject*)node, "children");
 }
 
