@@ -12,25 +12,28 @@ object Libuast {
   final var loaded = false
 
   class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
-    private var finished: Boolean = false
-    private var iterations: Int = 0
+    private var closed = false
+    private var rootNode = node
+    private var iterPtr: ByteBuffer = newIterator(rootNode, treeOrder)
 
     override def hasNext(): Boolean = {
-      !finished
+      !closed
     }
 
-    override def next(): Node = Libuast.synchronized {
-      val next = iterate(node, treeOrder, iterations)
-      // XXX set finished to true if null
-      iterations += 1
-      next
+    override def next(): Node = {
+      nextIterator(iterPtr)
     }
 
-    def reset() = {
-      iterations = 0
+    def close() = {
+      if (!closed) {
+        disposeIterator(iterPtr)
+        closed = true
+      }
     }
 
-    @native def iterate(node: Node, treeOrder: Int, iterations: Int): Node
+    @native def newIterator(node: Node, treeOrder: Int): ByteBuffer
+    @native def nextIterator(ptr: ByteBuffer): Node
+    @native def disposeIterator(ptr: ByteBuffer)
   }
 
   // Extract the native module from the jar

@@ -1,10 +1,6 @@
 #ifndef _Included_org_bblfsh_client_libuast_Libuast_jni_utils
 #define _Included_org_bblfsh_client_libuast_Libuast_jni_utils
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <jni.h>
 
 // Defined in utils.c
@@ -61,7 +57,4 @@ int ReadLen(const jobject *, const char *);
 
 void ThrowException(const char *);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -1,7 +1,3 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "objtrack.h"
 
 #include <jni.h>
@@ -53,7 +49,3 @@ void freeObjects() {
   free(_allocVector);
   _allocVector = NULL;
 }
-
-#ifdef __cplusplus
-}
-#endif

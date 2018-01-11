@@ -103,10 +103,10 @@ compileLibuast := {
 
     "mkdir ./lib" !
 
-    val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.c " +
-        "src/main/scala/org/bblfsh/client/libuast/jni_utils.c " +
-        "src/main/scala/org/bblfsh/client/libuast/nodeiface.c " +
-        "src/main/scala/org/bblfsh/client/libuast/objtrack.c " +
+    val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.cc " +
+        "src/main/scala/org/bblfsh/client/libuast/jni_utils.cc " +
+        "src/main/scala/org/bblfsh/client/libuast/nodeiface.cc " +
+        "src/main/scala/org/bblfsh/client/libuast/objtrack.cc " +
         "src/libuast-native/uast.cc " +
         "src/libuast-native/roles.c "
 
@@ -123,7 +123,7 @@ def compileLinux(sourceFiles: String) = {
   }
   val xml2Conf = "xml2-config --cflags --libs" !!
 
-  val cmd:String = "gcc -shared -Wall -fPIC -O2 " +
+  val cmd:String = "g++ -shared -Wall -fPIC -O2 " +
     "-I/usr/include " +
     "-I" + javaHome + "/include/ " +
     "-I" + javaHome + "/include/linux " +
