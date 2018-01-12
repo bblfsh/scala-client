@@ -13,8 +13,7 @@ object Libuast {
 
   class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
     private var closed = false
-    private var rootNode = node
-    private var iterPtr: ByteBuffer = newIterator(rootNode, treeOrder)
+    private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
 
     override def hasNext(): Boolean = {
       !closed

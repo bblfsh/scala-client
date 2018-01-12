@@ -106,7 +106,7 @@ compileLibuast := {
     val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.cc " +
         "src/main/scala/org/bblfsh/client/libuast/jni_utils.cc " +
         "src/main/scala/org/bblfsh/client/libuast/nodeiface.cc " +
-        "src/main/scala/org/bblfsh/client/libuast/objtrack.cc " +
+        "src/main/scala/org/bblfsh/client/libuast/memtracker.cc " +
         "src/libuast-native/uast.cc " +
         "src/libuast-native/roles.c "
 

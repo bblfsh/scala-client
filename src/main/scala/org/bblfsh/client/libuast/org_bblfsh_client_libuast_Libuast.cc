@@ -1,45 +1,45 @@
 #include "org_bblfsh_client_libuast_Libuast.h"
 #include "jni_utils.h"
 #include "nodeiface.h"
-#include "objtrack.h"
+#include "memtracker.h"
 
-#include <cstdio> // XXX
-#include <stdexcept>
 #include <cstring>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 #include "uast.h"
 
-// XXX remove
 JavaVM *jvm;
 static Uast *ctx;
-
-//// Exported Java functions ////
+// Keep track of the current iterator for copyRefNode (since we can't pass the iter as
+// argument)
+MemTracker memTracker;
 
 static void *copyRefNode(void *node) {
   JNIEnv *env = getJNIEnv();
   // jobject itself is a opaque struct with a pointer and the pointed obj is deallocated
   // at the end so we need to increase the global ref and copy the returned jobject
-  // XXX Delete Ref after usage, free memory on dispose
   jobject ref = env->NewGlobalRef(*((jobject*)node));
   if (env->ExceptionCheck() == JNI_TRUE || !ref) {
     return NULL;
   }
 
-  jobject *nodeptr = (jobject*)malloc(sizeof(jobject));
+  void *nodeptr = (void*)malloc(sizeof(jobject));
   memcpy(nodeptr, &ref, sizeof(jobject));
 
-  // XXX needs a specific version for iterators so allocs doesn't get mixer with filter's
-  // ones
-  //trackObject((void *)nodeptr);
-  return (void*)nodeptr;
+  memTracker.AddIterRefNode(nodeptr, ref);
+  return nodeptr;
 }
+
+//// Exported Java functions ////
 
 // 00024 = "$" in .class files == Inner class reference
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_newIterator
   (JNIEnv *env, jobject self, jobject obj, int treeOrder) {
 
+    memTracker.ClearCurrentIterator();
     jobject *nodeptr = &obj;
-
     UastIterator *iter = UastIteratorNewWithTransformer(ctx, nodeptr, (TreeOrder)treeOrder,
                                                         copyRefNode);
     if (env->ExceptionCheck() == JNI_TRUE) {
@@ -49,7 +49,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterat
       ThrowException(LastError());
       return 0;
     }
-
+    memTracker.SetCurrentIterator(iter, true);
     return env->NewDirectByteBuffer(iter, 0);
 }
 
@@ -64,9 +64,9 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterat
       ThrowException("Could not recover native iterator from UastIterator");
       return NULL;
     }
+    memTracker.SetCurrentIterator(iter, false);
 
     jobject *retNode = (jobject *)UastIteratorNext(iter);
-    if (!retNode) printf("XXX retNode is null\n");
     return *retNode;
 }
 
@@ -82,13 +82,14 @@ JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_
       return;
     }
 
+    memTracker.DisposeMem(env);
     UastIteratorFree(iter);
-    // XXX re-enable with specific version for iterators
-    freeObjects();
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  memTracker.EnterFilter();
   Nodes *nodes = NULL;
   jobject nodeList = NULL;
 
@@ -125,7 +126,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     }
   } catch (std::runtime_error&) {}
 
-  freeObjects();
+  memTracker.DisposeMem(env);
 
   if (nodes)
     NodesFree(nodes);
@@ -137,6 +138,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
+  memTracker.ExitFilter();
   return immList;
 }
 

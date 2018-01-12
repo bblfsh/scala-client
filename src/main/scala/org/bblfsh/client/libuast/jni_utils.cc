@@ -1,5 +1,5 @@
 #include "jni_utils.h"
-#include "objtrack.h"
+#include "memtracker.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -37,6 +37,7 @@ const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
 
 extern JavaVM *jvm;
+extern MemTracker memTracker;
 
 //// JNI helpers
 JNIEnv *getJNIEnv() {
@@ -74,7 +75,7 @@ const char *AsNativeStr(jstring jstr) {
 
   // str must be copied to deref the java string before return
   const char *cstr = strdup(tmp);
-  trackObject((void *)cstr);
+  memTracker.AddUtilsNode((void*)cstr);
 
   env->ReleaseStringUTFChars(jstr, tmp);
   if (env->ExceptionOccurred()) {
@@ -87,7 +88,7 @@ const char *AsNativeStr(jstring jstr) {
 jobject *ToObjectPtr(jobject *object) {
   jobject *copy = (jobject*)malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
-  trackObject((void *)copy);
+  memTracker.AddUtilsNode((void*)copy);
   return copy;
 }
 
