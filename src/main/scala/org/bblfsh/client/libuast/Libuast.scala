@@ -12,6 +12,7 @@ object Libuast {
   final var loaded = false
 
   class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
+
     private var closed = false
     private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
 

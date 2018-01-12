@@ -56,11 +56,17 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
 
 object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024
+
+  val PreOrder = 0
+  val PostOrder = 1
+  val LevelOrder = 2
+
   private val libuast = new Libuast
 
   def apply(host: String, port: Int,
             maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE): BblfshClient =
     new BblfshClient(host, port, maxMsgSize)
+
 
   def normalizeLanguage(lang: String): String = {
     if (lang == null) {

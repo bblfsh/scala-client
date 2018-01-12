@@ -141,48 +141,5 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
     assert(endPos.get.line == 1)
     assert(endPos.get.col == 45)
   }
-
-  test("PreOrder iterator") {
-    println("--------------------------------------------------------------")
-    val order = 0
-    var it = BblfshClient.iterator(rootNode, order)
-
-    assert(it.hasNext())
-    var n = it.next()
-    println(n.internalType)
-    assert(n.internalType == "CompilationUnit")
-
-    assert(it.hasNext())
-    n = it.next()
-    println(n.internalType)
-    assert(n.internalType == "PackageDeclaration")
-
-    assert(it.hasNext())
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-    n = it.next()
-    println(n.internalType)
-  }
-  
-  // XXX postorder and levelorder
-  // XXX test usage after close()
 }
 
