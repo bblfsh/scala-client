@@ -5,7 +5,7 @@ organization := "org.bblfsh"
 version := "1.5.3"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.6.0"
+val libuastVersion = "v1.7.0"
 
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
@@ -81,18 +81,17 @@ publishTo := {
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
-    // XXX
-    //import sys.process._
+    import sys.process._
 
-    //println("Downloading libuast...")
+    println("Downloading libuast...")
 
-    //f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
-    //"tar zxf libuast.tar.gz" #&&
-    //f"mv libuast-$libuastVersion%s libuast" #&&
-    //"rm -rf src/libuast-native" #&&
-    //"mv libuast/src/ src/libuast-native" #&&
-    //"rm -rf libuast" #&&
-    //"rm libuast.tar.gz" !
+    f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
+    "tar zxf libuast.tar.gz" #&&
+    f"mv libuast-$libuastVersion%s libuast" #&&
+    "rm -rf src/libuast-native" #&&
+    "mv libuast/src/ src/libuast-native" #&&
+    "rm -rf libuast" #&&
+    "rm libuast.tar.gz" !
 }
 
 val compileLibuast = TaskKey[Unit]("compileLibuast", "Compile libUAST")
