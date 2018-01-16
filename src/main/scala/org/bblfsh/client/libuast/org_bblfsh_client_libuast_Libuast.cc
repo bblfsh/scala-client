@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <stdexcept>
+#include <cstdlib>
 #include <unordered_map>
 #include <vector>
 
