@@ -1,9 +1,5 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "jni_utils.h"
-#include "objtrack.h"
+#include "memtracker.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -41,12 +37,13 @@ const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
 
 extern JavaVM *jvm;
+extern MemTracker memTracker;
 
 //// JNI helpers
 JNIEnv *getJNIEnv() {
   JNIEnv *pEnv = NULL;
 
-  switch ((*jvm)->GetEnv(jvm, (void **)&pEnv, JNI_VERSION_1_8))
+  switch (jvm->GetEnv((void **)&pEnv, JNI_VERSION_1_8))
   {
     case JNI_OK:
       // Thread is ready to use, nothing to do
@@ -54,7 +51,7 @@ JNIEnv *getJNIEnv() {
 
     case JNI_EDETACHED:
       // Thread is detached, need to attach
-      (*jvm)->AttachCurrentThread(jvm, (void **)&pEnv, NULL);
+      jvm->AttachCurrentThread((void **)&pEnv, NULL);
       break;
   }
 
@@ -62,44 +59,47 @@ JNIEnv *getJNIEnv() {
 }
 
 const char *AsNativeStr(jstring jstr) {
-  if (!jstr)
+  if (!jstr) {
     return NULL;
+  }
 
   JNIEnv *env = getJNIEnv();
-  if (!env)
+  if (!env) {
     return NULL;
+  }
 
-  const char *tmp = (*env)->GetStringUTFChars(env, jstr, 0);
-  if ((*env)->ExceptionOccurred(env) || !tmp)
+  const char *tmp = env->GetStringUTFChars(jstr, 0);
+  if (env->ExceptionOccurred() || !tmp) {
     return NULL;
+  }
 
   // str must be copied to deref the java string before return
   const char *cstr = strdup(tmp);
-  trackObject((void *)cstr);
+  memTracker.AddUtilsNode((void*)cstr);
 
-  (*env)->ReleaseStringUTFChars(env, jstr, tmp);
-  if ((*env)->ExceptionOccurred(env))
+  env->ReleaseStringUTFChars(jstr, tmp);
+  if (env->ExceptionOccurred()) {
     return NULL;
+  }
 
   return cstr;
 }
 
 jobject *ToObjectPtr(jobject *object) {
-  jobject *copy = malloc(sizeof(jobject));
+  jobject *copy = (jobject*)malloc(sizeof(jobject));
   memcpy(copy, object, sizeof(jobject));
-  trackObject((void *)copy);
+  memTracker.AddUtilsNode((void*)copy);
   return copy;
 }
 
-
 static jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                    const char *className, const jobject *object) {
-  jclass cls = (*env)->FindClass(env, className);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  jclass cls = env->FindClass(className);
+  if (env->ExceptionOccurred() || !cls)
     return NULL;
 
-  jmethodID mId = (*env)->GetMethodID(env, cls, method, signature);
-  if ((*env)->ExceptionOccurred(env))
+  jmethodID mId = env->GetMethodID(cls, method, signature);
+  if (env->ExceptionOccurred())
     return NULL;
 
   return mId;
@@ -107,28 +107,44 @@ static jmethodID MethodID(JNIEnv *env, const char *method, const char *signature
 
 static jfieldID FieldID(JNIEnv *env, const char *className, const char *field,
                         const char *typeSignature) {
-  jclass cls = (*env)->FindClass(env, className);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  jclass cls = env->FindClass(className);
+  if (env->ExceptionOccurred() || !cls)
     return NULL;
 
   // Note: printing the type from Scala to find the type needed for GetFieldID
   // third argument using getClass.getName sometimes return objects different
   // from the ones needed for the signature. To find the right type to use do
   // this from Scala: (instance).getClass.getDeclaredField("fieldName")
-  jfieldID fId = (*env)->GetFieldID(env, cls, field, typeSignature);
-  if ((*env)->ExceptionOccurred(env) || !fId)
+  jfieldID fId = env->GetFieldID(cls, field, typeSignature);
+  if (env->ExceptionOccurred() || !fId)
     return NULL;
 
   return fId;
 }
+
 jint IntMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
                const jobject *object) {
+
   jmethodID mId = MethodID(env, method, signature, className, object);
-  if ((*env)->ExceptionOccurred(env) || !mId)
+  if (env->ExceptionOccurred() || !mId)
     return 0;
 
-  jint res = (*env)->CallIntMethod(env, *object, mId);
-  if ((*env)->ExceptionOccurred(env))
+  jint res = env->CallIntMethod(*object, mId);
+  if (env->ExceptionOccurred()) {
+    return 0;
+  }
+
+  return res;
+}
+
+jlong LongMethod(JNIEnv *env, const char *method, const char *signature, const char *className,
+               const jobject *object) {
+  jmethodID mId = MethodID(env, method, signature, className, object);
+  if (env->ExceptionOccurred() || !mId)
+    return 0;
+
+  jlong res = env->CallLongMethod(*object, mId);
+  if (env->ExceptionOccurred())
     return 0;
 
   return res;
@@ -137,11 +153,11 @@ jint IntMethod(JNIEnv *env, const char *method, const char *signature, const cha
 jboolean BooleanMethod(JNIEnv *env, const char *method, const char *signature,
                        const char *className, const jobject *object) {
   jmethodID mId = MethodID(env, method, signature, className, object);
-  if ((*env)->ExceptionOccurred(env) || !mId)
+  if (env->ExceptionOccurred() || !mId)
     return false;
 
-  jboolean res = (*env)->CallBooleanMethod(env, *object, mId);
-  if ((*env)->ExceptionOccurred(env))
+  jboolean res = env->CallBooleanMethod(*object, mId);
+  if (env->ExceptionOccurred())
     return false;
 
   return res;
@@ -150,14 +166,14 @@ jboolean BooleanMethod(JNIEnv *env, const char *method, const char *signature,
 jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
                      const char *className, const jobject *object, ...) {
   jmethodID mId = MethodID(env, method, signature, className, object);
-  if ((*env)->ExceptionOccurred(env) || !mId)
-    return false;
+  if (env->ExceptionOccurred() || !mId)
+    return NULL;
 
   va_list varargs;
   va_start(varargs, object);
-  jobject res = (*env)->CallObjectMethodV(env, *object, mId, varargs);
+  jobject res = env->CallObjectMethodV(*object, mId, varargs);
   va_end(varargs);
-  if ((*env)->ExceptionOccurred(env) || !res)
+  if (env->ExceptionOccurred() || !res)
     return NULL;
 
   return res;
@@ -166,42 +182,44 @@ jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
 jobject ObjectField(JNIEnv *env, const char *className, const jobject *obj,
                     const char *field, const char *typeSignature) {
   jfieldID valueId = FieldID(env, className, field, typeSignature);
-  if ((*env)->ExceptionOccurred(env) || !valueId)
+  if (env->ExceptionOccurred() || !valueId) {
     return NULL;
+  }
 
-  jobject value = (*env)->GetObjectField(env, *obj, valueId);
-  if ((*env)->ExceptionOccurred(env) || !value)
+  jobject value = env->GetObjectField(*obj, valueId);
+  if (env->ExceptionOccurred() || !value) {
     return NULL;
+  }
 
   return value;
 }
 
 jint IntField(JNIEnv *env, const char *className, const jobject *obj, const char *field) {
   jfieldID valueId = FieldID(env, className, field, "I");
-  if ((*env)->ExceptionOccurred(env) || !valueId)
+  if (env->ExceptionOccurred() || !valueId)
     return 0;
 
-  jint value = (*env)->GetIntField(env, *obj, valueId);
-  if ((*env)->ExceptionOccurred(env) || !value)
+  jint value = env->GetIntField(*obj, valueId);
+  if (env->ExceptionOccurred() || !value)
     return 0;
 
   return value;
 }
 
 jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign, ...) {
-  jclass cls = (*env)->FindClass(env, className);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  jclass cls = env->FindClass(className);
+  if (env->ExceptionOccurred() || !cls)
     return NULL;
 
-  jmethodID initId = (*env)->GetMethodID(env, cls, "<init>", initSign);
-  if ((*env)->ExceptionOccurred(env) || !initId)
+  jmethodID initId = env->GetMethodID(cls, "<init>", initSign);
+  if (env->ExceptionOccurred() || !initId)
     return NULL;
 
   va_list varargs;
   va_start(varargs, initSign);
-  jobject instance = (*env)->NewObjectV(env, cls, initId, varargs);
+  jobject instance = env->NewObjectV(cls, initId, varargs);
   va_end(varargs);
-  if ((*env)->ExceptionOccurred(env) || !instance)
+  if (env->ExceptionOccurred() || !instance)
     return NULL;
 
   return instance;
@@ -212,13 +230,14 @@ const char *ReadStr(const jobject *node, const char *property) {
   if (!env)
     return NULL;
 
-  jclass cls = (*env)->FindClass(env, CLS_NODE);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  jclass cls = env->FindClass(CLS_NODE);
+  if (env->ExceptionOccurred() || !cls)
     return NULL;
 
   jstring jvstr = (jstring)ObjectField(env, CLS_NODE, node, property, TYPE_STR);
-  if ((*env)->ExceptionOccurred(env) || !jvstr)
+  if (env->ExceptionOccurred() || !jvstr) {
     return NULL;
+  }
 
   return AsNativeStr(jvstr);
 }
@@ -228,13 +247,14 @@ int ReadLen(const jobject *node, const char *property) {
   if (!env)
     return 0;
 
-  jclass cls = (*env)->FindClass(env, CLS_NODE);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  jclass cls = env->FindClass(CLS_NODE);
+  if (env->ExceptionOccurred() || !cls)
     return 0;
 
   jobject childSeq = ObjectField(env, CLS_NODE, node, property, TYPE_SEQ);
-  if ((*env)->ExceptionOccurred(env) || !cls)
+  if (env->ExceptionOccurred() || !childSeq) {
     return 0;
+  }
 
   return (int)IntMethod(env, "length", "()I", CLS_SEQ, &childSeq);
 }
@@ -244,13 +264,9 @@ void ThrowException(const char* message) {
   if (!env)
     return;
 
-  jclass jcls = (*env)->FindClass(env, "java/lang/Exception");
-  if ((*env)->ExceptionCheck(env) == JNI_TRUE)
+  jclass jcls = env->FindClass("java/lang/Exception");
+  if (env->ExceptionCheck() == JNI_TRUE)
     return;
 
-  (*env)->ThrowNew(env, jcls, message);
+  env->ThrowNew(jcls, message);
 }
-
-#ifdef __cplusplus
-}
-#endif

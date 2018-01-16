@@ -1,13 +1,13 @@
 /* Header for class org_bblfsh_client_libuast_Libuast */
-
 #ifndef _Included_org_bblfsh_client_libuast_Libuast
 #define _Included_org_bblfsh_client_libuast_Libuast
-
-#include <jni.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <jni.h>
+
 /*
  * Class:   org_bblfsh_client_libuast_Libuast
  * Method:  filter
@@ -16,7 +16,20 @@ extern "C" {
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *, jobject, jobject, jstring);
 
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_iterate
+  (JNIEnv *env, jobject self, jobject obj, int treeOrder, int iterations);
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_newIterator
+  (JNIEnv *, jobject, jobject, int);
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_nextIterator
+  (JNIEnv *, jobject, jobject);
+
+JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_disposeIterator
+  (JNIEnv *, jobject, jobject);
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved);
+
 #ifdef __cplusplus
 }
 #endif
