@@ -6,7 +6,9 @@ version := "1.5.3"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.7.0"
-
+val sdkVersion = "v1.9.2"
+val sdkMajor = "v1"
+val protoDir = "src/main/proto"
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
 
@@ -15,7 +17,7 @@ target in assembly := file("build")
 PB.targets in Compile := Seq(
   scalapb.gen() -> (sourceManaged in Compile).value
 )
-PB.protoSources in Compile := Seq(file("src/main/proto"))
+PB.protoSources in Compile := Seq(file(protoDir))
 
 libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
@@ -77,6 +79,26 @@ publishTo := {
     Some("snapshots" at nexus + "content/repositories/snapshots")
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+val getProtoFiles = TaskKey[Unit]("getProtoFiles", "Retrieve protobuf files")
+getProtoFiles := {
+    import sys.process._
+
+    println("Downloading and installing SDK protocol buffer files...")
+
+    val bblfshProto = f"$protoDir%s/gopkg.in/bblfsh"
+    val sdkProto = f"$bblfshProto%s/sdk.$sdkMajor%s"
+    f"rm -rf $bblfshProto%s" #&&
+    f"mkdir -p $sdkProto%s/protocol" #&&
+    f"mkdir -p $sdkProto%s/uast" !
+
+    val unzip_dir = "sdk-" + sdkVersion.substring(1)
+
+    f"curl -SL https://github.com/bblfsh/sdk/archive/$sdkVersion%s.tar.gz" #| "tar xz" #&&
+    f"cp $unzip_dir%s/protocol/generated.proto $sdkProto%s/protocol/" #&&
+    f"cp $unzip_dir%s/uast/generated.proto $sdkProto%s/uast/" #&&
+    f"rm -rf $unzip_dir%s" !
 }
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
@@ -172,5 +194,5 @@ mappings in (Compile, packageBin) += {
     (baseDirectory.value / "lib" / "libscalauast.dylib") -> "lib/libscalauast.dylib"
 }
 
-mainClass := Def.sequential(getLibuast, compileLibuast, (mainClass in Compile)).value
+mainClass := Def.sequential(getProtoFiles, getLibuast, compileLibuast, (mainClass in Compile)).value
 
