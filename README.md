@@ -87,6 +87,11 @@ val resp = client.parse(filename, fileContent)
 println(resp.uast.get)
 // Filtered response
 println(client.filter(resp.uast.get, "//Import[@roleImport]"))
+// Filtered responses using XPath functions returning types
+// other than NodeLists (Bool, Number, String):
+println(client.filterBool(resp.uast.get, "boolean(//*[@strtOffset or @endOffset])"))
+println(client.filterString(resp.uast.get, "name(//*[1])"))
+println(client.filterNumber(resp.uast.get, "count(//*)"))
 ```
 
 Command line:
