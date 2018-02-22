@@ -5,8 +5,8 @@ organization := "org.bblfsh"
 version := "1.5.3"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.7.0"
-val sdkVersion = "v1.9.2"
+val libuastVersion = "v1.13.0"
+val sdkVersion = "v1.8.2"
 val sdkMajor = "v1"
 val protoDir = "src/main/proto"
 
@@ -15,7 +15,7 @@ mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
 target in assembly := file("build")
 
 PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
+    scalapb.gen() -> (sourceManaged in Compile).value
 )
 PB.protoSources in Compile := Seq(file(protoDir))
 
@@ -195,4 +195,3 @@ mappings in (Compile, packageBin) += {
 }
 
 mainClass := Def.sequential(getProtoFiles, getLibuast, compileLibuast, (mainClass in Compile)).value
-

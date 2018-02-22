@@ -143,6 +143,84 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   return immList;
 }
 
+
+JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_libuast_Libuast_filterBool
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  jboolean ret = false;
+  memTracker.EnterFilter();
+
+  try {
+    jobject *node = &obj;
+    const char *cstr = AsNativeStr(query);
+    if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
+      throw std::runtime_error("");
+    }
+
+    bool ok;
+    ret = (jboolean)UastFilterBool(ctx, node, cstr, &ok);
+    if (!ok) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  memTracker.DisposeMem(env);
+  memTracker.ExitFilter();
+  return ret;
+}
+
+JNIEXPORT jdouble JNICALL Java_org_bblfsh_client_libuast_Libuast_filterNumber
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  jdouble ret = false;
+  memTracker.EnterFilter();
+
+  try {
+    jobject *node = &obj;
+    const char *cstr = AsNativeStr(query);
+    if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
+      throw std::runtime_error("");
+    }
+
+    bool ok;
+    ret = (jdouble)UastFilterNumber(ctx, node, cstr, &ok);
+    if (!ok) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  memTracker.DisposeMem(env);
+  memTracker.ExitFilter();
+  return ret;
+}
+
+JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_filterString
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  const char *retStr = NULL;
+  memTracker.EnterFilter();
+
+  try {
+    jobject *node = &obj;
+    const char *cstr = AsNativeStr(query);
+    if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
+      throw std::runtime_error("");
+    }
+
+    retStr = UastFilterString(ctx, node, cstr);
+    if (retStr == NULL) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  memTracker.DisposeMem(env);
+  memTracker.ExitFilter();
+  return env->NewStringUTF(retStr);
+}
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   jvm = vm;
   ctx = CreateUast();
