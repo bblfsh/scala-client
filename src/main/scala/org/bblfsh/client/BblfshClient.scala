@@ -52,6 +52,18 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   def filter(node: Node, query: String): List[Node] = {
     BblfshClient.filter(node, query)
   }
+
+  def filterBool(node: Node, query: String): Boolean = {
+    BblfshClient.filterBool(node, query)
+  }
+
+  def filterNumber(node: Node, query: String): Double = {
+    BblfshClient.filterNumber(node, query)
+  }
+
+  def filterString(node: Node, query: String): String = {
+    BblfshClient.filterString(node, query)
+  }
 }
 
 object BblfshClient {
@@ -84,6 +96,18 @@ object BblfshClient {
     libuast.filter(node, query)
   }
 
+  def filterBool(node: Node, query: String): Boolean = Libuast.synchronized {
+    libuast.filterBool(node, query)
+  }
+
+  def filterNumber(node: Node, query: String): Double = Libuast.synchronized {
+    libuast.filterNumber(node, query)
+  }
+
+  def filterString(node: Node, query: String): String = Libuast.synchronized {
+    libuast.filterString(node, query)
+  }
+
   def iterator(node: Node, treeOrder: Int): Libuast.UastIterator = {
     libuast.iterator(node, treeOrder)
   }
@@ -91,6 +115,18 @@ object BblfshClient {
   implicit class NodeMethods(val node: Node) {
     def filter(query: String): List[Node] = {
       BblfshClient.filter(node, query)
+    }
+
+    def filterBool(query: String): Boolean = {
+      BblfshClient.filterBool(node, query)
+    }
+
+    def filterNumber(query: String): Double = {
+      BblfshClient.filterNumber(node, query)
+    }
+
+    def filterString(query: String): String = {
+      BblfshClient.filterString(node, query)
     }
   }
 }

@@ -73,4 +73,7 @@ class Libuast {
   }
 
   @native def filter(node: Node, query: String): List[Node]
+  @native def filterBool(node: Node, query: String): Boolean
+  @native def filterNumber(node: Node, query: String): Double
+  @native def filterString(node: Node, query: String): String
 }

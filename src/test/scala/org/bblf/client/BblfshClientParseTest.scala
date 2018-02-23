@@ -61,6 +61,27 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
     rootNode.filter("//QualifiedName[@roleExpression]")
   }
 
+  test("XPath query with wrong type") {
+    assertThrows[Exception]{ rootNode.filter("boolean(1)") }
+  }
+
+  test("XPath query returning a boolean value") {
+    val resTrue = rootNode.filterBool("boolean(1)")
+    assert(resTrue)
+    val resFalse = rootNode.filterBool("boolean(0)")
+    assert(!resFalse)
+  }
+
+  test("XPath query returning a number value") {
+    val res = rootNode.filterNumber("count(//*)")
+    assert(res == 28.0)
+  }
+
+  test("XPath query returning a string value") {
+    val res = rootNode.filterString("name(//*[1])")
+    assert(res == "CompilationUnit")
+  }
+
   test("XPath query with threads") {
     val th = new Thread(new Runnable {
       def run() {

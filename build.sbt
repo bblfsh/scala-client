@@ -2,11 +2,11 @@ import sys.process._
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.5.3"
+version := "1.7.0"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.7.0"
-val sdkVersion = "v1.9.2"
+val libuastVersion = "v1.8.2"
+val sdkVersion = "v1.13.0"
 val sdkMajor = "v1"
 val protoDir = "src/main/proto"
 
@@ -14,19 +14,12 @@ mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
 
 target in assembly := file("build")
 
-PB.targets in Compile := Seq(
-  scalapb.gen() -> (sourceManaged in Compile).value
-)
-PB.protoSources in Compile := Seq(file(protoDir))
-
 libraryDependencies += "com.trueaccord.scalapb" %% "scalapb-runtime" % com.trueaccord.scalapb.compiler.Version.scalapbVersion % "protobuf"
 libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
-
   "io.grpc" % "grpc-netty" % com.trueaccord.scalapb.compiler.Version.grpcJavaVersion,
   "com.trueaccord.scalapb" %% "scalapb-runtime-grpc" % com.trueaccord.scalapb.compiler.Version.scalapbVersion,
-
   "org.rogach" %% "scallop" % "3.0.3"
 )
 
@@ -38,6 +31,11 @@ assemblyMergeStrategy in assembly := {
 }
 
 test in assembly := {}
+
+PB.targets in Compile := Seq(
+    scalapb.gen() -> (sourceManaged in Compile).value
+)
+PB.protoSources in Compile := Seq(file(protoDir))
 
 sonatypeProfileName := "org.bblfsh"
 
@@ -89,8 +87,9 @@ getProtoFiles := {
 
     val bblfshProto = f"$protoDir%s/gopkg.in/bblfsh"
     val sdkProto = f"$bblfshProto%s/sdk.$sdkMajor%s"
-    f"rm -rf $bblfshProto%s" #&&
-    f"mkdir -p $sdkProto%s/protocol" #&&
+
+    f"mkdir -p $sdkProto%s/protocol" !
+
     f"mkdir -p $sdkProto%s/uast" !
 
     val unzip_dir = "sdk-" + sdkVersion.substring(1)
@@ -106,6 +105,7 @@ getLibuast := {
     import sys.process._
 
     println("Downloading libuast...")
+    println(f"https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz")
 
     f"curl -SL https://github.com/bblfsh/libuast/releases/download/$libuastVersion%s/libuast-$libuastVersion%s.tar.gz -o libuast.tar.gz" #&&
     "tar zxf libuast.tar.gz" #&&
@@ -153,7 +153,7 @@ def compileLinux(sourceFiles: String) = {
     sourceFiles +
     xml2Conf + " "
 
-  checkedProcess(cmd, "macOS build")
+  checkedProcess(cmd, "Linux build")
 }
 
 def compileMacOS(sourceFiles: String): Unit = {
@@ -195,4 +195,3 @@ mappings in (Compile, packageBin) += {
 }
 
 mainClass := Def.sequential(getProtoFiles, getLibuast, compileLibuast, (mainClass in Compile)).value
-

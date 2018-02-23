@@ -143,6 +143,80 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   return immList;
 }
 
+static const char *InitFilter(JNIEnv *env, jobject obj, jstring query) {
+  memTracker.EnterFilter();
+
+  const char *cstr = AsNativeStr(query);
+  if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
+    throw std::runtime_error("");
+  }
+  return cstr;
+}
+
+static void FinishFilter(JNIEnv *env) {
+  memTracker.DisposeMem(env);
+  memTracker.ExitFilter();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_libuast_Libuast_filterBool
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  jobject *node = &obj;
+  jboolean ret = false;
+
+  try {
+    auto cstr = InitFilter(env, obj, query);
+    bool ok;
+    ret = (jboolean)UastFilterBool(ctx, node, cstr, &ok);
+    if (!ok) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  FinishFilter(env);
+  return ret;
+}
+
+JNIEXPORT jdouble JNICALL Java_org_bblfsh_client_libuast_Libuast_filterNumber
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  jobject *node = &obj;
+  jdouble ret = false;
+
+  try {
+    auto cstr = InitFilter(env, obj, query);
+    bool ok;
+    ret = (jdouble)UastFilterNumber(ctx, node, cstr, &ok);
+    if (!ok) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  FinishFilter(env);
+  return ret;
+}
+
+JNIEXPORT jstring JNICALL Java_org_bblfsh_client_libuast_Libuast_filterString
+  (JNIEnv *env, jobject self, jobject obj, jstring query) {
+
+  jobject *node = &obj;
+  const char *retStr = NULL;
+
+  try {
+    auto cstr = InitFilter(env, obj, query);
+    retStr = UastFilterString(ctx, node, cstr);
+    if (retStr == NULL) {
+      ThrowException(LastError());
+      throw std::runtime_error("");
+    }
+  } catch (std::runtime_error&) {}
+
+  FinishFilter(env);
+  return env->NewStringUTF(retStr);
+}
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   jvm = vm;
   ctx = CreateUast();
