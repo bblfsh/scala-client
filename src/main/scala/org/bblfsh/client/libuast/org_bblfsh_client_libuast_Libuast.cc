@@ -6,6 +6,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <cstdlib>
+#include <cstdio>
 #include <unordered_map>
 #include <vector>
 
@@ -58,6 +59,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterat
   (JNIEnv *env, jobject self, jobject iteratorPtr) {
 
     UastIterator *iter = (UastIterator*) env->GetDirectBufferAddress(iteratorPtr);
+
     if (env->ExceptionCheck() == JNI_TRUE) {
       return NULL;
     }
@@ -68,6 +70,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterat
     memTracker.SetCurrentIterator(iter, false);
 
     jobject *retNode = (jobject *)UastIteratorNext(iter);
+    if (retNode == NULL) {
+      // end of the iteration reached
+      return NULL;
+    }
     return *retNode;
 }
 

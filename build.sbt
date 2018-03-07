@@ -2,11 +2,11 @@ import sys.process._
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.7.0"
+version := "1.8.0"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.8.2"
-val sdkVersion = "v1.13.0"
+val libuastVersion = "v1.9.0"
+val sdkVersion = "v1.14.0"
 val sdkMajor = "v1"
 val protoDir = "src/main/proto"
 
