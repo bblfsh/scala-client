@@ -21,7 +21,11 @@ object Libuast {
     }
 
     override def next(): Node = {
-      nextIterator(iterPtr)
+      val res = nextIterator(iterPtr)
+      if (res == null) {
+        close() 
+      }
+      res
     }
 
     def close() = {
