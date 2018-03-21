@@ -133,8 +133,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     }
   } catch (std::runtime_error&) {}
 
-  memTracker.DisposeMem(env);
-
   if (nodes)
     NodesFree(nodes);
 
@@ -145,7 +143,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
-  memTracker.ExitFilter();
+  FinishFilter(env);
   return immList;
 }
 
