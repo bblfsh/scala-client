@@ -93,6 +93,21 @@ JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_
     UastIteratorFree(iter);
 }
 
+static const char *InitFilter(JNIEnv *env, jobject obj, jstring query) {
+  memTracker.EnterFilter();
+
+  const char *cstr = AsNativeStr(query);
+  if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
+    throw std::runtime_error("");
+  }
+  return cstr;
+}
+
+static void FinishFilter(JNIEnv *env) {
+  memTracker.DisposeMem(env);
+  memTracker.ExitFilter();
+}
+
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *env, jobject self, jobject obj, jstring query) {
 
@@ -133,8 +148,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     }
   } catch (std::runtime_error&) {}
 
-  memTracker.DisposeMem(env);
-
   if (nodes)
     NodesFree(nodes);
 
@@ -145,23 +158,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
     immList = ObjectMethod(env, "toList", METHOD_MUTLIST_TOIMMLIST, CLS_LIST, &nodeList);
   }
 
-  memTracker.ExitFilter();
+  FinishFilter(env);
   return immList;
-}
-
-static const char *InitFilter(JNIEnv *env, jobject obj, jstring query) {
-  memTracker.EnterFilter();
-
-  const char *cstr = AsNativeStr(query);
-  if (env->ExceptionCheck() == JNI_TRUE || !cstr) {
-    throw std::runtime_error("");
-  }
-  return cstr;
-}
-
-static void FinishFilter(JNIEnv *env) {
-  memTracker.DisposeMem(env);
-  memTracker.ExitFilter();
 }
 
 JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_libuast_Libuast_filterBool
