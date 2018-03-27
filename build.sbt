@@ -164,7 +164,7 @@ def compileMacOS(sourceFiles: String): Unit = {
     return
   }
 
-  val cmd = osxHome + "/bin/o64-clang -shared -Wall -fPIC -O2 -lxml2 " +
+  val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -lxml2 -std=c++11 " +
       "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
       "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
       "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
