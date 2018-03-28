@@ -112,7 +112,7 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
 
   test("Xpath filter StartLine") {
     val filtered = rootNode.filter("//*[@startLine='1']");
-    assert(filtered.length == 17)
+    assert(filtered.length == 28)
     val filteredNeg = rootNode.filter("//*[@startLine='100']");
     assert(filteredNeg.length == 0)
   }
@@ -133,7 +133,7 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
 
   test("Xpath filter EndLine") {
     val filtered = rootNode.filter("//*[@endLine='1']");
-    assert(filtered.length == 16)
+    assert(filtered.length == 26)
     val filteredNeg = rootNode.filter("//*[@endLine='100']");
     assert(filteredNeg.length == 0)
   }
