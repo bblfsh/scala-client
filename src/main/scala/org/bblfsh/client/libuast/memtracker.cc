@@ -1,4 +1,5 @@
 #include "memtracker.h"
+#include <cstdlib>
 #include <cstdio>
 
 UastIterator* MemTracker::CurrentIterator() { return currentIter_; }

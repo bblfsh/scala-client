@@ -25,12 +25,23 @@ before_install:
 
 env:
   global:
-   - OSXCROSS_PACKAGE="osxcross_3034f7149716d815bc473d0a7b35d17e4cf175aa.tar.gz"
-   - OSXCROSS_URL="https://github.com/bblfsh/client-scala/releases/download/v1.5.2/${OSXCROSS_PACKAGE}"
+   - OSXCROSS_PATH="$HOME/osxcross"
+   - OSXCROSS_REV=3034f7149716d815bc473d0a7b35d17e4cf175aa
+   - SDK_VERSION=10.11
+   - DARWIN_VERSION=15
+   - OSX_VERSION_MIN=10.6
+   - OSXCROSS_SDK_URL="https://s3.dockerproject.org/darwin/v2/MacOSX10.11.sdk.tar.xz"
 
 install:
- - cd ${HOME}
- - curl -sSL ${OSXCROSS_URL} | tar -C ${HOME} -xzf - 
+ - mkdir -p /tmp/osxcross
+ - cd /tmp/osxcross
+ - curl -sSL "https://codeload.github.com/tpoechtrager/osxcross/tar.gz/${OSXCROSS_REV}" | tar -C /tmp/osxcross --strip=1 -xzf -
+ - curl -s -S -L -o tarballs/MacOSX${SDK_VERSION}.sdk.tar.xz ${OSXCROSS_SDK_URL}
+ - UNATTENDED=yes ./build.sh >/dev/null
+ - mv target "${OSXCROSS_PATH}"
+ - curl -S -L "https://github.com/karalabe/xgo/blob/647f256c447ee20f9bf13ebc42e612d55994a383/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
+ - mv v1 "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
+ - rm -rf /tmp/osxcross "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
 
 script:
  - cd $TRAVIS_BUILD_DIR
