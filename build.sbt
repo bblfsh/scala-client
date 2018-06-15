@@ -6,7 +6,7 @@ version := "1.8.2"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.9.1"
-val sdkVersion = "v1.14.0"
+val sdkVersion = "v1.16.0"
 val sdkMajor = "v1"
 val protoDir = "src/main/proto"
 
@@ -148,6 +148,7 @@ def compileLinux(sourceFiles: String) = {
     "-I/usr/include " +
     "-I" + javaHome + "/include/ " +
     "-I" + javaHome + "/include/linux " +
+    "-I" + javaHome + "/include/darwin " +
     "-Isrc/libuast-native/  " +
     "-o lib/libscalauast.so " + 
     sourceFiles +

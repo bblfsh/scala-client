@@ -5,6 +5,7 @@ import org.bblfsh.client.libuast.Libuast
 import gopkg.in.bblfsh.sdk.v1.protocol.generated.{Encoding, ProtocolServiceGrpc,
                                                   ParseRequest, ParseResponse,
                                                   NativeParseRequest, NativeParseResponse,
+                                                  SupportedLanguagesRequest, SupportedLanguagesResponse,
                                                   VersionRequest, VersionResponse}
 import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
 
@@ -39,6 +40,11 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
                                  language = BblfshClient.normalizeLanguage(lang),
                                  encoding = encoding)
     stub.nativeParse(req)
+  }
+
+  def supportedLanguages(): SupportedLanguagesResponse = {
+    val req = SupportedLanguagesRequest()
+    stub.supportedLanguages(req)
   }
 
   def version(): VersionResponse = {
