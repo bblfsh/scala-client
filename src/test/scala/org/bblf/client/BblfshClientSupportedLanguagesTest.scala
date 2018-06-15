@@ -12,7 +12,11 @@ class BblfshClientSupportedLanguagesTest extends FunSuite with BeforeAndAfter {
     resp = client.supportedLanguages()
   }
 
-  test("Check languages") {
+  test("Check languages are not empty") {
     assert(!resp.languages.isEmpty)
+  }
+
+  test("Check languages contain Java") {
+    assert(resp.languages.map(d => d.name).contains("Java"))
   }
 }
