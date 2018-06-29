@@ -131,11 +131,11 @@ compileLibuast := {
         "src/libuast-native/uast.cc " +
         "src/libuast-native/roles.c "
 
-    compileLinux(sourceFiles)
-    compileMacOS(sourceFiles)
+    compileUnix(sourceFiles)
+    crossCompileMacOS(sourceFiles)
 }
 
-def compileLinux(sourceFiles: String) = {
+def compileUnix(sourceFiles: String) = {
   import sys.process._
 
   var javaHome = System.getenv("JAVA_HOME")
@@ -144,20 +144,33 @@ def compileLinux(sourceFiles: String) = {
   }
   val xml2Conf = "xml2-config --cflags --libs" !!
 
-  val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
-    "-I/usr/include " +
-    "-I" + javaHome + "/include/ " +
-    "-I" + javaHome + "/include/linux " +
-    "-I" + javaHome + "/include/darwin " +
-    "-Isrc/libuast-native/  " +
-    "-o lib/libscalauast.so " + 
-    sourceFiles +
-    xml2Conf + " "
+  val osName = System.getProperty("os.name").toLowerCase()
+  if (osName.contains("mac os x")) {
+    val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
+      "-I/usr/include " +
+      "-I" + javaHome + "/include/ " +
+      "-I" + javaHome + "/include/darwin " +
+      "-Isrc/libuast-native/  " +
+      "-o lib/libscalauast.dylib " +
+      sourceFiles +
+      xml2Conf + " "
 
-  checkedProcess(cmd, "Linux build")
+    checkedProcess(cmd, "macOS build")
+  } else {
+    val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
+      "-I/usr/include " +
+      "-I" + javaHome + "/include/ " +
+      "-I" + javaHome + "/include/linux " +
+      "-Isrc/libuast-native/  " +
+      "-o lib/libscalauast.so " +
+      sourceFiles +
+      xml2Conf + " "
+
+    checkedProcess(cmd, "Linux build")
+  }
 }
 
-def compileMacOS(sourceFiles: String): Unit = {
+def crossCompileMacOS(sourceFiles: String): Unit = {
   val osxHome = System.getenv("OSXCROSS_PATH")
 
   if (osxHome == null || osxHome.isEmpty) {
@@ -174,7 +187,7 @@ def compileMacOS(sourceFiles: String): Unit = {
       "-Isrc/libuast-native/ -o lib/libscalauast.dylib " +
       sourceFiles
 
-  checkedProcess(cmd, "macOS build")
+  checkedProcess(cmd, "macOS cross-compile build")
 } 
 
 def checkedProcess(cmd: String, name: String) {
