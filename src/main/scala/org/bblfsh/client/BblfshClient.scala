@@ -52,6 +52,10 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     stub.version(req)
   }
 
+  def close(): Unit = {
+    channel.shutdownNow()
+  }
+
   /**
    * Proxy for Bblfsh.filter / Node.filter, provided for backward compatibility.
    */
