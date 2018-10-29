@@ -2,7 +2,7 @@
 
 This a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
 It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code
-generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries. 
+generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries.
 
 ### Installation
 
@@ -14,10 +14,10 @@ cd client-scala
 ```
 
 gRPC/protobuf files are re-generate from `src/main/proto` on every `./sbt compile`
-and are stored under `./target/src_managed/`. 
+and are stored under `./target/src_managed/`.
 
-The jar file and the native module are generated in the `build/` directory. If 
-you move the jar file to some other path, the native (`.so` or `.dylib`) 
+The jar file and the native module are generated in the `build/` directory. If
+you move the jar file to some other path, the native (`.so` or `.dylib`)
 library must be in the same path.
 
 If the build fails because it can't find the `jni.h` header file, run it with:
@@ -27,8 +27,6 @@ If the build fails because it can't find the `jni.h` header file, run it with:
 ```
 
 Changing the JDK directory to the one right for your system.
-
-*Note: currently only Linux is supported, check #7 for MacOS support*.
 
 #### Apache Maven
 
@@ -54,11 +52,11 @@ libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
 
 ### Dependencies
 
-You need to install libxml2, the Java SDK and its header files. The command for 
+You need to install Java SDK and its header files. The command for
 Debian and derived distributions would be:
 
 ```
-sudo apt install libxml2-dev openjdk-8 openjdk-8-jdk-headless
+sudo apt install openjdk-8 openjdk-8-jdk-headless
 ```
 
 ### Usage
@@ -68,9 +66,9 @@ command:
 
 ```
 docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/server
-```   
+```
 
-Please, read the [getting started](https://doc.bblf.sh/user/getting-started.html) 
+Please, read the [getting started](https://doc.bblf.sh/user/getting-started.html)
 guide to learn more about how to use and deploy a bblfsh server.
 
 API
@@ -86,7 +84,7 @@ val resp = client.parse(filename, fileContent)
 // Full response
 println(resp.uast.get)
 // Filtered response
-println(client.filter(resp.uast.get, "//Import[@roleImport]"))
+println(client.filter(resp.uast.get, "//Import[@role=Import]"))
 // Filtered responses using XPath functions returning types
 // other than NodeLists (Bool, Number, String):
 println(client.filterBool(resp.uast.get, "boolean(//*[@strtOffset or @endOffset])"))
@@ -97,13 +95,13 @@ println(client.filterNumber(resp.uast.get, "count(//*)"))
 Command line:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py
+java -jar build/bblfsh-client-assembly-<version>.jar -f file.py
 ```
 
 or if you want to use a XPath query:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py -q "//Import[@roleImport]" 
+java -jar build/bblfsh-client-assembly-<version>.jar -f file.py -q "//Import[@roleImport]"
 ```
 
 Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)

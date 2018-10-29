@@ -26,6 +26,7 @@ const char *METHOD_SEQ_SORTED = "(Lscala/math/Ordering;)Ljava/lang/Object;";
 const char *METHOD_MAP_KEYS = "()Lscala/collection/GenIterable;";
 
 // Class fully qualified names
+const char *CLS_NODE_EXT = "org/bblfsh/client/NodeExt";
 const char *CLS_NODE = "gopkg/in/bblfsh/sdk/v1/uast/generated/Node";
 const char *CLS_POSITION = "gopkg/in/bblfsh/sdk/v1/uast/generated/Position";
 const char *CLS_ROLE = "gopkg/in/bblfsh/sdk/v1/uast/generated/Role";
@@ -95,12 +96,14 @@ jobject *ToObjectPtr(jobject *object) {
 static jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                    const char *className, const jobject *object) {
   jclass cls = env->FindClass(className);
-  if (env->ExceptionOccurred() || !cls)
+  if (env->ExceptionOccurred() || !cls) {
     return NULL;
+  }
 
   jmethodID mId = env->GetMethodID(cls, method, signature);
-  if (env->ExceptionOccurred())
+  if (env->ExceptionOccurred()) {
     return NULL;
+  }
 
   return mId;
 }
@@ -208,19 +211,22 @@ jint IntField(JNIEnv *env, const char *className, const jobject *obj, const char
 
 jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign, ...) {
   jclass cls = env->FindClass(className);
-  if (env->ExceptionOccurred() || !cls)
+  if (env->ExceptionOccurred() || !cls) {
     return NULL;
+  }
 
   jmethodID initId = env->GetMethodID(cls, "<init>", initSign);
-  if (env->ExceptionOccurred() || !initId)
+  if (env->ExceptionOccurred() || !initId) {
     return NULL;
+  }
 
   va_list varargs;
   va_start(varargs, initSign);
   jobject instance = env->NewObjectV(cls, initId, varargs);
   va_end(varargs);
-  if (env->ExceptionOccurred() || !instance)
+  if (env->ExceptionOccurred() || !instance) {
     return NULL;
+  }
 
   return instance;
 }

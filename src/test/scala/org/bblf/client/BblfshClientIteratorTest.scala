@@ -1,19 +1,14 @@
 package org.bblfsh.client
 
-import org.bblfsh.client.BblfshClient._
+import gopkg.in.bblfsh.sdk.v2.uast.nodes.nodes.Node
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
-import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
-import gopkg.in.bblfsh.sdk.v1.uast.generated.Position
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
-
-import java.io.File
-import scala.io.Source
 
 class BblfshClientIterator extends FunSuite with BeforeAndAfter {
   var rootNode: Node = _
-
+/*
   before {
+
     val child1 = new Node(internalType = "child1", 
                           startPosition = Some(Position(offset = 1)))
 
@@ -133,4 +128,5 @@ class BblfshClientIterator extends FunSuite with BeforeAndAfter {
     n = it.next()
     assert(!it.hasNext())
   }
+  */
 }

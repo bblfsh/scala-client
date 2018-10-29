@@ -20,6 +20,7 @@ extern const char *METHOD_SEQ_SORTED;
 extern const char *METHOD_MAP_KEYS;
 
 extern const char *CLS_NODE;
+extern const char *CLS_NODE_EXT;
 extern const char *CLS_POSITION;
 extern const char *CLS_ROLE;
 extern const char *CLS_OPTION;

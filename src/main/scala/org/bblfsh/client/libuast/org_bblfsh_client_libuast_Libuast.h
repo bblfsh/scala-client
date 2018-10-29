@@ -8,11 +8,32 @@ extern "C" {
 
 #include <jni.h>
 
+/* ContextExt */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_ContextExt_root
+  (JNIEnv *env, jobject);
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_ContextExt_encode
+  (JNIEnv *env, jobject, jobject, jint);
+
+JNIEXPORT void JNICALL Java_org_bblfsh_client_ContextExt_dispose
+  (JNIEnv *env, jobject);
+
+
+/* NodeExt */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_NodeExt_load
+  (JNIEnv *env, jobject);
+
+
+/* Libuast */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_decode
+  (JNIEnv *env, jobject, jobject);
+
+
 /*
  * Class:   org_bblfsh_client_libuast_Libuast
  * Method:  filter
  * Signature: (ILjava/lang/String;)Lscala/collection/immutable/List;
-*/
+*
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_filter
   (JNIEnv *, jobject, jobject, jstring);
 
@@ -36,7 +57,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterat
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_disposeIterator
   (JNIEnv *, jobject, jobject);
-
+*/
 jint JNI_OnLoad(JavaVM *vm, void *reserved);
 
 #ifdef __cplusplus

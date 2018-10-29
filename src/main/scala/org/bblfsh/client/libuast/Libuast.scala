@@ -1,17 +1,19 @@
 package org.bblfsh.client.libuast
 
-import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
-import scala.collection.Iterator
 import java.io.File
-import java.nio.file.Paths
 import java.nio.ByteBuffer
+import java.nio.file.Paths
 
-import org.apache.commons.io.{IOUtils, FileUtils}
+import gopkg.in.bblfsh.sdk.v2.uast.nodes.nodes.Node
+import org.apache.commons.io.{FileUtils, IOUtils}
+import org.bblfsh.client.{ContextExt, NodeExt}
+
+import scala.collection.Iterator
 
 object Libuast {
   final var loaded = false
 
-  class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
+  class UastIterator(node: NodeExt, treeOrder: Int) extends Iterator[NodeExt] {
 
     private var closed = false
     private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
@@ -20,7 +22,7 @@ object Libuast {
       !closed
     }
 
-    override def next(): Node = {
+    override def next(): NodeExt = {
       val res = nextIterator(iterPtr)
       if (res == null) {
         close() 
@@ -35,8 +37,8 @@ object Libuast {
       }
     }
 
-    @native def newIterator(node: Node, treeOrder: Int): ByteBuffer
-    @native def nextIterator(ptr: ByteBuffer): Node
+    @native def newIterator(node: NodeExt, treeOrder: Int): ByteBuffer
+    @native def nextIterator(ptr: ByteBuffer): NodeExt
     @native def disposeIterator(ptr: ByteBuffer)
   }
 
@@ -44,7 +46,13 @@ object Libuast {
   private final def loadBinaryLib(name: String) = {
     val ext = if (System.getProperty("os.name").toLowerCase == "mac os x") ".dylib" else ".so"
     val fullLibName = name + ext
-    val in = getClass.getResourceAsStream(Paths.get("/lib", fullLibName).toString)
+    val path = Paths.get("lib", fullLibName).toString
+    val in = getClass.getClassLoader.getResourceAsStream(path)
+    if (null == in) {
+      val msg = s"Failed to load library '$name' from '$path'"
+      println(msg)
+      throw new RuntimeException(msg)
+    }
 
     val prefix = "libscalauast_"
     val fout = File.createTempFile(prefix, ext)
@@ -52,6 +60,7 @@ object Libuast {
 
     try {
       IOUtils.copy(in, out)
+
     } finally {
       in.close()
       out.close()
@@ -72,12 +81,15 @@ class Libuast {
     }
   }
 
-  def iterator(node: Node, treeOrder: Int) = {
+  def iterator(node: NodeExt, treeOrder: Int) = {
     new Libuast.UastIterator(node, treeOrder)
   }
 
-  @native def filter(node: Node, query: String): List[Node]
-  @native def filterBool(node: Node, query: String): Boolean
-  @native def filterNumber(node: Node, query: String): Double
-  @native def filterString(node: Node, query: String): String
+  @native def decode(buf: ByteBuffer): ContextExt                   //done
+  //@native def uast(): Context
+
+  @native def filter(node: NodeExt, query: String): List[NodeExt]
+  @native def filterBool(node: NodeExt, query: String): Boolean
+  @native def filterNumber(node: NodeExt, query: String): Double
+  @native def filterString(node: NodeExt, query: String): String
 }

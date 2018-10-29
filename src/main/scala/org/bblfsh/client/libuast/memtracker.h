@@ -2,7 +2,7 @@
 #include <vector>
 
 #include <jni.h>
-#include "uast.h"
+#include "libuast.h"
 
 struct NodeRef {
   void *copy;
