@@ -64,7 +64,7 @@ private:
             const char* utf = env->GetStringUTFChars(s, &isCopy);
             std::string* str = new std::string(utf);
             env->ReleaseStringUTFChars(s, utf);
-            throw std::runtime_error(msg + *str); //or ThrowNew()?
+            throw std::runtime_error(msg + " " + *str); //or ThrowNew()?
         }
     }
 
@@ -258,8 +258,14 @@ public:
             v = val->obj;
         }
         //PyDict_SetItemString(obj, k.data(), v); // new ref
-        jclass mapCls = env->FindClass("java/util/TreeMap");
-        jmethodID putId = env->GetMethodID(mapCls, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object");
+        std::string mapClsName = "java/util/TreeMap";
+        jclass mapCls = env->FindClass(mapClsName.data());
+        checkJvmException("Failed to find class '" + mapClsName + "'");
+
+        std::string putMethod = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object";
+        jmethodID putId = env->GetMethodID(mapCls, "put", putMethod.data());
+        checkJvmException("Failed to call method .put() with signature'" + putMethod + "'");
+
         jobject el = env->CallObjectMethod(obj, putId, k.data(), v);
         checkJvmException("Failed to put " + k + " from Node::SetKeyValue");
     }
@@ -368,7 +374,6 @@ private:
 
         JNIEnv *env = getJNIEnv();
         jobject jObj = NewJavaObject(env, CLS_NODE_EXT, "(JJ)V", this, node);
-
         return jObj;
     }
 
@@ -463,12 +468,12 @@ public:
             throw std::runtime_error("Cannot get NodeExt.ctx");
         }
         auto sctx = nodeExtCtx->ctx;
-        NodeHandle *snode = getHandle<NodeHandle>(env, src, "handle");
+        NodeHandle snode = reinterpret_cast<NodeHandle>(getHandle<NodeHandle>(env, src, "handle"));
         if (!snode) {
             throw std::runtime_error("Cannot get NodeExt.handle");
         }
 
-        Node* node = uast::Load(sctx, *snode, ctx);
+        Node* node = uast::Load(sctx, snode, ctx);
         if (!node) {
             throw std::runtime_error("Failed to uast::Load()");
         }
@@ -550,7 +555,7 @@ JNIEXPORT void JNICALL Java_org_bblfsh_client_libuast_Libuast_00024UastIterator_
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_ContextExt_root
   (JNIEnv *env, jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContex");
+  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
   return p->RootNode();
 }
 
@@ -558,14 +563,14 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_ContextExt_encode
   (JNIEnv *env, jobject self, jobject node, jint fmt) {
   UastFormat format = UAST_BINARY; // TODO: make it arg
 
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContex");
+  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
   return p->Encode(node, format);
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_ContextExt_dispose
   (JNIEnv *env, jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContex");
-  setHandle<ContextExt>(env, self, 0, "nativeContex");
+  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  setHandle<ContextExt>(env, self, 0, "nativeContext");
   delete p;
 }
 
@@ -586,11 +591,11 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_decode
   //works only with ByteBuffer.allocateDirect()
   void* buf = env->GetDirectBufferAddress(directBuf);
   if (env->ExceptionCheck() == JNI_TRUE) {
-    return NULL;
+    return nullptr;
   }
   jlong len = env->GetDirectBufferCapacity(directBuf);
   if (env->ExceptionCheck() == JNI_TRUE) {
-    return NULL;
+    return nullptr;
   }
 
   //another option is to use
@@ -603,7 +608,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_libuast_Libuast_decode
 
   jobject jCtxExt = NewJavaObject(env, "org/bblfsh/client/ContextExt", "(J)V", p);
   if (env->ExceptionCheck() == JNI_TRUE || !jCtxExt) {
-    jCtxExt = NULL;
+    jCtxExt = nullptr;
     delete(ctx);
     env->ExceptionDescribe();
     throw std::runtime_error("failed to instantiate ContextExt class");

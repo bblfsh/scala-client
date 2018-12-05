@@ -36,7 +36,7 @@ class BblfshClientParseTest extends FlatSpec
     val uast = resp.uast.decode()
 
     assert(uast != null)
-    assert(uast.nativeContex != 0)
+    assert(uast.nativeContext != 0)
 
     println(uast)
     uast.dispose()
@@ -62,7 +62,7 @@ class BblfshClientParseTest extends FlatSpec
     val encodedBytes: ByteBuffer = uast.encode(rootNode, 0)
 
     encodedBytes.capacity should be (resp.uast.asReadOnlyByteBuffer.capacity)
-    encodedBytes should be equals resp.uast.asReadOnlyByteBuffer
+    encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
 
     println(resp.uast.asReadOnlyByteBuffer)
     println(encodedBytes)
