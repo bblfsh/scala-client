@@ -42,6 +42,24 @@ jobject asJvmBuffer(uast::Buffer buf) {
 }
 
 
+    // checkJvmException checks for a JVM exceptions, and if any, throws an error.
+    static void checkJvmException(std::string msg) {
+        JNIEnv *env = getJNIEnv();
+        if (env->ExceptionOccurred()) {
+            auto err = env->ExceptionOccurred();
+            env->ExceptionDescribe();
+
+            jboolean isCopy = false;
+            jmethodID toString = env->GetMethodID(env->FindClass("java/lang/Object"), "toString", "()Ljava/lang/String;");
+            jstring s = (jstring)env->CallObjectMethod(err, toString);
+            const char* utf = env->GetStringUTFChars(s, &isCopy);
+            std::string* str = new std::string(utf);
+            env->ReleaseStringUTFChars(s, utf);
+            throw std::runtime_error(msg + " " + *str); //or ThrowNew()?
+        }
+    }
+
+
 class Interface;
 
 class Node : public uast::Node<Node*> {
@@ -52,21 +70,6 @@ private:
 
     jobject keys;
     std::string* str;
-
-    // checkJvmException checks for a JVM exceptions, and if any, throws an error.
-    static void checkJvmException(std::string msg) {
-        JNIEnv *env = getJNIEnv();
-        if (env->ExceptionOccurred()) {
-            auto err = env->ExceptionOccurred();
-            jboolean isCopy = false;
-            jmethodID toString = env->GetMethodID(env->FindClass("java/lang/Object"), "toString", "()Ljava/lang/String;");
-            jstring s = (jstring)env->CallObjectMethod(err, toString);
-            const char* utf = env->GetStringUTFChars(s, &isCopy);
-            std::string* str = new std::string(utf);
-            env->ReleaseStringUTFChars(s, utf);
-            throw std::runtime_error(msg + " " + *str); //or ThrowNew()?
-        }
-    }
 
     // kindOf returns a kind of a Python object.
     // Borrows the reference.
@@ -93,14 +96,14 @@ public:
     friend class Context;
 
     // Node creates a new node associated with a given JVM object and sets the kind.
-    // Steals the reference.
+    // Creates a new global reference.
     Node(Interface* c, NodeKind k, jobject v) : keys(nullptr), str(nullptr) {
         ctx = c;
-        obj = v;
+        obj = getJNIEnv()->NewGlobalRef(v);
         kind = k;
     }
     // Node creates a new node associated with a given JVM object and automatically determines the kind.
-    // Creates a new reference.
+    // Creates a new global reference.
     Node(Interface* c, jobject v) : keys(nullptr), str(nullptr) {
         ctx = c;
         obj = getJNIEnv()->NewGlobalRef(v);
@@ -171,7 +174,7 @@ public:
         return value;
     }
 
-    size_t Size() { //not sure why is this needed
+    size_t Size() { // FIXME: returns jint now!
         size_t sz = 0;
         JNIEnv *env = getJNIEnv();
 
@@ -222,12 +225,19 @@ public:
         }
         JNIEnv *env = getJNIEnv();
 
-        jclass arrCls = env->FindClass("java/util/ArrayList"); //TODO(bzz): cache. this is expensive!
+        std::string arrClsName = "java/util/ArrayList";
+        jclass arrCls = env->FindClass(arrClsName.data()); //TODO(bzz): cache. this is expensive!
+        checkJvmException("Failed to find class '" + arrClsName + "'");
+
         if (env->IsInstanceOf(obj, arrCls)) {
-            jmethodID getId = env->GetMethodID(arrCls, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+            std::string getMethod = "(Ljava/lang/Object;)Ljava/lang/Object;";
+            jmethodID getId = env->GetMethodID(arrCls, "get", getMethod.data());
+            checkJvmException("Failed to get method .get with signature'" + getMethod + "'");
+
             jobject el = env->CallObjectMethod(obj, getId, i);
-            jobject v = env->NewGlobalRef(el); // borrows
-            return lookupOrCreate(v); // new ref
+            checkJvmException("Failed to ArrayList.get() from Node::ValueAt");
+            //jobject v = env->NewGlobalRef(el); // borrows
+            return lookupOrCreate(el); // new ref
         }
 
         /*TODO(bzz): Object case: replace \w TreeMap<String, Object> manipulations
@@ -243,15 +253,37 @@ public:
     void SetValue(size_t i, Node* val) {
         JNIEnv *env = getJNIEnv();
         jobject v = nullptr;
-        if (val && val->obj) {
+        if (val && val->obj) { //FIXME: why new ref? else clause?
             v = env->NewGlobalRef(val->obj);
         }
         //PyList_SetItem(obj, i, v); // steals
-        jclass arrCls = env->FindClass("java/util/ArrayList");
-        jmethodID setId = env->GetMethodID(arrCls, "set", "(ILjava/lang/Object;)Ljava/lang/Object");
-        jobject el = env->CallObjectMethod(obj, setId, i, v);
+        std::string arrClsName = "java/util/ArrayList";
+        jclass arrCls = env->FindClass(arrClsName.data());
+        checkJvmException("Failed to find class '" + arrClsName + "'");
+
+        std::string sizeMethod = "()I";
+        jint size = IntMethod(env, "size", sizeMethod.data(), arrClsName.data(), &obj);
+        checkJvmException("Failed to get method .size() with signature'" + sizeMethod + "'");
+
+        jmethodID addOrSetId;
+        if (size > i) { //FIXME: better jint comparison
+            std::string setMethod = "(ILjava/lang/Object;)Ljava/lang/Object;";
+            jmethodID setId = env->GetMethodID(arrCls, "set", setMethod.data());
+            checkJvmException("Failed to get method .set() with signature'" + setMethod + "'");
+            addOrSetId = setId;
+
+            jobject el = env->CallObjectMethod(obj, addOrSetId, i, v);
+            checkJvmException("Failed to ArrayList.set() from Node::SetValue");
+        } else {
+            std::string addMethod = "(Ljava/lang/Object;)Z";
+            jmethodID addId = env->GetMethodID(arrCls, "add", addMethod.data());
+            checkJvmException("Failed to get method .add() with signature'" + addMethod + "'");
+            addOrSetId = addId;
+            jobject el = env->CallObjectMethod(obj, addOrSetId, /* i,*/ v); //FIXME: grow size + .set(i)
+            checkJvmException("Failed to ArrayList.add() from Node::SetValue");
+        }
     }
-    void SetKeyValue(std::string k, Node* val) {
+    void SetKeyValue(std::string key, Node* val) {
         JNIEnv *env = getJNIEnv();
         jobject v = nullptr;
         if (val && val->obj) {
@@ -259,15 +291,17 @@ public:
         }
         //PyDict_SetItemString(obj, k.data(), v); // new ref
         std::string mapClsName = "java/util/TreeMap";
-        jclass mapCls = env->FindClass(mapClsName.data());
-        checkJvmException("Failed to find class '" + mapClsName + "'");
+        std::string putMethod = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
 
-        std::string putMethod = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object";
-        jmethodID putId = env->GetMethodID(mapCls, "put", putMethod.data());
-        checkJvmException("Failed to call method .put() with signature'" + putMethod + "'");
+//        jclass mapCls = env->FindClass(mapClsName.data());
+//        checkJvmException("Failed to find class '" + mapClsName + "'");
+//
+//        jmethodID putId = env->GetMethodID(mapCls, "put", putMethod.data());
+//        checkJvmException("Failed to get method .put() with signature'" + putMethod + "'");
+        jstring k = env->NewStringUTF(key.data());
 
-        jobject el = env->CallObjectMethod(obj, putId, k.data(), v);
-        checkJvmException("Failed to put " + k + " from Node::SetKeyValue");
+        jobject el = ObjectMethod(env, "put", putMethod.data(), mapClsName.data(), &obj, k, v);
+        checkJvmException("Failed to TreeMap.put('" + key + "') from Node::SetKeyValue");
     }
 };
 
@@ -280,7 +314,6 @@ private:
     std::map<jobject, Node*> obj2node;
 
     // lookupOrCreate either creates a new object or returns existing one.
-    // In the second case it creates a new reference.
     Node* lookupOrCreate(jobject obj) {
         if (!obj) return nullptr;
 
@@ -293,7 +326,6 @@ private:
     }
 
     // create makes a new object with a specified kind.
-    // Steals the reference.
     Node* create(NodeKind kind, jobject obj) {
         Node* node = new Node(this, kind, obj);
         obj2node[obj] = node;
@@ -329,12 +361,16 @@ public:
 
     Node* NewObject(size_t size) {
         JNIEnv *env = getJNIEnv();
-        jobject m = NewJavaObject(env, "java/util/TreeMap", "()V");
+        std::string clsName = "java/util/TreeMap";
+        jobject m = NewJavaObject(env, clsName.data(), "()V");
+        checkJvmException("failed to create new " + clsName);
         return create(NODE_OBJECT, m);
     }
     Node* NewArray(size_t size) {
         JNIEnv *env = getJNIEnv();
-        jobject arr = NewJavaObject(env, "java/util/ArrayList", "(I)V", size);
+        std::string clsName = "java/util/ArrayList";
+        jobject arr = NewJavaObject(env, clsName.data(), "(I)V", size);
+        checkJvmException("failed to create new " + clsName);
         return create(NODE_ARRAY, arr);
     }
     Node* NewString(std::string v) {

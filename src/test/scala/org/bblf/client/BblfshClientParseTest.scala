@@ -45,7 +45,7 @@ class BblfshClientParseTest extends FlatSpec
   "Decoded UAST's RootNode" should "not be NULL" in {
     val uast = resp.uast.decode()
     val rootNode: NodeExt = uast.root()
-    println(rootNode)
+    println(rootNode.getClass)
 
     rootNode should not be null
     rootNode.ctx should not be (0)
@@ -69,13 +69,19 @@ class BblfshClientParseTest extends FlatSpec
   }
 
   "Loading data from Go to JVM" should "bring native object to memory" in {
+    import scala.collection.JavaConverters._
+
     val uast = resp.uast.decode()
     val rootNode: NodeExt = uast.root()
 
     println(s"Loading $rootNode")
     val v = rootNode.load()
     v should not be Nil
-    v should not be empty
+    v.isEmpty should not be true
+    v.size() should equal(6)
+
+    println("Result size: " + v.size())
+    v.keySet().asScala.foreach(println)
   }
 
 
