@@ -29,7 +29,11 @@ extern const char *CLS_MAP;
 extern const char *CLS_LIST;
 extern const char *CLS_MUTLIST;
 extern const char *CLS_ITERABLE;
-extern const char *CLS_LONG;
+
+extern const char *CLS_JAVA_MAP;
+extern const char *CLS_JAVA_ARR;
+extern const char *CLS_JAVA_STR;
+
 
 JNIEnv *getJNIEnv();
 

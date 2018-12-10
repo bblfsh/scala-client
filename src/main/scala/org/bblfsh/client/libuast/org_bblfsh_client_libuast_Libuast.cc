@@ -77,7 +77,7 @@ private:
         JNIEnv *env = getJNIEnv();
         if (!obj) {
           return NODE_NULL;
-        } else if (env->IsInstanceOf(obj, env->FindClass("java/lang/String"))) {
+        } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JAVA_STR))) {
           return NODE_STRING;
         } else if (env->IsInstanceOf(obj, env->FindClass("java/lang/Integer"))) {
           return NODE_INT;
@@ -85,7 +85,7 @@ private:
           return NODE_FLOAT;
         } else if (env->IsInstanceOf(obj, env->FindClass("java/lang/Boolean"))) {
           return NODE_BOOL;
-        } else if (env->IsInstanceOf(obj, env->FindClass("java/util/ArrayList"))) {
+        } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JAVA_ARR))) {
           return NODE_ARRAY;
         }
         return NODE_OBJECT;
@@ -178,9 +178,9 @@ public:
         size_t sz = 0;
         JNIEnv *env = getJNIEnv();
 
-        jclass arrCls = env->FindClass("java/util/ArrayList");
-        jclass mapCls = env->FindClass("java/util/TreeMap");
-        jclass strCls = env->FindClass("java/lang/String");
+        jclass arrCls = env->FindClass(CLS_JAVA_ARR);
+        jclass mapCls = env->FindClass(CLS_JAVA_MAP);
+        jclass strCls = env->FindClass(CLS_JAVA_STR);
 
         if (!obj) {
           sz = 0;
@@ -225,9 +225,8 @@ public:
         }
         JNIEnv *env = getJNIEnv();
 
-        std::string arrClsName = "java/util/ArrayList";
-        jclass arrCls = env->FindClass(arrClsName.data()); //TODO(bzz): cache. this is expensive!
-        checkJvmException("Failed to find class '" + arrClsName + "'");
+        jclass arrCls = env->FindClass(CLS_JAVA_ARR); //TODO(bzz): cache. this is expensive!
+        checkJvmException("Failed to find class '" + std::string(CLS_JAVA_ARR) + "'");
 
         if (env->IsInstanceOf(obj, arrCls)) {
             std::string getMethod = "(Ljava/lang/Object;)Ljava/lang/Object;";
@@ -257,12 +256,11 @@ public:
             v = env->NewGlobalRef(val->obj);
         }
         //PyList_SetItem(obj, i, v); // steals
-        std::string arrClsName = "java/util/ArrayList";
-        jclass arrCls = env->FindClass(arrClsName.data());
-        checkJvmException("Failed to find class '" + arrClsName + "'");
+        jclass arrCls = env->FindClass(CLS_JAVA_ARR);
+        checkJvmException("Failed to find class '" + std::string(CLS_JAVA_ARR) + "'");
 
         std::string sizeMethod = "()I";
-        jint size = IntMethod(env, "size", sizeMethod.data(), arrClsName.data(), &obj);
+        jint size = IntMethod(env, "size", sizeMethod.data(), CLS_JAVA_ARR, &obj);
         checkJvmException("Failed to get method .size() with signature'" + sizeMethod + "'");
 
         jmethodID addOrSetId;
@@ -290,17 +288,10 @@ public:
             v = val->obj;
         }
         //PyDict_SetItemString(obj, k.data(), v); // new ref
-        std::string mapClsName = "java/util/TreeMap";
         std::string putMethod = "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
-
-//        jclass mapCls = env->FindClass(mapClsName.data());
-//        checkJvmException("Failed to find class '" + mapClsName + "'");
-//
-//        jmethodID putId = env->GetMethodID(mapCls, "put", putMethod.data());
-//        checkJvmException("Failed to get method .put() with signature'" + putMethod + "'");
         jstring k = env->NewStringUTF(key.data());
 
-        jobject el = ObjectMethod(env, "put", putMethod.data(), mapClsName.data(), &obj, k, v);
+        jobject el = ObjectMethod(env, "put", putMethod.data(), CLS_JAVA_MAP, &obj, k, v);
         checkJvmException("Failed to TreeMap.put('" + key + "') from Node::SetKeyValue");
     }
 };
@@ -361,16 +352,14 @@ public:
 
     Node* NewObject(size_t size) {
         JNIEnv *env = getJNIEnv();
-        std::string clsName = "java/util/TreeMap";
-        jobject m = NewJavaObject(env, clsName.data(), "()V");
-        checkJvmException("failed to create new " + clsName);
+        jobject m = NewJavaObject(env, CLS_JAVA_MAP, "()V");
+        checkJvmException("failed to create new " + std::string(CLS_JAVA_MAP));
         return create(NODE_OBJECT, m);
     }
     Node* NewArray(size_t size) {
         JNIEnv *env = getJNIEnv();
-        std::string clsName = "java/util/ArrayList";
-        jobject arr = NewJavaObject(env, clsName.data(), "(I)V", size);
-        checkJvmException("failed to create new " + clsName);
+        jobject arr = NewJavaObject(env, CLS_JAVA_ARR, "(I)V", size);
+        checkJvmException("failed to create new " + std::string(CLS_JAVA_ARR));
         return create(NODE_ARRAY, arr);
     }
     Node* NewString(std::string v) {

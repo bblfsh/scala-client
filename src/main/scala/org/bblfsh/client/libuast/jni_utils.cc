@@ -37,6 +37,10 @@ const char *CLS_LIST = "scala/collection/immutable/List";
 const char *CLS_MUTLIST = "scala/collection/mutable/MutableList";
 const char *CLS_ITERABLE = "scala/collection/GenIterable";
 
+const char *CLS_JAVA_MAP = "java/util/TreeMap";
+const char *CLS_JAVA_ARR = "java/util/ArrayList";
+const char *CLS_JAVA_STR = "java/lang/String";
+
 extern JavaVM *jvm;
 extern MemTracker memTracker;
 
@@ -130,6 +134,7 @@ jint IntMethod(JNIEnv *env, const char *method, const char *signature, const cha
 
   jmethodID mId = MethodID(env, method, signature, className, object);
   if (env->ExceptionOccurred() || !mId)
+    //TODO: report exception and ExceptionClear() it!
     return 0;
 
   jint res = env->CallIntMethod(*object, mId);
