@@ -2,7 +2,7 @@ import sys.process._
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.10.1"
+version := "1.11.0"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "v1.9.1"
@@ -14,13 +14,15 @@ mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
 
 target in assembly := file("build")
 
-libraryDependencies += "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
-libraryDependencies += "commons-io" % "commons-io" % "2.5"
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.0.1" % "test",
-  "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
+  "org.rogach" %% "scallop" % "3.0.3",
+  "commons-io" % "commons-io" % "2.5",
+
+  "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf",
   "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion,
-  "org.rogach" %% "scallop" % "3.0.3"
+  "io.grpc" % "grpc-netty" % scalapb.compiler.Version.grpcJavaVersion,
+
+  "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
 assemblyMergeStrategy in assembly := {
