@@ -1,20 +1,17 @@
 package org.bblfsh.client
 
-import org.bblfsh.client.BblfshClient._
-
 import gopkg.in.bblfsh.sdk.v1.protocol.generated.ParseResponse
 import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
-import org.scalatest.FunSuite
-import org.scalatest.BeforeAndAfter
+import org.bblfsh.client.BblfshClient._
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
-import java.io.File
 import scala.io.Source
 
 class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
 
   val client = BblfshClient("0.0.0.0", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
-  val fileContent = Source.fromFile(fileName) .getLines.mkString
+  val fileContent = Source.fromFile(fileName).getLines.mkString
   var resp: ParseResponse = _
   var rootNode: Node = _
 
@@ -29,6 +26,15 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
   test("Parse UAST for existing .java file") {
     assert(resp.errors.isEmpty)
     assert(resp.uast.isDefined)
+  }
+
+  test("Parse UAST with very short timeout") {
+    try {
+      client.parseWithTimeout(fileName, fileContent, 0)
+      this.fail("Expected an exception")
+    } catch {
+      case re: RuntimeException => print(re)
+    }
   }
 
   test("Get the internalType") {
@@ -50,7 +56,7 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
     assert(properties("internalRole") == "package")
   }
 
-  test("Simple XPath query called on client object andinstance") {
+  test("Simple XPath query called on client object and instance") {
     var filtered = client.filter(rootNode, "//QualifiedName[@roleExpression]")
     var filtered2 = BblfshClient.filter(rootNode, "//QualifiedName[@roleExpression]")
     assert(filtered.length == 3)
