@@ -83,7 +83,7 @@ import org.bblfsh.client.BblfshClient
 val client = BblfshClient("0.0.0.0", 9432)
 
 val filename = "/path/to/file.py" // client responsible for encoding it to utf-8
-val fileContent = Source.fromFile(filename).getLines.mkString
+val fileContent = Source.fromFile(filename).getLines.mkString("\n")
 val resp = client.parse(filename, fileContent)
 
 // Full response

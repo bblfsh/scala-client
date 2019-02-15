@@ -14,7 +14,7 @@ class BblfshClientVersionTest extends FunSuite with BeforeAndAfter {
 
   val client = BblfshClient("0.0.0.0", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
-  val fileContent = Source.fromFile(fileName) .getLines.mkString
+  val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
   var resp: VersionResponse = _
 
   before {

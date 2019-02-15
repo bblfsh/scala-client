@@ -11,6 +11,7 @@ class BblfshClientParseTest extends FunSuite with BeforeAndAfter {
 
   val client = BblfshClient("0.0.0.0", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
+  //FIXME(bzz): change to .mkString("\n") in v2 (breaks all the fixtures below)
   val fileContent = Source.fromFile(fileName).getLines.mkString
   var resp: ParseResponse = _
   var rootNode: Node = _
