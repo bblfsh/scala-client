@@ -20,6 +20,8 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   private val stub = ProtocolServiceGrpc.blockingStub(channel)
 
   /**
+    * Parses file with a given name and content using an encoding
+    * and a timeout provided.
     *
     * @param name file name
     * @param content file content
@@ -71,7 +73,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     * setting a bblfsh request timeout.
     *
     * Since v1.11, this API exposes the timeout.
-
+    *
     * @param name file name
     * @param content file content
     * @param timeout bblfsh request timeout, seconds

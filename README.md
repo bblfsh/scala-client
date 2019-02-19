@@ -6,7 +6,7 @@ generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries.
 
 ### Status
 
-Current `scala-clinet` v1.x only supports bblfsh protocol and UASTv1.
+Current `scala-client` v1.x only supports bblfsh protocol and UASTv1.
 
 ### Installation
 
