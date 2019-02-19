@@ -2,7 +2,11 @@
 
 This a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
 It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code
-generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries. 
+generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries.
+
+### Status
+
+Current `scala-client` v1.x only supports bblfsh protocol and UASTv1.
 
 ### Installation
 
@@ -28,8 +32,6 @@ If the build fails because it can't find the `jni.h` header file, run it with:
 
 Changing the JDK directory to the one right for your system.
 
-*Note: currently only Linux is supported, check #7 for MacOS support*.
-
 #### Apache Maven
 
 The `bblfsh-client` package is available thorugh [Maven
@@ -42,7 +44,7 @@ at Maven central's dependency information.
 <dependency>
     <groupId>org.bblfsh</groupId>
     <artifactId>bblfsh-client</artifactId>
-    <version>${client_version}</version>
+    <version>${version}</version>
 </dependency>
 ```
 
@@ -67,10 +69,10 @@ If you don't have a bblfsh server running you can execute it using the following
 command:
 
 ```
-docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/server
+docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/bblfshd
 ```   
 
-Please, read the [getting started](https://doc.bblf.sh/user/getting-started.html) 
+Please, read the [getting started](https://doc.bblf.sh/using-babelfish/getting-started.html)
 guide to learn more about how to use and deploy a bblfsh server.
 
 API
@@ -81,12 +83,15 @@ import org.bblfsh.client.BblfshClient
 val client = BblfshClient("0.0.0.0", 9432)
 
 val filename = "/path/to/file.py" // client responsible for encoding it to utf-8
-val fileContent = Source.fromFile(filename).getLines.mkString
+val fileContent = Source.fromFile(filename).getLines.mkString("\n")
 val resp = client.parse(filename, fileContent)
+
 // Full response
 println(resp.uast.get)
+
 // Filtered response
 println(client.filter(resp.uast.get, "//Import[@roleImport]"))
+
 // Filtered responses using XPath functions returning types
 // other than NodeLists (Bool, Number, String):
 println(client.filterBool(resp.uast.get, "boolean(//*[@strtOffset or @endOffset])"))
@@ -97,13 +102,13 @@ println(client.filterNumber(resp.uast.get, "count(//*)"))
 Command line:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py
+java -jar build/bblfsh-client-assembly-*.jar -f <file.py>
 ```
 
 or if you want to use a XPath query:
 
 ```
-java -jar build/bblfsh-client-assembly-1.0.1.jar -f file.py -q "//Import[@roleImport]" 
+java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//Import[@roleImport]"
 ```
 
 Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)
