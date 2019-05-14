@@ -44,7 +44,13 @@ object Libuast {
   private final def loadBinaryLib(name: String) = {
     val ext = if (System.getProperty("os.name").toLowerCase == "mac os x") ".dylib" else ".so"
     val fullLibName = name + ext
-    val in = getClass.getResourceAsStream(Paths.get("/lib", fullLibName).toString)
+    val path = Paths.get("lib", fullLibName).toString
+    val in = getClass.getClassLoader.getResourceAsStream(path)
+    if (null == in) {
+      val msg = s"Failed to load library '$name' from '$path'"
+      println(msg)
+      throw new RuntimeException(msg)
+    }
 
     val prefix = "libscalauast_"
     val fout = File.createTempFile(prefix, ext)
