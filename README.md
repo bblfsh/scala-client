@@ -18,10 +18,10 @@ cd client-scala
 ```
 
 gRPC/protobuf files are re-generate from `src/main/proto` on every `./sbt compile`
-and are stored under `./target/src_managed/`. 
+and are stored under `./target/src_managed/`.
 
-The jar file and the native module are generated in the `build/` directory. If 
-you move the jar file to some other path, the native (`.so` or `.dylib`) 
+The jar file and the native module are generated in the `build/` directory. If
+you move the jar file to some other path, the native (`.so` or `.dylib`)
 library must be in the same path.
 
 If the build fails because it can't find the `jni.h` header file, run it with:
@@ -56,7 +56,7 @@ libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
 
 ### Dependencies
 
-You need to install libxml2, the Java SDK and its header files. The command for 
+You need to install libxml2, the Java SDK and its header files. The command for
 Debian and derived distributions would be:
 
 ```
@@ -70,7 +70,7 @@ command:
 
 ```
 docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/bblfshd
-```   
+```
 
 Please, read the [getting started](https://doc.bblf.sh/using-babelfish/getting-started.html)
 guide to learn more about how to use and deploy a bblfsh server.
