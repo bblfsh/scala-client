@@ -10,8 +10,8 @@ class BblfshClientTimeoutTest extends FunSuite with BeforeAndAfter {
   val fileName = "src/test/resources/large.php"
   val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
 
-  test("Parse requests with default timeout fails") {
-    val resp = client.parse(fileName, fileContent)
+  test("Parse requests with small timeout fails") {
+    val resp = client.parseWithTimeout(fileName, fileContent, 1) /* seconds */
     assert(!resp.errors.isEmpty)
     assert(resp.errors(0).startsWith("rpc error: code = DeadlineExceeded desc"))
   }
