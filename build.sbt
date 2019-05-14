@@ -49,6 +49,11 @@ developers += Developer("juanjux",
                         "Juanjo Álvarez",
                         "juanjo@sourced.tech",
                         url("https://github.com/juanjux"))
+developers += Developer("bzz",
+                        "Alexander Bezzubov",
+                        "Alex@sourced.tech",
+                        url("https://github.com/bzz"))
+
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 pomIncludeRepository := (_ => false)
 
@@ -173,6 +178,11 @@ def compileUnix(sourceFiles: String) = {
 }
 
 def crossCompileMacOS(sourceFiles: String): Unit = {
+  val osName = System.getProperty("os.name").toLowerCase()
+  if (osName.contains("mac os x")) {
+      println("Skip cross-compilation for macOS on macOS")
+      return
+  }
   val osxHome = System.getenv("OSXCROSS_PATH")
 
   if (osxHome == null || osxHome.isEmpty) {
@@ -190,7 +200,7 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
       sourceFiles
 
   checkedProcess(cmd, "macOS cross-compile build")
-} 
+}
 
 def checkedProcess(cmd: String, name: String) {
   import sys.process._
