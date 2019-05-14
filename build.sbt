@@ -5,8 +5,8 @@ organization := "org.bblfsh"
 version := "1.11.0"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "v1.9.1"
-val sdkVersion = "v1.16.0"
+val libuastVersion = "v2.0.1"
+val sdkVersion = "v1.17.0"
 val sdkMajor = "v1"
 val protoDir = "src/main/proto"
 
