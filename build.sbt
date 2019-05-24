@@ -1,13 +1,13 @@
-import sys.process._
+
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "1.11.0"
+version := "2.0.0-SNAPSHOT"
 
 scalaVersion := "2.11.11"
 val libuastVersion = "1.9.3"
-val sdkVersion = "v1.17.0"
-val sdkMajor = "v1"
+val sdkMajor = "v3"
+val sdkVersion = s"${sdkMajor}.1.0"
 val protoDir = "src/main/proto"
 
 mainClass in Compile := Some("org.bblfsh.client.cli.ScalaClientCLI")
@@ -92,19 +92,19 @@ getProtoFiles := {
 
     println(s"Downloading and installing SDK$sdkMajor protocol buffer files...")
 
-    val bblfshProto = f"$protoDir%s/gopkg.in/bblfsh"
-    val sdkProto = f"$bblfshProto%s/sdk.$sdkMajor%s"
+    val bblfshProto = s"${protoDir}/github.com/bblfsh"
+    val sdkProto = s"${bblfshProto}/sdk.${sdkMajor}"
 
-    f"mkdir -p $sdkProto%s/protocol" !
+    s"mkdir -p ${sdkProto}/protocol" !
 
-    f"mkdir -p $sdkProto%s/uast" !
+    s"mkdir -p ${sdkProto}/uast/role" !
 
     val unzip_dir = "sdk-" + sdkVersion.substring(1)
 
-    f"curl -SL https://github.com/bblfsh/sdk/archive/$sdkVersion%s.tar.gz" #| "tar xz" #&&
-    f"cp $unzip_dir%s/protocol/generated.proto $sdkProto%s/protocol/" #&&
-    f"cp $unzip_dir%s/uast/generated.proto $sdkProto%s/uast/" #&&
-    f"rm -rf $unzip_dir%s" !
+    s"curl -SL https://github.com/bblfsh/sdk/archive/${sdkVersion}.tar.gz" #| "tar xz" #&&
+    s"cp ${unzip_dir}/protocol/driver.proto ${sdkProto}/protocol/" #&&
+    s"cp ${unzip_dir}/uast/role/generated.proto ${sdkProto}/uast/role" #&&
+    s"rm -rf ${unzip_dir}" !
 }
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")

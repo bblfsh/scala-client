@@ -1,6 +1,8 @@
-package org.bblfsh.client.libuast
+package org.bblfsh.client.v2.libuast
 
-import gopkg.in.bblfsh.sdk.v1.uast.generated.Node
+import org.bblfsh.client.v2.Node
+import org.bblfsh.client.v2.Context
+
 import scala.collection.Iterator
 import java.io.File
 import java.nio.file.Paths
@@ -11,34 +13,34 @@ import org.apache.commons.io.{IOUtils, FileUtils}
 object Libuast {
   final var loaded = false
 
-  class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
+  // class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
 
-    private var closed = false
-    private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
+  //   private var closed = false
+  //   private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
 
-    override def hasNext(): Boolean = {
-      !closed
-    }
+  //   override def hasNext(): Boolean = {
+  //     !closed
+  //   }
 
-    override def next(): Node = {
-      val res = nextIterator(iterPtr)
-      if (res == null) {
-        close() 
-      }
-      res
-    }
+  //   override def next(): Node = {
+  //     val res = nextIterator(iterPtr)
+  //     if (res == null) {
+  //       close() 
+  //     }
+  //     res
+  //   }
 
-    def close() = {
-      if (!closed) {
-        disposeIterator(iterPtr)
-        closed = true
-      }
-    }
+  //   def close() = {
+  //     if (!closed) {
+  //       disposeIterator(iterPtr)
+  //       closed = true
+  //     }
+  //   }
 
-    @native def newIterator(node: Node, treeOrder: Int): ByteBuffer
-    @native def nextIterator(ptr: ByteBuffer): Node
-    @native def disposeIterator(ptr: ByteBuffer)
-  }
+  //   @native def newIterator(node: Node, treeOrder: Int): ByteBuffer
+  //   @native def nextIterator(ptr: ByteBuffer): Node
+  //   @native def disposeIterator(ptr: ByteBuffer)
+  // }
 
   // Extract the native module from the jar
   private final def loadBinaryLib(name: String) = {
@@ -78,12 +80,11 @@ class Libuast {
     }
   }
 
-  def iterator(node: Node, treeOrder: Int) = {
-    new Libuast.UastIterator(node, treeOrder)
-  }
+  // FIXME(bzz): add iterators
+  // def iterator(node: Node, treeOrder: Int) = {
+  //   new Libuast.UastIterator(node, treeOrder)
+  // }
 
+  @native def decode(buf: ByteBuffer): Context
   @native def filter(node: Node, query: String): List[Node]
-  @native def filterBool(node: Node, query: String): Boolean
-  @native def filterNumber(node: Node, query: String): Double
-  @native def filterString(node: Node, query: String): String
 }
