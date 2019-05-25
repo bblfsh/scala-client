@@ -5,7 +5,7 @@ organization := "org.bblfsh"
 version := "2.0.0-SNAPSHOT"
 
 scalaVersion := "2.11.11"
-val libuastVersion = "1.9.3"
+val libuastVersion = "3.3.1"
 val sdkMajor = "v3"
 val sdkVersion = s"${sdkMajor}.1.0"
 val protoDir = "src/main/proto"
@@ -111,16 +111,18 @@ val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
     import sys.process._
 
-    val releaseUrl = s"https://github.com/bblfsh/libuast/archive/v$libuastVersion.tar.gz"
-    println(s"Downloading libuast from $releaseUrl")
+    val ghUrl = "https://github.com/bblfsh/libuast"
+    val os = if (System.getProperty("os.name").toLowerCase.contains("mac os x")) "darwin" else "linux"
+    val binaryReleaseUrl = s"${ghUrl}/releases/download/v${libuastVersion}/libuast-${os}-amd64.tar.gz"
+    println(s"Downloading libuast binary from ${binaryReleaseUrl}")
 
-    f"curl -SL $releaseUrl -o libuast.tar.gz" #&&
-    "tar zxf libuast.tar.gz" #&&
-    f"mv libuast-$libuastVersion libuast" #&&
-    "rm -rf src/libuast-native" #&&
-    "mv libuast/src/ src/libuast-native" #&&
+    s"curl -sL ${binaryReleaseUrl} -o libuast-bin.tar.gz" #&&
+    "tar xzf libuast-bin.tar.gz" #&&
+    s"mv ${os}-amd64 libuast" #&&
+    "rm -rf src/main/resources/libuast" #&&
+    "mv libuast src/main/resources" #&&
     "rm -rf libuast" #&&
-    "rm libuast.tar.gz" !
+    "rm libuast-bin.tar.gz" !
 }
 
 val compileScalaLibuast = TaskKey[Unit]("compileScalaLibuast", "Compile libScalaUast JNI library")
@@ -131,15 +133,13 @@ compileScalaLibuast := {
 
     "mkdir -p ./src/main/resources/lib/" !
 
-    val sourceFiles = "src/main/scala/org/bblfsh/client/libuast/org_bblfsh_client_libuast_Libuast.cc " +
-        "src/main/scala/org/bblfsh/client/libuast/jni_utils.cc " +
-        "src/main/scala/org/bblfsh/client/libuast/nodeiface.cc " +
-        "src/main/scala/org/bblfsh/client/libuast/memtracker.cc " +
-        "src/libuast-native/uast.cc " +
-        "src/libuast-native/roles.c "
+    val nativeSourceFiles = "src/main/native/org_bblfsh_client_libuast_Libuast.cc "
+        // "src/main/native/jni_utils.cc " +
+        // "src/main/scala/org/bblfsh/client/libuast/nodeiface.cc " +
+        // "src/main/scala/org/bblfsh/client/libuast/memtracker.cc " +
 
-    compileUnix(sourceFiles)
-    crossCompileMacOS(sourceFiles)
+    compileUnix(nativeSourceFiles)
+    crossCompileMacOS(nativeSourceFiles)
 }
 
 def compileUnix(sourceFiles: String) = {
@@ -149,7 +149,6 @@ def compileUnix(sourceFiles: String) = {
   if (javaHome == null) {
     javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
   }
-  val xml2Conf = "xml2-config --cflags --libs" !!
 
   val osName = System.getProperty("os.name").toLowerCase()
   if (osName.contains("mac os x")) {
@@ -157,10 +156,9 @@ def compileUnix(sourceFiles: String) = {
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/darwin " +
-      "-Isrc/libuast-native/  " +
+      "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
-      sourceFiles +
-      xml2Conf + " "
+      sourceFiles + " "
 
     checkedProcess(cmd, "macOS build")
   } else {
@@ -168,10 +166,9 @@ def compileUnix(sourceFiles: String) = {
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/linux " +
-      "-Isrc/libuast-native/  " +
+      "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.so " +
-      sourceFiles +
-      xml2Conf + " "
+      sourceFiles + " "
 
     checkedProcess(cmd, "Linux build")
   }
@@ -183,8 +180,8 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
       println("Skipping cross-compilation for macOS on macOS")
       return
   }
-  val osxHome = System.getenv("OSXCROSS_PATH")
 
+  val osxHome = System.getenv("OSXCROSS_PATH")
   if (osxHome == null || osxHome.isEmpty) {
     println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
     return
