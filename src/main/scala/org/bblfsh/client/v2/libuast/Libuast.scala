@@ -13,6 +13,7 @@ import org.apache.commons.io.{IOUtils, FileUtils}
 object Libuast {
   final var loaded = false
 
+  // TODO(bzz): implement iterators
   // class UastIterator(node: Node, treeOrder: Int) extends Iterator[Node] {
 
   //   private var closed = false
@@ -80,7 +81,7 @@ class Libuast {
     }
   }
 
-  // FIXME(bzz): add iterators
+  // TODO(bzz): implement iterators
   // def iterator(node: Node, treeOrder: Int) = {
   //   new Libuast.UastIterator(node, treeOrder)
   // }

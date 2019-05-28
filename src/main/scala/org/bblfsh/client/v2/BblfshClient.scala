@@ -39,7 +39,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     lang: String,
     timeout: Long
   ): ParseResponse = {
-    // FIXME(bzz): make timout work again
+    // FIXME(bzz): make timout work in v2 again
     val req = ParseRequest(
       filename = name,
       content = content,
@@ -109,15 +109,22 @@ object BblfshClient {
 
   private val libuast = new Libuast
 
-  def apply(host: String, port: Int,
-            maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE): BblfshClient =
-    new BblfshClient(host, port, maxMsgSize)
+  def apply(
+    host: String, port: Int,
+    maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE
+  ): BblfshClient = new BblfshClient(host, port, maxMsgSize)
 
 
   def filter(node: Node, query: String): List[Node] = Libuast.synchronized {
     libuast.filter(node, query)
   }
 
+  /**
+   * Decodes bytes from wired format of bblfsh protocol.v2.
+   * Requires a buffer in Direct mode.
+   *
+   * Since v2.
+   */
   def decode(buf: ByteBuffer): Context = Libuast.synchronized {
     if (!buf.isDirect()) {
       throw new RuntimeException("Only directly-allocated buffer decoding is supported.")
@@ -127,6 +134,10 @@ object BblfshClient {
 
   // Enables API: resp.uast.decode()
   implicit class UastMethods(val buf: ByteString) {
+    /**
+     * Decodes bytes from wired format of bblfsh protocol.v2.
+     * Copies a buffer in Direct mode.
+     */
     def decode(): Context = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
       buf.copyTo(bufDirectCopy)
@@ -134,6 +145,7 @@ object BblfshClient {
     }
   }
   
+  // TODO(bzz): implement
   // def iterator(node: Node, treeOrder: Int): Libuast.UastIterator = {
   //   libuast.iterator(node, treeOrder)
   // }

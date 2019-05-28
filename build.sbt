@@ -121,6 +121,7 @@ getLibuast := {
     s"mv ${os}-amd64 libuast" #&&
     "rm -rf src/main/resources/libuast" #&&
     "mv libuast src/main/resources" #&&
+    "rm src/main/resources/libuast.so" #&&
     "rm -rf libuast" #&&
     "rm libuast-bin.tar.gz" !
 }
@@ -133,10 +134,8 @@ compileScalaLibuast := {
 
     "mkdir -p ./src/main/resources/lib/" !
 
-    val nativeSourceFiles = "src/main/native/org_bblfsh_client_libuast_Libuast.cc "
-        // "src/main/native/jni_utils.cc " +
-        // "src/main/scala/org/bblfsh/client/libuast/nodeiface.cc " +
-        // "src/main/scala/org/bblfsh/client/libuast/memtracker.cc " +
+    val nativeSourceFiles = "src/main/native/org_bblfsh_client_v2_libuast_Libuast.cc " +
+        "src/main/native/jni_utils.cc "
 
     compileUnix(nativeSourceFiles)
     crossCompileMacOS(nativeSourceFiles)
@@ -151,12 +150,14 @@ def compileUnix(sourceFiles: String) = {
   }
 
   val osName = System.getProperty("os.name").toLowerCase()
-  if (osName.contains("mac os x")) {
-    val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
+  if (osName.contains("mac os x")) { // TODO(bzz): change to '-fPIC -O2' for release
+    val cmd:String = "g++ -shared -Wall -g -std=c++11 " +
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/darwin " +
       "-Isrc/main/resources/libuast " +
+      "-Lsrc/main/resources/libuast " +
+      "-l uast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles + " "
 
@@ -167,6 +168,8 @@ def compileUnix(sourceFiles: String) = {
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/linux " +
       "-Isrc/main/resources/libuast " +
+      "-Lsrc/main/resources/libuast " +
+      "-l uast " +
       "-o src/main/resources/lib/libscalauast.so " +
       sourceFiles + " "
 
@@ -194,6 +197,8 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
       "-Isrc/libuast-native/ " +
+      "-Lsrc/main/resources/libuast " +
+      "-l uast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles
 

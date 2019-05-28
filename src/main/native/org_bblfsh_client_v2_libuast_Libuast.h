@@ -23,6 +23,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter
   (JNIEnv *, jobject, jobject, jstring);
 
+jint JNI_OnLoad(JavaVM *vm, void *reserved);
+
 #ifdef __cplusplus
 }
 #endif
