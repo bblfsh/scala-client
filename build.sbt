@@ -105,6 +105,8 @@ getProtoFiles := {
     s"cp ${unzip_dir}/protocol/driver.proto ${sdkProto}/protocol/" #&&
     s"cp ${unzip_dir}/uast/role/generated.proto ${sdkProto}/uast/role" #&&
     s"rm -rf ${unzip_dir}" !
+
+    println("Done unpacking SDK")
 }
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
@@ -119,11 +121,13 @@ getLibuast := {
     s"curl -sL ${binaryReleaseUrl} -o libuast-bin.tar.gz" #&&
     "tar xzf libuast-bin.tar.gz" #&&
     s"mv ${os}-amd64 libuast" #&&
+    "mkdir -p src/main/resources" #&&
     "rm -rf src/main/resources/libuast" #&&
     "mv libuast src/main/resources" #&&
     "rm src/main/resources/libuast/libuast.so" #&& // always a static build
-    "rm -rf libuast" #&&
     "rm libuast-bin.tar.gz" !
+
+    println("Done unpacking libuast")
 }
 
 val compileScalaLibuast = TaskKey[Unit]("compileScalaLibuast", "Compile libScalaUast JNI library")
