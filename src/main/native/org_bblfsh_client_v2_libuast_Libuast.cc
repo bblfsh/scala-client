@@ -6,7 +6,9 @@
 #include "libuast.h"
 #include "libuast.hpp"
 
-JavaVM *jvm;  // FIXME(bzz): double-check and document
+// TODO(bzz): double-check and document. Suggestion and more context at
+// https://github.com/bblfsh/client-scala/pull/84#discussion_r288347756
+JavaVM *jvm;
 
 jobject asJvmBuffer(uast::Buffer buf) {
   JNIEnv *env = getJNIEnv();

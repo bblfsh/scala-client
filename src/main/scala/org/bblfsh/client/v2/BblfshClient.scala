@@ -100,7 +100,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
 }
 
 object BblfshClient {
-  val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024
+  val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
   val PreOrder      = 0
   val PostOrder     = 1

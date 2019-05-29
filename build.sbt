@@ -93,7 +93,7 @@ getProtoFiles := {
     println(s"Downloading and installing SDK$sdkMajor protocol buffer files...")
 
     val bblfshProto = s"${protoDir}/github.com/bblfsh"
-    val sdkProto = s"${bblfshProto}/sdk.${sdkMajor}"
+    val sdkProto = s"${bblfshProto}/sdk/${sdkMajor}"
 
     s"mkdir -p ${sdkProto}/protocol" !
 
@@ -121,7 +121,7 @@ getLibuast := {
     s"mv ${os}-amd64 libuast" #&&
     "rm -rf src/main/resources/libuast" #&&
     "mv libuast src/main/resources" #&&
-    "rm src/main/resources/libuast.so" #&&
+    "rm src/main/resources/libuast/libuast.so" #&& // always a static build
     "rm -rf libuast" #&&
     "rm libuast-bin.tar.gz" !
 }
@@ -156,7 +156,7 @@ def compileUnix(sourceFiles: String) = {
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/darwin " +
       "-Isrc/main/resources/libuast " +
-      "-Lsrc/main/resources/libuast " +
+      "-Lsrc/main/resources/libuast " + // sic, must be in the classpath for the test
       "-l uast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles + " "
@@ -191,8 +191,6 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
   }
 
   val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -lxml2 -std=c++11 " +
-      "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/libxml2/ " +
-      "-I" + osxHome + "/SDK/src/libuast-native/roles.c " +
       "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
