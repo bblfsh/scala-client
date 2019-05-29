@@ -1,9 +1,8 @@
 package org.bblfsh.client.v2
 
 import gopkg.in.bblfsh.sdk.v2.protocol.driver.SupportedLanguagesResponse
-import org.scalatest.{BeforeAndAfter, FunSuite, Ignore}
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
-@Ignore // unitll we have a bblfshd release supporting aliases
 class BblfshClientSupportedLanguagesTest extends FunSuite with BeforeAndAfter {
   val client = BblfshClient("0.0.0.0", 9432)
   var resp: SupportedLanguagesResponse = _

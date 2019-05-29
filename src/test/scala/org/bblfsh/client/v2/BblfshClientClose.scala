@@ -1,11 +1,10 @@
 package org.bblfsh.client.v2
 
 import gopkg.in.bblfsh.sdk.v2.protocol.driver.VersionResponse
-import org.scalatest.{BeforeAndAfter, FunSuite, Ignore}
+import org.scalatest.{BeforeAndAfter, FunSuite}
 
 import scala.io.Source
 
-@Ignore // unitll we have a bblfshd release supporting aliases
 class BblfshClientClose extends FunSuite with BeforeAndAfter {
   val client = BblfshClient("0.0.0.0", 9432)
 
