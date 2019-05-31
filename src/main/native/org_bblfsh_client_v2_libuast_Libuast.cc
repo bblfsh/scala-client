@@ -1,5 +1,4 @@
 #include "org_bblfsh_client_v2_libuast_Libuast.h"
-#include "jni_handle.h"
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
 
@@ -10,9 +9,38 @@
 // https://github.com/bblfsh/client-scala/pull/84#discussion_r288347756
 JavaVM *jvm;
 
+namespace {
 jobject asJvmBuffer(uast::Buffer buf) {
   JNIEnv *env = getJNIEnv();
   return env->NewDirectByteBuffer(buf.ptr, buf.size);
+}
+
+jfieldID getHandleField(JNIEnv *env, jobject obj, const char *name) {
+  jclass cls = env->GetObjectClass(obj);
+  if (env->ExceptionOccurred() || !cls) {
+    return nullptr;
+  }
+
+  jfieldID jfid = env->GetFieldID(cls, name, "J");
+  if (env->ExceptionOccurred() || !jfid) {
+    return nullptr;
+  }
+  return jfid;
+}
+
+template <typename T>
+T *getHandle(JNIEnv *env, jobject obj, const char *name) {
+  jlong handle = env->GetLongField(obj, getHandleField(env, obj, name));
+  if (env->ExceptionOccurred() || !handle) {
+    return nullptr;
+  }
+  return reinterpret_cast<T *>(handle);
+}
+
+template <typename T>
+void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
+  jlong handle = reinterpret_cast<jlong>(t);
+  env->SetLongField(obj, getHandleField(env, obj, name), handle);
 }
 
 class ContextExt {
@@ -73,6 +101,7 @@ class ContextExt {
     return asJvmBuffer(data);
   }
 };
+}  // namespace
 
 // v2.libuast.Libuast()
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
