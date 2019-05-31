@@ -218,4 +218,10 @@ def checkedProcess(cmd: String, name: String) {
   }
 }
 
+cleanFiles ++= Seq(
+  baseDirectory.value / "src/main/resources/libuast",
+  baseDirectory.value / "src/main/resources/lib",
+  baseDirectory.value / s"${protoDir}/github.com/bblfsh"
+)
+
 mainClass := Def.sequential(getProtoFiles, getLibuast, compileScalaLibuast, (mainClass in Compile)).value
