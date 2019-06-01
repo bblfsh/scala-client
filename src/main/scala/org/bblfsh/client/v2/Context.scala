@@ -9,6 +9,10 @@ case class Context(nativeContext: Long) {
 
     @native def filter()
 
+    // TODO(bzz): add loading of the root node, after clarifying when it's needed
+    // https://github.com/bblfsh/client-python/blob/master/bblfsh/pyuast.cc#L364
+    // @native def load(): ?
+
     override def finalize(): Unit = {
         this.dispose()
     }

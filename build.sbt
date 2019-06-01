@@ -127,6 +127,12 @@ getLibuast := {
     "rm src/main/resources/libuast/libuast.so" #&& // always a static build
     "rm libuast-bin.tar.gz" !
 
+    "find src/main/resources"!
+
+    "nm src/main/resources/libuast/libuast.a" #| "grep -c UastDecode"!
+
+    "nm src/main/resources/libuast/libuast.a" #| "wc -l"!
+
     println("Done unpacking libuast")
 }
 
@@ -154,16 +160,15 @@ def compileUnix(sourceFiles: String) = {
   }
 
   val osName = System.getProperty("os.name").toLowerCase()
-  if (osName.contains("mac os x")) { // TODO(bzz): change to '-fPIC -O2' for release
+  if (osName.contains("mac os x")) { // TODO(bzz): change back to '-fPIC -O2' for release
     val cmd:String = "g++ -shared -Wall -g -std=c++11 " +
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/darwin " +
       "-Isrc/main/resources/libuast " +
-      "-Lsrc/main/resources/libuast " + // sic, must be in the classpath for the test
-      "-l uast " +
-      "-o src/main/resources/lib/libscalauast.dylib " +
-      sourceFiles + " "
+      "-o src/main/resources/lib/libscalauast.dylib " + // sic, must be in the classpath for the test
+      sourceFiles +
+      "src/main/resources/libuast/libuast.a "
 
     checkedProcess(cmd, "macOS build")
   } else {
@@ -172,12 +177,13 @@ def compileUnix(sourceFiles: String) = {
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/linux " +
       "-Isrc/main/resources/libuast " +
-      "-Lsrc/main/resources/libuast " +
-      "-l uast " +
       "-o src/main/resources/lib/libscalauast.so " +
-      sourceFiles + " "
+      sourceFiles +
+      "src/main/resources/libuast/libuast.a "
 
     checkedProcess(cmd, "Linux build")
+
+    "nm src/main/resources/lib/libscalauast.so" #| "grep -c UastDecode"!
   }
 }
 
@@ -199,10 +205,9 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
       "-Isrc/libuast-native/ " +
-      "-Lsrc/main/resources/libuast " +
-      "-l uast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
-      sourceFiles
+      sourceFiles +
+      "src/main/resources/libuast/libuast.a "
 
   checkedProcess(cmd, "macOS cross-compile build")
 }

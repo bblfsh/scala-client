@@ -23,6 +23,7 @@ jobs:
   include:
     - name: 'All tests'
       stage: test
+      if: tag IS present # TODO(bzz): enable on PRs as soon as migrated to V2
       install: &test_setup_anchor
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
@@ -36,6 +37,7 @@ jobs:
     - name: 'V2: passing tests' # TODO(#83): remove, after both tests sets converge
       install: *test_setup_anchor
       script:
+        - sudo apt-get install -y binutils
         - ./sbt assembly
         - ./sbt "testOnly *Close* *ClientVersion* *SupportedLanguages*"
         - ./sbt "testOnly org.bblfsh.client.v2.BblfshClientParseTest -- -z \"Decoded UAST after parsing\""
