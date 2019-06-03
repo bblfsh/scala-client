@@ -1,7 +1,6 @@
-package org.bblf.client
+package org.bblfsh.client.v2
 
-import gopkg.in.bblfsh.sdk.v1.protocol.generated.SupportedLanguagesResponse
-import org.bblfsh.client.BblfshClient
+import gopkg.in.bblfsh.sdk.v2.protocol.driver.SupportedLanguagesResponse
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class BblfshClientSupportedLanguagesTest extends FunSuite with BeforeAndAfter {
