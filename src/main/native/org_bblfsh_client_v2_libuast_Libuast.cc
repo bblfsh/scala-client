@@ -137,16 +137,9 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   return jCtxExt;
 }
 
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
-                                                                 jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
-  setHandle<ContextExt>(env, self, 0, "nativeContext");
-  delete p;
-}
-
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
     JNIEnv *, jobject, jobject, jstring) {
-  return NULL;  // TODO(bzz): implement
+  return nullptr;  // TODO(bzz): implement
 }
 
 // v2.Context()
@@ -154,6 +147,19 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root(JNIEnv *env,
                                                                  jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
   return p->RootNode();
+}
+
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
+                                                                 jobject self) {
+  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  setHandle<ContextExt>(env, self, 0, "nativeContext");
+  delete p;
+}
+
+// v2.Node()
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Node_load(JNIEnv *,
+                                                              jobject) {
+  return nullptr;  // TODO(bzz): implement
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
