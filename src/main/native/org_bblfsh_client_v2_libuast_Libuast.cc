@@ -93,7 +93,7 @@ class ContextExt {
     return toJ(root);
   }
 
-  // Encode serializes existing-on-guest-side UAST.
+  // Encode serializes external UAST.
   // Borrows the reference.
   jobject Encode(jobject node, UastFormat format) {
     NodeHandle h = toHandle(node);
@@ -147,6 +147,15 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root(JNIEnv *env,
                                                                  jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
   return p->RootNode();
+}
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
+    JNIEnv *env, jobject self, jobject node) {
+  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
+
+  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  return p->Encode(node, fmt);
+  return nullptr;
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,

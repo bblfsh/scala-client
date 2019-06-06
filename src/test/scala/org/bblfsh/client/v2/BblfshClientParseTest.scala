@@ -55,11 +55,11 @@ class BblfshClientParseTest extends FlatSpec
   }
 
   "Encoding back the RootNode of decoded UAST" should "produce same bytes" in {
-    val uast = resp.uast.decode()
-    val rootNode: Node = uast.root()
+    val uastCtx: Context = resp.uast.decode()
+    val rootNode: Node = uastCtx.root()
     println(s"Root node: $rootNode")
 
-    val encodedBytes: ByteBuffer = uast.encode(rootNode, 0)
+    val encodedBytes: ByteBuffer = uastCtx.encode(rootNode)
 
     encodedBytes.capacity should be (resp.uast.asReadOnlyByteBuffer.capacity)
     encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
