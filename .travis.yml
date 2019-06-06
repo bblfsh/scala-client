@@ -40,8 +40,10 @@ jobs:
         - sudo apt-get install -y binutils
         - ./sbt assembly
         - ./sbt "testOnly *Close* *ClientVersion* *SupportedLanguages*"
+        - ./sbt "testOnly org.bblfsh.client.v2.BblfshClientParseTest -- -z \"Parsed UAST for .java file\""
         - ./sbt "testOnly org.bblfsh.client.v2.BblfshClientParseTest -- -z \"Decoded UAST after parsing\""
         - ./sbt "testOnly org.bblfsh.client.v2.BblfshClientParseTest -- -z \"Decoded UAST RootNode\""
+
       after_failure: *failure_logs_anchor
 
     - name: 'Cross-compile, release & publish to Sonatype'
