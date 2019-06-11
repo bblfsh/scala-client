@@ -1,5 +1,9 @@
 package org.bblfsh.client.v2
 
+/** UAST nodes representation on the JVM side.
+ *
+ *  Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
+ */
 sealed abstract class JNode
 case class JString(s: String) extends JNode
 case class JDouble(num: Double) extends JNode

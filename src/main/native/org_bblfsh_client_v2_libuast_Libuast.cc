@@ -155,7 +155,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
 
   ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
   return p->Encode(node, fmt);
-  return nullptr;
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
