@@ -15,6 +15,8 @@ jobject asJvmBuffer(uast::Buffer buf) {
   return env->NewDirectByteBuffer(buf.ptr, buf.size);
 }
 
+const char *nativeContext = "nativeContext";
+
 jfieldID getHandleField(JNIEnv *env, jobject obj, const char *name) {
   jclass cls = env->GetObjectClass(obj);
   if (env->ExceptionOccurred() || !cls) {
@@ -145,7 +147,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
 // v2.Context()
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root(JNIEnv *env,
                                                                  jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->RootNode();
 }
 
@@ -153,14 +155,14 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
     JNIEnv *env, jobject self, jobject node) {
   UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
 
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->Encode(node, fmt);
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
                                                                  jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
-  setHandle<ContextExt>(env, self, 0, "nativeContext");
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
+  setHandle<ContextExt>(env, self, 0, nativeContext);
   delete p;
 }
 
