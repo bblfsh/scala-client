@@ -15,6 +15,8 @@ jobject asJvmBuffer(uast::Buffer buf) {
   return env->NewDirectByteBuffer(buf.ptr, buf.size);
 }
 
+const char *nativeContext = "nativeContext";
+
 jfieldID getHandleField(JNIEnv *env, jobject obj, const char *name) {
   jclass cls = env->GetObjectClass(obj);
   if (env->ExceptionOccurred() || !cls) {
@@ -93,7 +95,7 @@ class ContextExt {
     return toJ(root);
   }
 
-  // Encode serializes existing-on-guest-side UAST.
+  // Encode serializes external UAST.
   // Borrows the reference.
   jobject Encode(jobject node, UastFormat format) {
     NodeHandle h = toHandle(node);
@@ -137,23 +139,37 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   return jCtxExt;
 }
 
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
-                                                                 jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
-  setHandle<ContextExt>(env, self, 0, "nativeContext");
-  delete p;
-}
-
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
     JNIEnv *, jobject, jobject, jstring) {
-  return NULL;  // TODO(bzz): implement
+  return nullptr;  // TODO(bzz): implement
 }
 
 // v2.Context()
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root(JNIEnv *env,
                                                                  jobject self) {
-  ContextExt *p = getHandle<ContextExt>(env, self, "nativeContext");
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->RootNode();
+}
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
+    JNIEnv *env, jobject self, jobject node) {
+  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
+
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
+  return p->Encode(node, fmt);
+}
+
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
+                                                                 jobject self) {
+  ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
+  setHandle<ContextExt>(env, self, 0, nativeContext);
+  delete p;
+}
+
+// v2.Node()
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Node_load(JNIEnv *,
+                                                              jobject) {
+  return nullptr;  // TODO(bzz): implement
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

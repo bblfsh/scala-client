@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     org_bblfsh_client_v2_Node
  * Method:    load
- * Signature: ()Lscala/collection/immutable/Map;
+ * Signature: ()Lorg/bblfsh/client/v2/JNode;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Node_load
   (JNIEnv *, jobject);
