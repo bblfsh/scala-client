@@ -6,7 +6,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 import scala.io.Source
 
 class BblfshClientVersionTest extends FunSuite with BeforeAndAfter {
-  val client = BblfshClient("0.0.0.0", 9432)
+  val client = BblfshClient("localhost", 9432)
   val fileName = "src/test/resources/SampleJavaFile.java"
   val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
   var resp: VersionResponse = _

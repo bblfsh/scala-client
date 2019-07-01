@@ -4,7 +4,7 @@ import gopkg.in.bblfsh.sdk.v2.protocol.driver.SupportedLanguagesResponse
 import org.scalatest.{BeforeAndAfter, FunSuite}
 
 class BblfshClientSupportedLanguagesTest extends FunSuite with BeforeAndAfter {
-  val client = BblfshClient("0.0.0.0", 9432)
+  val client = BblfshClient("localhost", 9432)
   var resp: SupportedLanguagesResponse = _
 
   before {
