@@ -189,7 +189,7 @@ class Node : public uast::Node<Node *> {
 
   NodeKind Kind() { return kind; }
 
-  // TODO(#90) all 'As*' are unused stubs, make them buletprof and test
+  // TODO(#90): implement and test (all 'As*' are unused stubs for now)
   std::string *AsString() {
     if (!str) {
       JNIEnv *env = getJNIEnv();
@@ -263,20 +263,18 @@ class Node : public uast::Node<Node *> {
   }
 
   void SetValue(size_t i, Node *val) {
+    JNIEnv *env = getJNIEnv();
     jobject v = nullptr;
     if (val && val->obj) {
       v = val->obj;
-    } else {  // FIXME(bzz)
-      //   v = "new JNull instance";  // Py_None;
+    } else {
+      v = NewJavaObject(env, CLS_JNULL, "()V");
     }
 
-    jobject res =
-        ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, &obj, v);
-    if (res == nullptr) {  // FIXME(bzz) replace by ThrowNew() to JVM
-      throw std::runtime_error(std::string("failed to call ")
-                                   .append(CLS_JARR)
-                                   .append(".add() from Node::SetValue()"));
-    }
+    ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, &obj, v);
+    checkJvmException(std::string("failed to call ")
+                          .append(CLS_JARR)
+                          .append(".add() from Node::SetValue()"));
   }
   void SetKeyValue(std::string key, Node *val) {
     JNIEnv *env = getJNIEnv();
@@ -291,12 +289,10 @@ class Node : public uast::Node<Node *> {
 
     jobject res =
         ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, &obj, k, v);
-    if (res == nullptr) {  // FIXME(bzz) replace by ThrowNew() to JVM
-      throw std::runtime_error(
-          std::string("failed to call JObject.add() from Node::SetKeyValue(")
-              .append(key)
-              .append(")"));
-    }
+    checkJvmException(
+        std::string("failed to call JObject.add() from Node::SetKeyValue(")
+            .append(key)
+            .append(")"));
   }
 };
 
@@ -435,21 +431,16 @@ class Context {
     JNIEnv *env = getJNIEnv();
 
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, src, "ctx");
-    if (!nodeExtCtx) {
-      throw std::runtime_error("Cannot get Node.ctx");
-    }
+    checkJvmException("failed to get Node.ctx");
+
     auto sctx = nodeExtCtx->ctx;
     NodeHandle snode =
         reinterpret_cast<NodeHandle>(getHandle<NodeHandle>(env, src, "handle"));
-    if (!snode) {
-      throw std::runtime_error("Cannot get Node.handle");
-    }
+    checkJvmException("failed to get Node.handle");
 
     Node *node = uast::Load(sctx, snode, ctx);
-    if (!node) {
-      throw std::runtime_error("Failed to uast::Load()");
-    }
-    return toJ(node);  // new ref
+    checkJvmException("failed to uast::Load()");
+    return toJ(node);
   }
 };
 
@@ -465,13 +456,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 
   // works only with ByteBuffer.allocateDirect()
   void *buf = env->GetDirectBufferAddress(directBuf);
-  if (env->ExceptionCheck() == JNI_TRUE) {
-    return nullptr;
-  }
+  checkJvmException("failed to use buffer for direct access");
+
   jlong len = env->GetDirectBufferCapacity(directBuf);
-  if (env->ExceptionCheck() == JNI_TRUE) {
-    return nullptr;
-  }
+  checkJvmException("failed to get buffer capacity");
 
   // another option (instead of XXX) is to use
   // GetPrimitiveArrayCritical
@@ -482,12 +470,11 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   auto p = new ContextExt(ctx);
 
   jobject jCtxExt = NewJavaObject(env, CLS_CTX, "(J)V", p);
-  if (env->ExceptionCheck() == JNI_TRUE || !jCtxExt) {
+  if (env->ExceptionCheck() || !jCtxExt) {
     jCtxExt = nullptr;
     delete (ctx);
     delete (p);
-    env->ExceptionDescribe();
-    throw std::runtime_error("failed to instantiate Context class");
+    checkJvmException("failed to instantiate Context class");
   }
 
   return jCtxExt;
@@ -547,7 +534,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Node_load(JNIEnv *env,
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env;
   if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_8) != JNI_OK) {
-    return -1;
+    return JNI_ERR;
   }
   jvm = vm;
 
