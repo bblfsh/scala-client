@@ -1,5 +1,7 @@
 package org.bblfsh.client.v2
 
+import java.io.Serializable
+
 import scala.collection.mutable
 
 /** UAST nodes representation on the JVM side.
@@ -46,15 +48,31 @@ case class JFloat(num: Double) extends JNode
 case class JUint(num: Long) extends JNode
 case class JInt(num: Long) extends JNode
 case class JBool(value: Boolean) extends JNode
+
 case class JObject(obj: mutable.Buffer[JField]) extends JNode {
   def this() = this(mutable.Buffer[JField]())
   def add(k: String, v: JNode) = {
     obj += ((k, v))
   }
 }
+case object JObject {
+  def apply[T <: (Product with Serializable with JNode)](ns: (String, T)*) = {
+    val jo = new JObject()
+    jo.obj ++= ns
+    jo
+  }
+}
+
 case class JArray(arr: mutable.Buffer[JNode]) extends JNode {
   def this(size: Int) = this(new mutable.ArrayBuffer[JNode](size))
-  def add(v: JNode) = {
-    arr += v
+  def add(n: JNode) = {
+    arr += n
+  }
+}
+case object JArray {
+  def apply[T <:  (Product with Serializable with JNode)](ns: T *)   = {
+    val ja = new JArray(ns.length)
+    ja.arr ++= ns
+    ja
   }
 }

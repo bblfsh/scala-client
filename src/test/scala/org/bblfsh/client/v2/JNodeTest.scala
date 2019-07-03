@@ -2,20 +2,18 @@ package org.bblfsh.client.v2
 
 import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 
-import scala.collection.mutable.Buffer
-
 
 class JNodeTest extends FlatSpec
   with BeforeAndAfter
   with Matchers {
 
-  val rootTree = JArray(Buffer(
-    JObject(Buffer(
+  val rootTree = JArray(
+    JObject(
       "k1" -> JString("v1"),
       "k2" -> JBool(false)
-    )),
+    ),
     JString("test")
-  ))
+  )
 
   "JNode" should "expose children" in {
     rootTree.children.size shouldEqual 2
