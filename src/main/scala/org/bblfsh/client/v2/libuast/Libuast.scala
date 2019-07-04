@@ -1,14 +1,13 @@
 package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.Node
-import org.bblfsh.client.v2.Context
+import org.bblfsh.client.v2.{ContextExt, JNode, Node}
 
 import scala.collection.Iterator
 import java.io.File
 import java.nio.file.Paths
 import java.nio.ByteBuffer
 
-import org.apache.commons.io.{IOUtils, FileUtils}
+import org.apache.commons.io.{FileUtils, IOUtils}
 
 object Libuast {
   final var loaded = false
@@ -86,6 +85,6 @@ class Libuast {
   //   new Libuast.UastIterator(node, treeOrder)
   // }
 
-  @native def decode(buf: ByteBuffer): Context
+  @native def decode(buf: ByteBuffer): ContextExt
   @native def filter(node: Node, query: String): List[Node]
 }
