@@ -2,6 +2,7 @@
 
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
+#include "org_bblfsh_client_v2_ContextExt.h"
 #include "org_bblfsh_client_v2_Context__.h"
 #include "org_bblfsh_client_v2_Node.h"
 #include "org_bblfsh_client_v2_libuast_Libuast.h"
@@ -72,9 +73,7 @@ class ContextExt {
 
     JNIEnv *env = getJNIEnv();
     jclass cls = env->FindClass(CLS_NODE);
-    if (env->ExceptionOccurred() || !cls) {
-      return 0;
-    }
+    checkJvmException("failed to find class " + std::string(CLS_NODE));
 
     if (!env->IsInstanceOf(obj, cls)) {
       const char *err = "ContextExt.toHandle() called not on Node type";
@@ -84,9 +83,7 @@ class ContextExt {
 
     auto handle =
         (NodeHandle)env->GetLongField(obj, getField(env, obj, "handle"));
-    if (env->ExceptionOccurred() || !handle) {
-      return 0;
-    }
+    checkJvmException("failed to get field Node.handle");
 
     return handle;
   }
@@ -103,11 +100,12 @@ class ContextExt {
     return toJ(root);
   }
 
-  // Encode serializes external UAST.
+  // Encode serializes the external UAST.
   // Borrows the reference.
   jobject Encode(jobject node, UastFormat format) {
-    NodeHandle h = toHandle(node);
-    uast::Buffer data = ctx->Encode(h, format);
+    // if (!assertNotContext(node)) return nullptr;
+
+    uast::Buffer data = ctx->Encode(toHandle(node), format);
     return asJvmBuffer(data);
   }
 };
@@ -131,7 +129,7 @@ class Node : public uast::Node<Node *> {
   static NodeKind kindOf(jobject obj) {
     JNIEnv *env = getJNIEnv();
     // TODO(bzz): expose JNode.kind & replace type comparison \w a string test
-    if (!obj) {
+    if (!obj || env->IsInstanceOf(obj, env->FindClass(CLS_JNULL))) {
       return NODE_NULL;
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JSTR))) {
       return NODE_STRING;
@@ -189,49 +187,71 @@ class Node : public uast::Node<Node *> {
 
   NodeKind Kind() { return kind; }
 
-  // TODO(#90): implement and test (all 'As*' are unused stubs for now)
-  std::string *AsString() {
+  std::string *AsString() {  // new ref
     if (!str) {
+      const char methodName[] = "str";
       JNIEnv *env = getJNIEnv();
-      const char *utf = env->GetStringUTFChars((jstring)obj, 0);
+      jstring jstr = (jstring)ObjectMethod(
+          env, methodName, "()Ljava/lang/String;", CLS_JSTR, &obj);
+
+      const char *utf = env->GetStringUTFChars(jstr, 0);
       str = new std::string(utf);
-      env->ReleaseStringUTFChars((jstring)obj, utf);
+      env->ReleaseStringUTFChars(jstr, utf);
     }
 
     std::string *s = new std::string(*str);
     return s;
   }
   int64_t AsInt() {
+    const char methodName[] = "num";
     JNIEnv *env = getJNIEnv();
-    jclass cls = env->FindClass("java/lang/Integer");
-    jmethodID valueId = env->GetMethodID(cls, "longValue", "()J");
-    long long value = (long long)env->CallLongMethod(obj, valueId);
+    jmethodID mID = MethodID(env, methodName, "()J", CLS_JINT);
+
+    long long value = (long long)env->CallLongMethod(obj, mID);
+    checkJvmException(std::string("failed to call ")
+                          .append(CLS_JINT)
+                          .append(".")
+                          .append(methodName)
+                          .append(" at Node::AsInt()"));
     return (int64_t)(value);
   }
   uint64_t AsUint() {
+    const char methodName[] = "get";
     JNIEnv *env = getJNIEnv();
-    jclass cls = env->FindClass("java/lang/Integer");
-    jmethodID valueId = env->GetMethodID(cls, "intValue", "()I");
-    jlong value = env->CallIntMethod(obj, valueId);
+    jmethodID mID = MethodID(env, methodName, "()J", CLS_JUINT);
 
-    jmethodID mId = env->GetMethodID(cls, "toUnsignedLong", "(I)J");
-    jlong v = env->CallLongMethod(obj, mId, value);
-
-    return (uint64_t)(v);
+    jlong value = env->CallLongMethod(obj, mID);
+    checkJvmException(std::string("failed to call ")
+                          .append(CLS_JUINT)
+                          .append(".")
+                          .append(methodName)
+                          .append(" at Node::AsUint()"));
+    return (uint64_t)(value);
   }
   double AsFloat() {
+    const char methodName[] = "num";
     JNIEnv *env = getJNIEnv();
-    jclass cls = env->FindClass("java/lang/Double");
-    jmethodID valueId = env->GetMethodID(cls, "floatValue", "()F");
-    float value = (float)env->CallFloatMethod(obj, valueId);
+    jmethodID mID = MethodID(env, methodName, "()D", CLS_JFLT);
+
+    double value = (double)env->CallDoubleMethod(obj, mID);
+    checkJvmException(std::string("failed to call ")
+                          .append(CLS_JFLT)
+                          .append(".")
+                          .append(methodName)
+                          .append(" at Node::AsFloat()"));
     return value;
   }
   bool AsBool() {
+    const char methodName[] = "value";
     JNIEnv *env = getJNIEnv();
-    // TODO(bzz) check failures, cache classes, read 'value' filed
-    jclass cls = env->FindClass("java/lang/Boolean");
-    jmethodID valueId = env->GetMethodID(cls, "booleanValue", "()Z");
-    bool value = (bool)env->CallBooleanMethod(obj, valueId);
+    jmethodID mID = MethodID(env, methodName, "()Z", CLS_JBOOL);
+
+    bool value = (bool)env->CallBooleanMethod(obj, mID);
+    checkJvmException(std::string("failed to call ")
+                          .append(CLS_JBOOL)
+                          .append(".")
+                          .append(methodName)
+                          .append(" at Node::AsBool()"));
     return value;
   }
   size_t Size() {
@@ -245,7 +265,7 @@ class Node : public uast::Node<Node *> {
 
     JNIEnv *env = getJNIEnv();
     jstring key = (jstring)ObjectMethod(env, "keyAt", METHOD_JNODE_KEY_AT,
-                                        CLS_JNODE, &obj);
+                                        CLS_JNODE, &obj, i);
 
     const char *k = env->GetStringUTFChars(key, 0);
     std::string *s = new std::string(k);
@@ -258,7 +278,7 @@ class Node : public uast::Node<Node *> {
 
     JNIEnv *env = getJNIEnv();
     jobject val =
-        ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, &obj);
+        ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, &obj, i);
     return lookupOrCreate(env->NewGlobalRef(val));  // new ref
   }
 
@@ -287,8 +307,7 @@ class Node : public uast::Node<Node *> {
 
     jstring k = env->NewStringUTF(key.data());
 
-    jobject res =
-        ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, &obj, k, v);
+    ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, &obj, k, v);
     checkJvmException(
         std::string("failed to call JObject.add() from Node::SetKeyValue(")
             .append(key)
@@ -404,6 +423,9 @@ class Context {
     if (node == nullptr) return nullptr;
     return iface->toJ(node);
   }
+  // toNode returns a node associated with a JVM object.
+  // Returns a new reference.
+  Node *toNode(jobject obj) { return iface->lookupOrCreate(obj); }
 
  public:
   Context() {
@@ -425,6 +447,16 @@ class Context {
   jobject RootNode() {
     Node *root = ctx->RootNode();
     return toJ(root);  // new ref
+  }
+
+  // Encode serializes UAST.
+  // Creates a new reference.
+  jobject Encode(jobject node, UastFormat format) {
+    // if (!assertNotContext(node)) return nullptr;
+
+    Node *n = toNode(node);
+    uast::Buffer data = ctx->Encode(n, format);
+    return asJvmBuffer(data);
   }
 
   jobject LoadFrom(jobject src) {  // JNode
@@ -474,13 +506,13 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
     jCtxExt = nullptr;
     delete (ctx);
     delete (p);
-    checkJvmException("failed to instantiate Context class");
+    checkJvmException("failed to instantiate ContextExt class");
   }
 
   return jCtxExt;
 }
 
-// TODO(#86): implement
+// TODO(#83): implement
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
     JNIEnv *, jobject, jobject, jstring) {
   return nullptr;
@@ -490,21 +522,31 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
 //              v2.Context()
 // ==========================================
 
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
+    JNIEnv *env, jobject self, jobject node) {
+  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument
+
+  Context *p = getHandle<Context>(env, self, nativeContext);
+  return p->Encode(node, fmt);
+}
+
 JNIEXPORT jlong JNICALL
 Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   auto c = new Context();
-  uast::Context<NodeHandle> *ctx;  // TODO(#90): init from c on encode() impl
-  auto p = new ContextExt(ctx);
-  return (long)p;
+  return (long)c;
 }
 
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root(JNIEnv *env,
-                                                                 jobject self) {
+// ==========================================
+//              v2.ContextExt()
+// ==========================================
+
+JNIEXPORT jobject JNICALL
+Java_org_bblfsh_client_v2_ContextExt_root(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->RootNode();
 }
 
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
     JNIEnv *env, jobject self, jobject node) {
   UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
 
@@ -512,8 +554,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
   return p->Encode(node, fmt);
 }
 
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
-                                                                 jobject self) {
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   setHandle<ContextExt>(env, self, 0, nativeContext);
   delete p;

@@ -10,15 +10,23 @@ extern "C" {
 /*
  * Class:     org_bblfsh_client_v2_Context
  * Method:    root
- * Signature: ()Lorg/bblfsh/client/v2/Node;
+ * Signature: ()Lorg/bblfsh/client/v2/JNode;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_root
   (JNIEnv *, jobject);
 
 /*
  * Class:     org_bblfsh_client_v2_Context
+ * Method:    filter
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_filter
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_bblfsh_client_v2_Context
  * Method:    encode
- * Signature: (Lorg/bblfsh/client/v2/Node;)Ljava/nio/ByteBuffer;
+ * Signature: (Lorg/bblfsh/client/v2/JNode;)Ljava/nio/ByteBuffer;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode
   (JNIEnv *, jobject, jobject);
@@ -29,14 +37,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_Context
- * Method:    filter
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_filter
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

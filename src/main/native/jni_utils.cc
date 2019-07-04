@@ -20,8 +20,9 @@ JNIEnv *getJNIEnv() {
   return pEnv;
 }
 
+// Class fully qualified names
 const char CLS_NODE[] = "org/bblfsh/client/v2/Node";
-const char CLS_CTX[] = "org/bblfsh/client/v2/Context";
+const char CLS_CTX[] = "org/bblfsh/client/v2/ContextExt";
 const char CLS_OBJ[] = "java/lang/Object";
 const char CLS_RE[] = "java/lang/RuntimeException";
 const char CLS_JNODE[] = "org/bblfsh/client/v2/JNode";
@@ -34,6 +35,7 @@ const char CLS_JUINT[] = "org/bblfsh/client/v2/JUint";
 const char CLS_JARR[] = "org/bblfsh/client/v2/JArray";
 const char CLS_JOBJ[] = "org/bblfsh/client/v2/JObject";
 
+// Method signatures
 const char METHOD_JNODE_KEY_AT[] = "(I)Ljava/lang/String;";
 const char METHOD_JNODE_VALUE_AT[] = "(I)Lorg/bblfsh/client/v2/JNode;";
 const char METHOD_JOBJ_ADD[] =
@@ -126,8 +128,8 @@ jfieldID getField(JNIEnv *env, jobject obj, const char *name) {
   return jfid;
 }
 
-static jmethodID MethodID(JNIEnv *env, const char *method,
-                          const char *signature, const char *className) {
+jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
+                   const char *className) {
   jclass cls = env->FindClass(className);
   checkJvmException(std::string("failed to find a class ").append(className));
 
@@ -171,7 +173,7 @@ jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
   va_start(varargs, object);
   jobject res = env->CallObjectMethodV(*object, mId, varargs);
   va_end(varargs);
-  checkJvmException(std::string("failed get varargs for ")
+  checkJvmException(std::string("failed to get varargs for ")
                         .append(className)
                         .append(".")
                         .append(method));

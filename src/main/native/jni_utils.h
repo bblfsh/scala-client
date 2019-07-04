@@ -44,4 +44,5 @@ jint IntMethod(JNIEnv *, const char *, const char *, const char *,
 jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
                      const jobject *, ...);
 
+jmethodID MethodID(JNIEnv *, const char *, const char *, const char *);
 #endif
