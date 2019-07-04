@@ -4,7 +4,7 @@ import org.scalatest.{BeforeAndAfter, FunSuite}
 
 
 class BblfshClientClose extends FunSuite with BeforeAndAfter {
-  val client = BblfshClient("0.0.0.0", 9432)
+  val client = BblfshClient("localhost", 9432)
 
   test("Check close") {
     // call client method to check connection works

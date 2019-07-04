@@ -1,8 +1,10 @@
 package org.bblfsh.client.v2
 	
 import java.nio.ByteBuffer
-	
+
 case class Context(nativeContext: Long) {
+    def this() = this(Context.create())
+
     @native def root(): Node
     @native def encode(n: Node): ByteBuffer
     @native def dispose()
@@ -16,4 +18,8 @@ case class Context(nativeContext: Long) {
     override def finalize(): Unit = {
         this.dispose()
     }
+}
+
+object Context {
+    @native def create(): Long
 }

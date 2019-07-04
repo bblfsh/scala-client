@@ -18,12 +18,10 @@ stages:
   - name: release
     if: tag IS present
 
-
 jobs:
   include:
     - name: 'All tests'
       stage: test
-      if: tag IS present # TODO(bzz): enable on PRs as soon as migrated to V2
       install: &test_setup_anchor
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
@@ -33,15 +31,6 @@ jobs:
         - ./sbt assembly test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
-
-    - name: 'V2: passing tests' # TODO(#83): remove, after both tests sets converge
-      install: *test_setup_anchor
-      script:
-        - sudo apt-get install -y binutils
-        - ./sbt assembly
-        - ./sbt "testOnly *Close* *ClientVersion* *SupportedLanguages* *BblfshClientParseTest"
-
-      after_failure: *failure_logs_anchor
 
     - name: 'Cross-compile, release & publish to Sonatype'
       stage: release

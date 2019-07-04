@@ -2,30 +2,10 @@ package org.bblfsh.client.v2
 
 import java.nio.ByteBuffer
 
-import gopkg.in.bblfsh.sdk.v2.protocol.driver.ParseResponse
-import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
 
-import scala.io.Source
-
-class BblfshClientParseTest extends FlatSpec
-  with BeforeAndAfter
-  with BeforeAndAfterAll
-  with Matchers {
-
-  val client = BblfshClient("0.0.0.0", 9432)
-  val fileName = "src/test/resources/SampleJavaFile.java"
-  val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
-  var resp: ParseResponse = _
+class BblfshClientParseTest extends BblfshClientBaseTest {
 
   import BblfshClient._ // enables uast.* methods
-
-  before {
-    resp = client.parse(fileName, fileContent)
-  }
-
-  override def afterAll {
-    client.close()
-  }
 
   "Parsed UAST for .java file" should "not be empty" in {
     assert(resp != null)
@@ -61,7 +41,7 @@ class BblfshClientParseTest extends FlatSpec
 
     val encodedBytes: ByteBuffer = uastCtx.encode(rootNode)
 
-    encodedBytes.capacity should be (resp.uast.asReadOnlyByteBuffer.capacity)
+    encodedBytes.capacity should be(resp.uast.asReadOnlyByteBuffer.capacity)
     encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
 
     println(resp.uast.asReadOnlyByteBuffer)
