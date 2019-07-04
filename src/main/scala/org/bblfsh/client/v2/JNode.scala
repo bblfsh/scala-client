@@ -5,10 +5,11 @@ import java.io.Serializable
 import scala.collection.mutable
 
 /** UAST nodes representation on the JVM side.
- *
- *  Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
- */
+  *
+  *  Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
+  */
 sealed abstract class JNode {
+  /* Dynamic dispatch is a convenience to be called from JNI */
   def children: Seq[JNode] = this match {
     case JObject(l) => l map (_._2)
     case JArray(l) => l
@@ -19,8 +20,7 @@ sealed abstract class JNode {
     case JObject(l) => l.size
     case JArray(l) => l.size
     case JString(l) => l.length
-    case JNothing => 0
-    case _ => 1
+    case _ => 0
   }
 
   def keyAt(i: Int): String = this match {
@@ -45,7 +45,9 @@ case object JNothing extends JNode // 'zero' value for JNode
 case class JNull() extends JNode
 case class JString(str: String) extends JNode
 case class JFloat(num: Double) extends JNode
-case class JUint(num: Long) extends JNode
+case class JUint(num: Long) extends JNode {
+  def get(): Long = java.lang.Integer.toUnsignedLong(num.toInt)
+}
 case class JInt(num: Long) extends JNode
 case class JBool(value: Boolean) extends JNode
 

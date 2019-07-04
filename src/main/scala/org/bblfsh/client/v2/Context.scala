@@ -9,7 +9,7 @@ case class Context(nativeContext: Long) {
     @native def encode(n: Node): ByteBuffer
     @native def dispose()
 
-    @native def filter() // TODO(bzz)
+    @native def filter()
 
     // TODO(bzz): add loading of the root node, after clarifying when it's needed
     // https://github.com/bblfsh/client-python/blob/master/bblfsh/pyuast.cc#L364

@@ -139,7 +139,7 @@ class Node : public uast::Node<Node *> {
       return NODE_INT;
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JFLT))) {
       return NODE_FLOAT;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JBOL))) {
+    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JBOOL))) {
       return NODE_BOOL;
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JUINT))) {
       return NODE_BOOL;
@@ -378,8 +378,8 @@ class Interface : public uast::NodeCreator<Node *> {
     return create(NODE_FLOAT, i);
   }
   Node *NewBool(bool v) {
-    jobject i = NewJavaObject(getJNIEnv(), CLS_JBOL, "(Z)V", v);
-    checkJvmException("failed to create new " + std::string(CLS_JBOL));
+    jobject i = NewJavaObject(getJNIEnv(), CLS_JBOOL, "(Z)V", v);
+    checkJvmException("failed to create new " + std::string(CLS_JBOOL));
     return create(NODE_BOOL, i);
   }
 };
