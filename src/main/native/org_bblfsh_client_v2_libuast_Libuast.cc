@@ -50,6 +50,28 @@ jobject asJvmBuffer(uast::Buffer buf) {
   return env->NewDirectByteBuffer(buf.ptr, buf.size);
 }
 
+// Checks if a given object is of Node/JNode class
+bool isContext(jobject obj, JNIEnv *env) {
+  if (!obj) return false;
+
+  jclass ctxCls = env->FindClass(CLS_CTX);
+  checkJvmException("failed to find class " + std::string(CLS_CTX));
+
+  return env->IsInstanceOf(obj, ctxCls);
+}
+
+bool assertNotContext(jobject obj) {
+  JNIEnv *env = getJNIEnv();
+  if (isContext(obj, env)) {
+    auto reCls = env->FindClass(CLS_RE);
+    checkJvmException("failed to find class " + std::string(CLS_RE));
+
+    env->ThrowNew(reCls, "cannot use UAST Context as a Node");
+    return false;
+  }
+  return true;
+}
+
 // ==========================================
 // External UAST Context (managed by libuast)
 // ==========================================
@@ -76,7 +98,9 @@ class ContextExt {
     checkJvmException("failed to find class " + std::string(CLS_NODE));
 
     if (!env->IsInstanceOf(obj, cls)) {
-      const char *err = "ContextExt.toHandle() called not on Node type";
+      auto err = std::string("ContextExt.toHandle() called not on")
+                     .append(CLS_NODE)
+                     .append(" type");
       ctx->SetError(err);
       return 0;
     }
@@ -103,7 +127,7 @@ class ContextExt {
   // Encode serializes the external UAST.
   // Borrows the reference.
   jobject Encode(jobject node, UastFormat format) {
-    // if (!assertNotContext(node)) return nullptr;
+    if (!assertNotContext(node)) return nullptr;
 
     uast::Buffer data = ctx->Encode(toHandle(node), format);
     return asJvmBuffer(data);
@@ -358,7 +382,7 @@ class Interface : public uast::NodeCreator<Node *> {
   // toJ returns a JVM object associated with a node.
   // Returns a new reference.
   jobject toJ(Node *node) {
-    if (node == nullptr) return nullptr;
+    if (!node) return nullptr;
     jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
     return obj;
   }
@@ -420,7 +444,7 @@ class Context {
   // toJ returns a JVM object associated with a node.
   // Returns a new reference.
   jobject toJ(Node *node) {
-    if (node == nullptr) return nullptr;
+    if (!node) return nullptr;
     return iface->toJ(node);
   }
   // toNode returns a node associated with a JVM object.
@@ -452,7 +476,7 @@ class Context {
   // Encode serializes UAST.
   // Creates a new reference.
   jobject Encode(jobject node, UastFormat format) {
-    // if (!assertNotContext(node)) return nullptr;
+    if (!assertNotContext(node)) return nullptr;
 
     Node *n = toNode(node);
     uast::Buffer data = ctx->Encode(n, format);

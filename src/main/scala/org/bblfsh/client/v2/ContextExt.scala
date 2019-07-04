@@ -3,9 +3,9 @@ package org.bblfsh.client.v2
 import java.nio.ByteBuffer
 
 /**
-  * pyuast.ContextExt
-  *
   * Represents Go-side results of Libuast.decode()
+  *
+  * This is equivalent of pyuast.ContextExt API
   */
 case class ContextExt(nativeContext: Long) {
     @native def root(): Node
@@ -21,9 +21,9 @@ case class ContextExt(nativeContext: Long) {
 
 
 /**
-  * pyuast.Context
+  * Represents JVM-side constructed tree
   *
-  * Represents JVM-side constructed tree.
+  * This is equivalent of pyuast.Context API
   */
 case class Context(nativeContext: Long) {
     @native def root(): JNode
