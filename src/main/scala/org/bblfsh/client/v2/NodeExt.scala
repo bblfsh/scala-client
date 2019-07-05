@@ -4,9 +4,20 @@ import java.io.Serializable
 
 import scala.collection.mutable
 
-/** UAST nodes representation on the JVM side.
+/**
+  * UAST representation for the nodes originated from the Go side.
   *
-  *  Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
+  * @param ctx pointer to the native Context
+  * @param handle pointer to the native Node
+  */
+case class NodeExt(ctx: Long, handle: Long) {
+  @native def load(): JNode
+}
+
+
+/**
+  * UAST representation for the nodes originated from or loaded to the JVM side.
+  * Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
   */
 sealed abstract class JNode {
   /* Dynamic dispatch is a convenience to be called from JNI */

@@ -11,7 +11,7 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
 
   "Loading Go -> JVM of a real tree" should "bring JNode tree to memory" in {
     val uast = resp.uast.decode()
-    val rootNode: Node = uast.root()
+    val rootNode: NodeExt = uast.root()
 
     println(s"Loading $rootNode")
     val root = rootNode.load()
@@ -55,7 +55,7 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
   "Decoding, loading & encoding to different context" should "produce the same results" in {
     // decode -> load -> encode, and compare bytes
     val uast = resp.uast.decode()
-    val rootNode: Node = uast.root()
+    val rootNode: NodeExt = uast.root()
 
     println(s"Loading $rootNode")
     val root = rootNode.load()
@@ -66,7 +66,7 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
 
     // decode -> load -> encoded -> decode -> load, and compare trees
     val uast2 = BblfshClient.decode(data)
-    val rootNode2: Node = uast2.root()
+    val rootNode2: NodeExt = uast2.root()
     println(s"Loading $rootNode2")
     val root2 = rootNode2.load()
 

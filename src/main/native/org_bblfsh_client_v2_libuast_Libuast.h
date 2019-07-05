@@ -9,21 +9,27 @@ extern "C" {
 #endif
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
- * Method:    decode
- * Signature: (Ljava/nio/ByteBuffer;)Lorg/bblfsh/client/v2/Context;
- */
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
-  (JNIEnv *, jobject, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast
  * Method:    filter
- * Signature: (Lorg/bblfsh/client/v2/Node;Ljava/lang/String;)Lscala/collection/immutable/List;
+ * Signature: (Lorg/bblfsh/client/v2/NodeExt;Ljava/lang/String;)Lscala/collection/immutable/List;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter
   (JNIEnv *, jobject, jobject, jstring);
 
-jint JNI_OnLoad(JavaVM *vm, void *reserved);
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast
+ * Method:    iterator
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_iterator
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast
+ * Method:    decode
+ * Signature: (Ljava/nio/ByteBuffer;)Lorg/bblfsh/client/v2/ContextExt;
+ */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
+  (JNIEnv *, jobject, jobject);
 
 #ifdef __cplusplus
 }
