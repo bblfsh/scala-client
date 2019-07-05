@@ -1,5 +1,7 @@
 package org.bblfsh.client.v2
 
+import java.nio.ByteBuffer
+
 
 class BblfshClientLoadTest extends BblfshClientBaseTest {
 
@@ -34,32 +36,41 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
     root.children.foreach(println)
   }
 
-  // TODO(#90) a stub for testing JNode encoding impl
-  /*"Loading Go -> JVM for a simple encoded tree" should "bring JNode tree to memory" in {
-    val rootTree: JNode = JArray(Buffer(
-      JObject(Buffer(
+  "Loading Go -> JVM for a simple encoded tree" should "bring JNode tree to memory" in {
+    val rootTree: JNode = JArray(
+      JObject(
         "k1" -> JString("v1")
-      )),
+      ),
       JString("test")
-    ))
+    )
+
+    rootTree.size should be (2)
 
     val ctx = Context()
+    val bb: ByteBuffer = ctx.encode(rootTree)
 
-    ctx.encode(rootTree)
-  }*/
+    bb should not be (null)
+  }
 
-  // TODO(#90) a stub for more extensive testing of JNode encoding impl
-  /*"Decoding, loading & encoding to different context" should "produce the same results" in {
+  "Decoding, loading & encoding to different context" should "produce the same results" in {
+    // decode -> load -> encode, and compare bytes
     val uast = resp.uast.decode()
     val rootNode: Node = uast.root()
 
     println(s"Loading $rootNode")
     val root = rootNode.load()
-
     val ctx = Context()
     val data = ctx.encode(root)
 
-    data shouldBe equal resp.uast
-  }*/
+    data should equal (resp.uast.asReadOnlyByteBuffer())
+
+    // decode -> load -> encoded -> decode -> load, and compare trees
+    val uast2 = BblfshClient.decode(data)
+    val rootNode2: Node = uast2.root()
+    println(s"Loading $rootNode2")
+    val root2 = rootNode2.load()
+
+    root2 should equal (root)
+  }
 
 }

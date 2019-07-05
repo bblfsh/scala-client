@@ -35,7 +35,7 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
   }
 
   "Encoding back the RootNode of decoded UAST" should "produce same bytes" in {
-    val uastCtx: Context = resp.uast.decode()
+    val uastCtx: ContextExt = resp.uast.decode()
     val rootNode: Node = uastCtx.root()
     println(s"Root node: $rootNode")
 
