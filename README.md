@@ -1,4 +1,4 @@
-## Babelfish Scala client [![Build Status](https://travis-ci.org/bblfsh/client-scala.svg?branch=master)](https://travis-ci.org/bblfsh/client-scala)
+## Babelfish Scala client [![Build Status](https://travis-ci.org/bblfsh/scala-client.svg?branch=master)](https://travis-ci.org/bblfsh/scala-client)
 
 This a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
 It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code
@@ -12,8 +12,8 @@ Current `scala-client` v1.x only supports bblfsh protocol and UASTv1.
 
 #### Manual
 ```
-git clone https://github.com/bblfsh/client-scala.git
-cd client-scala
+git clone https://github.com/bblfsh/scala-client.git
+cd scala-client
 ./sbt assembly
 ```
 
@@ -56,11 +56,11 @@ libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
 
 ### Dependencies
 
-You need to install libxml2, the Java SDK and its header files. The command for
+You need to install the Java SDK and its header files. The command for
 Debian and derived distributions would be:
 
 ```
-sudo apt install libxml2-dev openjdk-8 openjdk-8-jdk-headless
+sudo apt install openjdk-8 openjdk-8-jdk-headless
 ```
 
 ### Usage
