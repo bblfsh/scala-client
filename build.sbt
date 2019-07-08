@@ -42,9 +42,9 @@ PB.protoSources in Compile := Seq(file(protoDir))
 sonatypeProfileName := "org.bblfsh"
 
 // pom settings for sonatype
-homepage := Some(url("https://github.com/bblfsh/client-scala"))
-scmInfo := Some(ScmInfo(url("https://github.com/bblfsh/client-scala"),
-                            "git@github.com:bblfsh/client-scala.git"))
+homepage := Some(url("https://github.com/bblfsh/scala-client"))
+scmInfo := Some(ScmInfo(url("https://github.com/bblfsh/scala-client"),
+                            "git@github.com:bblfsh/scala-client.git"))
 developers += Developer("juanjux",
                         "Juanjo Álvarez",
                         "juanjo@sourced.tech",

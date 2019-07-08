@@ -11,7 +11,7 @@
 #include "libuast.hpp"
 
 // TODO(bzz): double-check and document. Suggestion and more context at
-// https://github.com/bblfsh/client-scala/pull/84#discussion_r288347756
+// https://github.com/bblfsh/scala-client/pull/84#discussion_r288347756
 JavaVM *jvm;
 
 namespace {
