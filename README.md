@@ -56,11 +56,11 @@ libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
 
 ### Dependencies
 
-You need to install libxml2, the Java SDK and its header files. The command for
+You need to install the Java SDK and its header files. The command for
 Debian and derived distributions would be:
 
 ```
-sudo apt install libxml2-dev openjdk-8 openjdk-8-jdk-headless
+sudo apt install openjdk-8 openjdk-8-jdk-headless
 ```
 
 ### Usage
