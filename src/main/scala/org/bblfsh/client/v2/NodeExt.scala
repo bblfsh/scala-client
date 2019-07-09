@@ -6,8 +6,9 @@ import scala.collection.mutable
 
 /**
   * UAST representation for the nodes originated from the Go side.
+  * This is equivalent of pyuast.NodeExt API.
   *
-  * @param ctx pointer to the native Context
+  * @param ctx pointer to the native ContextExt
   * @param handle pointer to the native Node
   */
 case class NodeExt(ctx: Long, handle: Long) {
@@ -18,6 +19,8 @@ case class NodeExt(ctx: Long, handle: Long) {
 /**
   * UAST representation for the nodes originated from or loaded to the JVM side.
   * Mirrors https://godoc.org/github.com/bblfsh/sdk/uast/nodes
+  *
+  * This is equivalent of pyuast.Node API.
   */
 sealed abstract class JNode {
   /* Dynamic dispatch is a convenience to be called from JNI */
@@ -64,6 +67,7 @@ case class JBool(value: Boolean) extends JNode
 
 case class JObject(obj: mutable.Buffer[JField]) extends JNode {
   def this() = this(mutable.Buffer[JField]())
+  def filter(p: ((String, JNode)) => Boolean) = this.obj.filter(p)
   def add(k: String, v: JNode) = {
     obj += ((k, v))
   }
@@ -78,11 +82,13 @@ case object JObject {
 
 case class JArray(arr: mutable.Buffer[JNode]) extends JNode {
   def this(size: Int) = this(new mutable.ArrayBuffer[JNode](size))
+  def filter(p: JNode => Boolean) = this.arr.filter(p)
   def add(n: JNode) = {
     arr += n
   }
 }
 case object JArray {
+  /** Helper to construct literals in map-like notation */
   def apply[T <:  (Product with Serializable with JNode)](ns: T *)   = {
     val ja = new JArray(ns.length)
     ja.arr ++= ns
