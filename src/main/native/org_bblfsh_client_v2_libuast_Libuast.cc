@@ -560,6 +560,15 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   return (long)c;
 }
 
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env, jobject self){
+  Context *p = getHandle<Context>(env, self, nativeContext);
+  setHandle<Context>(env, self, 0, nativeContext);
+  delete p;
+};
+
+
+
 // ==========================================
 //              v2.ContextExt()
 // ==========================================
