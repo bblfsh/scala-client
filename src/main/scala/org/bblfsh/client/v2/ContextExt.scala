@@ -3,15 +3,15 @@ package org.bblfsh.client.v2
 import java.nio.ByteBuffer
 
 /**
-  * Represents Go-side results of Libuast.decode()
+  * Represents Go-side constructed tree, result of Libuast.decode()
   *
   * This is equivalent of pyuast.ContextExt API
   */
 case class ContextExt(nativeContext: Long) {
-    @native def root(): Node
-    // @native def load() // TODO(bzz): implement after clarifying when it's needed
+    @native def root(): NodeExt
+    // @native def load(): JNode // TODO(bzz): clarify when it's needed VS just .root().load()
     @native def filter()
-    @native def encode(n: Node): ByteBuffer
+    @native def encode(n: NodeExt): ByteBuffer
 
     @native def dispose()
     override def finalize(): Unit = {

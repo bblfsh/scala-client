@@ -10,7 +10,7 @@ extern "C" {
 /*
  * Class:     org_bblfsh_client_v2_ContextExt
  * Method:    root
- * Signature: ()Lorg/bblfsh/client/v2/Node;
+ * Signature: ()Lorg/bblfsh/client/v2/NodeExt;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_root
   (JNIEnv *, jobject);
@@ -26,7 +26,7 @@ JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_ContextExt_filter
 /*
  * Class:     org_bblfsh_client_v2_ContextExt
  * Method:    encode
- * Signature: (Lorg/bblfsh/client/v2/Node;)Ljava/nio/ByteBuffer;
+ * Signature: (Lorg/bblfsh/client/v2/NodeExt;)Ljava/nio/ByteBuffer;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode
   (JNIEnv *, jobject, jobject);

@@ -4,7 +4,7 @@
 #include "org_bblfsh_client_v2_Context.h"
 #include "org_bblfsh_client_v2_ContextExt.h"
 #include "org_bblfsh_client_v2_Context__.h"
-#include "org_bblfsh_client_v2_Node.h"
+#include "org_bblfsh_client_v2_NodeExt.h"
 #include "org_bblfsh_client_v2_libuast_Libuast.h"
 
 #include "libuast.h"
@@ -560,6 +560,15 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   return (long)c;
 }
 
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env, jobject self){
+  Context *p = getHandle<Context>(env, self, nativeContext);
+  setHandle<Context>(env, self, 0, nativeContext);
+  delete p;
+};
+
+
+
 // ==========================================
 //              v2.ContextExt()
 // ==========================================
@@ -589,8 +598,8 @@ Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
 //                v2.Node()
 // ==========================================
 
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Node_load(JNIEnv *env,
-                                                              jobject self) {
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
+                                                                 jobject self) {
   auto ctx = new Context();
   jobject node = ctx->LoadFrom(self);
   delete (ctx);

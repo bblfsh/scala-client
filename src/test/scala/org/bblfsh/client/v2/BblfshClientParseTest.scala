@@ -24,7 +24,7 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
 
   "Decoded UAST RootNode" should "not be NULL" in {
     val uast = resp.uast.decode()
-    val rootNode: Node = uast.root()
+    val rootNode: NodeExt = uast.root()
     println(rootNode.getClass)
 
     rootNode should not be null
@@ -36,7 +36,7 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
 
   "Encoding back the RootNode of decoded UAST" should "produce same bytes" in {
     val uastCtx: ContextExt = resp.uast.decode()
-    val rootNode: Node = uastCtx.root()
+    val rootNode: NodeExt = uastCtx.root()
     println(s"Root node: $rootNode")
 
     val encodedBytes: ByteBuffer = uastCtx.encode(rootNode)
