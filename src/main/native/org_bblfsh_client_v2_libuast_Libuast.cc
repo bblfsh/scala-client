@@ -6,6 +6,8 @@
 #include "org_bblfsh_client_v2_Context__.h"
 #include "org_bblfsh_client_v2_NodeExt.h"
 #include "org_bblfsh_client_v2_libuast_Libuast.h"
+#include "org_bblfsh_client_v2_libuast_Libuast_UastIter.h"
+#include "org_bblfsh_client_v2_libuast_Libuast_UastIterExt.h"
 
 #include "libuast.h"
 #include "libuast.hpp"
@@ -503,7 +505,7 @@ class Context {
 }  // namespace
 
 // ==========================================
-//          v2.libuast.Libuast()
+//          v2.libuast.Libuast
 // ==========================================
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
@@ -534,6 +536,32 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   }
 
   return jCtxExt;
+}
+
+// UastIter
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
+    JNIEnv *env, jobject self) {
+  return;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_hasNext(JNIEnv *env,
+                                                                jobject self) {
+  return false;
+}
+
+// UastIterExt
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
+    JNIEnv *env, jobject self) {
+  return;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_hasNext(
+    JNIEnv *env, jobject self) {
+  return false;
 }
 
 // TODO(#83): implement
