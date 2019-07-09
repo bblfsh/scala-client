@@ -14,7 +14,7 @@ JNIEnv *getJNIEnv() {
 
     case JNI_EDETACHED:  // Thread is detached, need to attach
       jvm->AttachCurrentThread((void **)&pEnv, NULL);
-      // TODO: this is a memory leak (at least)
+      // FIXME(bzz): this is a memory leak (at least)
       //  - jvm->DetachCurrentThread() is never called
       //  - local references are _never_ deleted :scream:
       //    https://developer.android.com/training/articles/perf-jni#local-and-global-references
