@@ -34,29 +34,32 @@ jobs:
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
         - sudo apt-get update
-        - sudo apt-get install -y --no-install-recommends clang g++ gcc gcc-multilib libc6-dev libc6-dev-i386 mingw-w64 patch xz-utils
+        - sudo apt-get install -y --no-install-recommends g++ gcc gcc-multilib libc6-dev libc6-dev-i386 patch xz-utils
       script:
         - ./sbt assembly test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
 
-    - name: 'Cross-compile, release & publish to Sonatype'
+    - &release
+      name: 'Cross-compile, release & publish to Sonatype'
       stage: release
       env:
          - OSXCROSS_PATH="$HOME/osxcross"
       before_install:
+        - sudo apt-get install -y --no-install-recommends clang mingw-w64
+      install:
         - mkdir -p /tmp/osxcross
         - cd /tmp/osxcross
-        - curl -sSL "https://codeload.github.com/tpoechtrager/osxcross/tar.gz/${OSXCROSS_REV}" | tar -C /tmp/osxcross --strip=1 -xzf -
-        - curl -s -S -L -o tarballs/MacOSX${SDK_VERSION}.sdk.tar.xz ${OSXCROSS_SDK_URL}
+        - curl -sSL "https://codeload.github.com/tpoechtrager/osxcross/tar.gz/${OSXCROSS_REV}" | tar -C "${PWD}" --strip=1 -xzf -
+        - curl -sSL -o tarballs/MacOSX${SDK_VERSION}.sdk.tar.xz ${OSXCROSS_SDK_URL}
         - UNATTENDED=yes ./build.sh >/dev/null
         - mv target "${OSXCROSS_PATH}"
-        - curl -S -L "https://github.com/karalabe/xgo/blob/647f256c447ee20f9bf13ebc42e612d55994a383/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
+        - curl -sSL "https://github.com/karalabe/xgo/blob/647f256c447ee20f9bf13ebc42e612d55994a383/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
         - mv v1 "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
         - rm -rf /tmp/osxcross "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
       script:
         - cd $TRAVIS_BUILD_DIR
-        - ./sbt assembly
+        - ./sbt assembly || travis_terminate 1
         - ./sbt publishLocal
         - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
         - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
