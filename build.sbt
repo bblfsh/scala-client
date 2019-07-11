@@ -111,10 +111,15 @@ getProtoFiles := {
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
+    val os = if (System.getProperty("os.name").toLowerCase.contains("mac os x")) "darwin" else "linux"
+
+    downloadUnpackLibuast(os)
+}
+
+def downloadUnpackLibuast(os: String) = {
     import sys.process._
 
     val ghUrl = "https://github.com/bblfsh/libuast"
-    val os = if (System.getProperty("os.name").toLowerCase.contains("mac os x")) "darwin" else "linux"
     val binaryReleaseUrl = s"${ghUrl}/releases/download/v${libuastVersion}/libuast-${os}-amd64.tar.gz"
     println(s"Downloading libuast binary from ${binaryReleaseUrl}")
 
@@ -124,7 +129,8 @@ getLibuast := {
     "mkdir -p src/main/resources" #&&
     "rm -rf src/main/resources/libuast" #&&
     "mv libuast src/main/resources" #&&
-    "rm src/main/resources/libuast/libuast.so" #&& // always a static build
+    "rm -f src/main/resources/libuast/libuast.so" #&& // always a static build
+    "rm -f src/main/resources/libuast/libuast.dylib" #&&
     "rm libuast-bin.tar.gz" !
 
     "find src/main/resources"!
@@ -133,7 +139,7 @@ getLibuast := {
 
     "nm src/main/resources/libuast/libuast.a" #| "wc -l"!
 
-    println("Done unpacking libuast")
+    println(s"Done unpacking libuast for ${os}")
 }
 
 val compileScalaLibuast = TaskKey[Unit]("compileScalaLibuast", "Compile libScalaUast JNI library")
@@ -200,11 +206,13 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
     return
   }
 
-  val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -lxml2 -std=c++11 " +
+  downloadUnpackLibuast("darwin")
+
+  val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -std=c++11 " +
       "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
-      "-Isrc/libuast-native/ " +
+      "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles +
       "src/main/resources/libuast/libuast.a "
