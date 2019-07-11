@@ -1,6 +1,7 @@
 package org.bblfsh.client.v2
 
 import java.io.Serializable
+import java.nio.ByteBuffer
 
 import scala.collection.mutable
 
@@ -23,6 +24,21 @@ case class NodeExt(ctx: Long, handle: Long) {
   * This is equivalent of pyuast.Node API.
   */
 sealed abstract class JNode {
+  def toByteArray: Array[Byte] = {
+    val buf = toByteBuffer
+    val arr = new Array[Byte](buf.capacity())
+    buf.get(arr)
+    buf.rewind()
+    arr
+  }
+
+  def toByteBuffer: ByteBuffer = {
+    val ctx = Context()
+    val bb = ctx.encode(this)
+    ctx.dispose()
+    bb
+  }
+
   /* Dynamic dispatch is a convenience to be called from JNI */
   def children: Seq[JNode] = this match {
     case JObject(l) => l map (_._2)
@@ -49,10 +65,57 @@ sealed abstract class JNode {
   }
 
   def apply(k: String): JNode = this match {
-    case o: JObject => o.obj.filter( _._1 == k ).head._2
+    case o: JObject => o.obj.filter(_._1 == k).head._2
     case _ => JNothing
   }
+}
 
+object JNode {
+  private def decodeFrom(bytes: ByteBuffer): JNode = {
+    val ctx = BblfshClient.decode(bytes)
+    val node = ctx.root().load()
+    ctx.dispose()
+    node
+  }
+
+  /**
+    * Decodes UAST from the given Buffer.
+    *
+    * If the buffer is Direct, it will avoid extra memory allocation,
+    * otherwise it will copy the content to a new Direct buffer.
+    *
+    * @param original UAST encoded in wire format of protocol.v2
+    * @return JNode of the UAST root
+    */
+  def parseFrom(original: ByteBuffer): JNode = {
+    val bufDirect = if (!original.isDirect) {
+      val bufDirectCopy = ByteBuffer.allocateDirect(original.capacity())
+      original.rewind()
+      bufDirectCopy.put(original)
+      original.rewind()
+      bufDirectCopy.flip()
+      bufDirectCopy
+    } else {
+      original
+    }
+    decodeFrom(bufDirect)
+  }
+
+  /**
+    * Decodes UAST from the given bytes.
+    *
+    * It will copy memory into temporary Direct buffer,
+    * otherwise it will copy the content to a new Direct buffer.
+    *
+    * @param bytes UAST encoded in wire format of protocol.v2
+    * @return JNode of the UAST root
+    */
+  def parseFrom(bytes: Array[Byte]): JNode = {
+    val bufDirect = ByteBuffer.allocateDirect(bytes.size)
+    bufDirect.put(bytes)
+    bufDirect.flip()
+    decodeFrom(bufDirect)
+  }
 }
 
 case object JNothing extends JNode // 'zero' value for JNode

@@ -130,11 +130,13 @@ object BblfshClient {
     libuast.decode(buf)
   }
 
-  // Enables API: resp.uast.decode()
+  /** Enables API: resp.uast.decode() */
   implicit class UastMethods(val buf: ByteString) {
     /**
-      * Decodes bytes from wired format of bblfsh protocol.v2.
-      * Copies a buffer in Direct mode.
+      * Decodes bytes from wire format of bblfsh protocol.v2.
+      *
+      * Always copies memory to a new buffer in Direct mode,
+      * to be able to pass it to JNI.
       */
     def decode(): ContextExt = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
@@ -142,6 +144,17 @@ object BblfshClient {
       BblfshClient.decode(bufDirectCopy)
     }
   }
+
+  /** Enables API: resp.get() */
+  implicit class ResponseMethods(val resp: ParseResponse) {
+    def get(): JNode = {
+      val ctx = resp.uast.decode()
+      val node = ctx.root().load()
+      ctx.dispose()
+      node
+    }
+  }
+
 
   // TODO(bzz): implement iterator
   // def iterator(node: NodeExt, treeOrder: Int): Libuast.NodeIterator = {

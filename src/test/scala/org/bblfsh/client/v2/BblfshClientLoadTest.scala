@@ -17,17 +17,17 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
     val root = rootNode.load()
 
     root should not be Nil
-    root.getClass shouldBe classOf[JObject]
+    root shouldBe a [JObject]
     root.children should not be empty
     root.children.size shouldBe 6
 
     val arr = root.children(1)
     arr should not be (null)
-    arr.getClass shouldBe classOf[JArray]
+    arr shouldBe a [JArray]
     arr.children.size shouldBe 1
 
     val str = arr.children(0)
-    str.getClass shouldBe classOf[JString]
+    str shouldBe a[JString]
 
     val nil = root("imports")
     nil should be (JNull())
@@ -48,6 +48,7 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
 
     val ctx = Context()
     val bb: ByteBuffer = ctx.encode(rootTree)
+    ctx.dispose()
 
     bb should not be (null)
   }
