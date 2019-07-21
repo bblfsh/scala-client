@@ -55,7 +55,7 @@ class BblfshClientLoadTest extends BblfshClientBaseTest {
 
   "Decoding, loading & encoding to different context" should "produce the same results" in {
     // decode -> load -> encode, and compare bytes
-    val uast = resp.uast.decode()
+    val uast: ContextExt = resp.uast.decode()
     val rootNode: NodeExt = uast.root()
 
     println(s"Loading $rootNode")

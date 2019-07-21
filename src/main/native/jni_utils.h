@@ -27,6 +27,11 @@ extern const char METHOD_JNODE_VALUE_AT[];
 extern const char METHOD_JOBJ_ADD[];
 extern const char METHOD_JARR_ADD[];
 extern const char METHOD_OBJ_TO_STR[];
+extern const char MERHOD_RE_INIT[];
+extern const char MERHOD_RE_INIT_CAUSE[];
+
+// Field signatures
+extern const char FIELD_NODE[];
 
 // Checks though JNI, if there is a pending excption on JVM side.
 //
@@ -36,7 +41,8 @@ void checkJvmException(std::string);
 
 JNIEnv *getJNIEnv();
 jobject NewJavaObject(JNIEnv *, const char *, const char *, ...);
-jfieldID getField(JNIEnv *env, jobject obj, const char *name);
+jfieldID FieldID(JNIEnv *, jobject, const char *, const char *);
+jobject ObjectField(JNIEnv *, jobject, const char *, const char *);
 
 jint IntMethod(JNIEnv *, const char *, const char *, const char *,
                const jobject *);
@@ -45,4 +51,6 @@ jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
                      const jobject *, ...);
 
 jmethodID MethodID(JNIEnv *, const char *, const char *, const char *);
+
+void ThrowByName(JNIEnv *, const char *, const char *);
 #endif

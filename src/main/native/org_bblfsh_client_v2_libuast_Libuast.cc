@@ -19,32 +19,34 @@ JavaVM *jvm;
 namespace {
 constexpr char nativeContext[] = "nativeContext";
 
-jfieldID getHandleField(JNIEnv *env, jobject obj, const char *name) {
-  jclass cls = env->GetObjectClass(obj);
-  if (env->ExceptionOccurred() || !cls) {
-    return nullptr;
-  }
-
-  jfieldID jfid = env->GetFieldID(cls, name, "J");
-  if (env->ExceptionOccurred() || !jfid) {
-    return nullptr;
-  }
-  return jfid;
-}
-
 template <typename T>
-T *getHandle(JNIEnv *env, jobject obj, const char *name) {
-  jlong handle = env->GetLongField(obj, getHandleField(env, obj, name));
-  if (env->ExceptionOccurred() || !handle) {
-    return nullptr;
-  }
+T *getHandle(JNIEnv *env, jobject obj, const char *name, const char *sig) {
+  jfieldID fId = FieldID(env, obj, name, sig);
+  if (!fId) return nullptr;
+
+  jlong handle = env->GetLongField(obj, fId);
+  checkJvmException("failed to get long field " + std::string(name));
   return reinterpret_cast<T *>(handle);
 }
 
 template <typename T>
-void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
+T *getHandle(JNIEnv *env, jobject obj, const char *name) {
+  return getHandle<T>(env, obj, name, "J");
+}
+
+template <typename T>
+void setHandle(JNIEnv *env, jobject obj, T *t, const char *name,
+               const char *sig) {
+  jfieldID fId = FieldID(env, obj, name, sig);
+  if (!fId) return;
+
   jlong handle = reinterpret_cast<jlong>(t);
-  env->SetLongField(obj, getHandleField(env, obj, name), handle);
+  env->SetLongField(obj, fId, handle);
+}
+
+template <typename T>
+void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
+  setHandle<T>(env, obj, t, name, "J");
 }
 
 jobject asJvmBuffer(uast::Buffer buf) {
@@ -90,7 +92,7 @@ class ContextExt {
     return jObj;
   }
 
-  // toHandle casts an object to NodeExt and returns its handle.
+  // toHandle casts an object to NodeExt and reads its handle field.
   // Borrows the reference.
   NodeHandle toHandle(jobject obj) {
     if (!obj) return 0;
@@ -100,16 +102,20 @@ class ContextExt {
     checkJvmException("failed to find class " + std::string(CLS_NODE));
 
     if (!env->IsInstanceOf(obj, cls)) {
-      auto err = std::string("ContextExt.toHandle() called not on")
+      auto err = std::string("ContextExt.toHandle() argument is not")
                      .append(CLS_NODE)
                      .append(" type");
       ctx->SetError(err);
       return 0;
     }
 
-    auto handle =
-        (NodeHandle)env->GetLongField(obj, getField(env, obj, "handle"));
-    checkJvmException("failed to get field Node.handle");
+    jfieldID fId = FieldID(env, obj, "handle", "J");
+    if (!fId) {
+      return 0;
+    }
+
+    auto handle = (NodeHandle)env->GetLongField(obj, fId);
+    checkJvmException("failed to get field NodeExt.handle");
 
     return handle;
   }
@@ -124,6 +130,16 @@ class ContextExt {
   jobject RootNode() {
     NodeHandle root = ctx->RootNode();
     return toJ(root);
+  }
+
+  // Iterate returns iterator over an external UAST tree.
+  // Borrows the reference.
+  uast::Iterator<NodeHandle> *Iterate(jobject node, TreeOrder order) {
+    if (!assertNotContext(node)) return nullptr;
+
+    NodeHandle h = toHandle(node);
+    auto iter = ctx->Iterate(h, order);
+    return iter;
   }
 
   // Encode serializes the external UAST.
@@ -485,19 +501,18 @@ class Context {
     return asJvmBuffer(data);
   }
 
-  jobject LoadFrom(jobject src) {  // JNode
+  jobject LoadFrom(jobject src) {  // NodeExt
     JNIEnv *env = getJNIEnv();
 
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, src, "ctx");
-    checkJvmException("failed to get Node.ctx");
+    checkJvmException("failed to get NodeExt.ctx");
 
     auto sctx = nodeExtCtx->ctx;
     NodeHandle snode =
         reinterpret_cast<NodeHandle>(getHandle<NodeHandle>(env, src, "handle"));
-    checkJvmException("failed to get Node.handle");
+    checkJvmException("failed to get NodeExt.handle");
 
     Node *node = uast::Load(sctx, snode, ctx);
-    checkJvmException("failed to uast::Load()");
     return toJ(node);
   }
 };
@@ -554,7 +569,37 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_hasNext(JNIEnv *env,
 // UastIterExt
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
+    JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
+
+  jobject node = ObjectField(env, self, "node", FIELD_NODE);
+  if (!node) {
+    return;
+  }
+
+  // borrow ContextExt from NodeExt
+  ContextExt *ctx = getHandle<ContextExt>(env, node, "ctx");
+
+  int order = 0;  // FIXME read from self.treeOrder
+  auto it = ctx->Iterate(node, (TreeOrder)order);
+
+  // this.iter = it;
+  setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
+  // this.ctx = ctx;
+  setHandle<ContextExt>(env, self, ctx, "ctx");
+  return;
+}
+
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
     JNIEnv *env, jobject self) {
+  // this.ctx - don't delete ContextExt, as it's borrowed
+  setHandle<ContextExt>(env, self, 0, "ctx");
+
+  // this.iter
+  auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
+  setHandle<uast::Iterator<NodeHandle>>(env, self, 0, "iter");
+  delete (iter);
+
   return;
 }
 
@@ -588,14 +633,12 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   return (long)c;
 }
 
-JNIEXPORT void JNICALL
-Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env, jobject self){
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
+                                                                 jobject self) {
   Context *p = getHandle<Context>(env, self, nativeContext);
   setHandle<Context>(env, self, 0, nativeContext);
   delete p;
 };
-
-
 
 // ==========================================
 //              v2.ContextExt()

@@ -101,6 +101,7 @@ object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
   // TODO(bzz): expose new 'children' order, use enum/case class
+  //            https://github.com/bblfsh/libuast/pull/106
   val PreOrder = 0
   val PostOrder = 1
   val LevelOrder = 2
@@ -156,13 +157,13 @@ object BblfshClient {
   }
 
 
-  // TODO(bzz): implement iterator
-  // def iterator(node: NodeExt, treeOrder: Int): Libuast.NodeIterator = {
-  //   new Libuast.NodeIterator(node, treeOrder)
-  // }
-  // def iterator(node: JNode, treeOrder: Int): Libuast.NodeIterator = {
-  //   new Libuast.NodeIterator(node, treeOrder)
-  // }
+  def iterator(node: NodeExt, treeOrder: Int): Libuast.UastIterExt = {
+    Libuast.UastIterExt(node, treeOrder)
+  }
+
+  def iterator(node: JNode, treeOrder: Int): Libuast.UastIter = {
+    Libuast.UastIter(node, treeOrder)
+  }
 
   // Enables API: resp.uast.decode().load().filter("//query")
   // TODO(bzz): implement XPath query

@@ -12,14 +12,16 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 object Libuast {
   final var loaded = false
 
-  class UastIter(node: JNode, treeOrder: Int, nIter: Long, nCtx: Long) extends Iterator[JNode] {
-    @native def nativeInit()
-
-    @native def nativeDispose()
-
+  // TODO(bzz): implement
+  class UastIter(node: JNode, treeOrder: Int, iter: Long, ctx: Long) extends Iterator[JNode] {
     @native override def hasNext(): Boolean
-
     @native override def next(): JNode
+
+    @native def nativeInit()
+    @native def nativeDispose()
+    override def finalize(): Unit = {
+        this.nativeDispose()
+    }
   }
 
   object UastIter {
@@ -30,14 +32,15 @@ object Libuast {
     }
   }
 
-  class UastIterExt(node: NodeExt, treeOrder: Int, nIter: Long, nCtx: Long) extends Iterator[NodeExt] {
+  class UastIterExt(var node: NodeExt, var treeOrder: Int, var iter: Long, var ctx: Long) extends Iterator[NodeExt] {
+    @native override def hasNext(): Boolean // FIXM(bzz): implement
+    @native override def next(): NodeExt // FIXM(bzz): implement
+
     @native def nativeInit()
-
     @native def nativeDispose()
-
-    @native override def hasNext(): Boolean
-
-    @native override def next(): NodeExt
+    override def finalize(): Unit = {
+        this.nativeDispose()
+    }
   }
 
   object UastIterExt {
@@ -48,6 +51,7 @@ object Libuast {
     }
   }
 
+  // FIXM(bzz): remove once hasNext/next are implemented
   //class UastIterExt(node: NodeExt, treeOrder: Int, nIter: Long, nCtx: Long) extends Iterator[NodeExt] {
   //  private var closed = false
   //  private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
