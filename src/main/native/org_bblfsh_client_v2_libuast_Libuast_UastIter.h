@@ -9,22 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
- * Method:    nativeInit
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
- * Method:    nativeDispose
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
  * Method:    hasNext
  * Signature: ()Z
  */
@@ -37,6 +21,22 @@ JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIt
  * Signature: ()Lorg/bblfsh/client/v2/JNode;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_next
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
+ * Method:    nativeInit
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
+ * Method:    nativeDispose
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

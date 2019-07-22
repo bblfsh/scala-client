@@ -127,6 +127,10 @@ class ContextExt {
 
   ~ContextExt() { delete (ctx); }
 
+  // lookup searches for a specific node handle.
+  // Helper for iterators. Returns a new reference.
+  jobject lookup(NodeHandle node) { return toJ(node); }
+
   jobject RootNode() {
     NodeHandle root = ctx->RootNode();
     return toJ(root);
@@ -603,10 +607,26 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
   return;
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_hasNext(
-    JNIEnv *env, jobject self) {
-  return false;
+JNIEXPORT jobject JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
+    JNIEnv *env, jobject self, jlong iterPtr) {
+  // this.iter
+  auto iter = reinterpret_cast<uast::Iterator<NodeHandle> *>(iterPtr);
+
+  try {
+    if (!iter->next()) {
+      return nullptr;
+    }
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  NodeHandle node = iter->node();
+  if (node == 0) return nullptr;
+
+  ContextExt *ctx = getHandle<ContextExt>(env, self, "ctx");
+  return ctx->lookup(node);
 }
 
 // TODO(#83): implement

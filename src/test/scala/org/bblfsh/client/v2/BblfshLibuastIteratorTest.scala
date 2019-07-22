@@ -38,7 +38,7 @@ class BblfshLibuastIteratorTest extends FlatSpec
   }
 
   after {
-    iter.nativeDispose()
+    iter.close()
   }
 
   // TODO(bzz): part of upcoming UastIter impl
@@ -55,17 +55,44 @@ class BblfshLibuastIteratorTest extends FlatSpec
     iter.iter should not be(0)
   }
 
-  "Native UAST iterator dispose()" should "clean up the fields" in {
-    iter.nativeDispose()
+  "Native UAST iterator close()" should "clean up the fields" in {
+    iter.hasNext() should be(true)
+
+    iter.close()
+
+    iter.hasNext() should be(false)
     iter.ctx should be(0)
     iter.iter should be(0)
   }
 
+  def countNodes(root: JNode): Int = {
+      var total = 0
+      root match {
+        case m: JObject => {
+          for ((k, v) <- m) {
+            total += countNodes(v)
+          }
+        }
+        case s: JArray => {
+          for (e: JNode <- s) {
+            total += countNodes(e)
+          }
+        }
+        case a: JNode => total += a.size
+      }
+      total
+    }
+
   "Native UAST iterator" should "return non-empty results on decoded objects" in {
-    iter.hasNext() should be(false) // FIXME(bzz): invert after hasNext impl
+    val wholeTree = nativeRootNode.load()
+    val totalJnodes = countNodes(wholeTree)
+    println(s"Total number of nodes in JVM ${totalJnodes}")
+
+    iter.hasNext() should be(true)
 
     val nodes = iter.toList
     nodes shouldNot be(empty)
+    println(s"Iterator returned ${nodes.size} nodes")
   }
 
 }

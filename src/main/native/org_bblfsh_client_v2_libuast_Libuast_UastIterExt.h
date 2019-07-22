@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIterExt
+ * Method:    nativeNext
+ * Signature: (J)Lorg/bblfsh/client/v2/NodeExt;
+ */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIterExt
  * Method:    nativeInit
  * Signature: ()V
  */
@@ -21,22 +29,6 @@ JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterEx
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIterExt
- * Method:    hasNext
- * Signature: ()Z
- */
-JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_hasNext
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIterExt
- * Method:    next
- * Signature: ()Lorg/bblfsh/client/v2/NodeExt;
- */
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_next
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

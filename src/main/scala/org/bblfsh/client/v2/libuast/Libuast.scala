@@ -33,9 +33,25 @@ object Libuast {
   }
 
   class UastIterExt(var node: NodeExt, var treeOrder: Int, var iter: Long, var ctx: Long) extends Iterator[NodeExt] {
-    @native override def hasNext(): Boolean // FIXM(bzz): implement
-    @native override def next(): NodeExt // FIXM(bzz): implement
+    private var closed = false
+    override def hasNext(): Boolean = {
+      !closed
+    }
+    override def next(): NodeExt = {
+      val node = nativeNext(iter)
+      if (node == null) {
+        close()
+      }
+      node
+    }
+    def close() = {
+      if (!closed) {
+        nativeDispose()
+        closed = true
+      }
+    }
 
+    @native def nativeNext(iterPtr: Long): NodeExt
     @native def nativeInit()
     @native def nativeDispose()
     override def finalize(): Unit = {
