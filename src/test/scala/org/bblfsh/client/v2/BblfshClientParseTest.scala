@@ -1,7 +1,7 @@
 package org.bblfsh.client.v2
 
 import java.nio.ByteBuffer
-
+import scala.io.Source
 
 class BblfshClientParseTest extends BblfshClientBaseTest {
 
@@ -34,7 +34,7 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     uast.dispose()
   }
 
-  "Encoding back the RootNode of decoded UAST" should "produce same bytes" in {
+  "Encoding UAST to the same ContextExt" should "produce the same bytes" in {
     val uastCtx: ContextExt = resp.uast.decode()
     val rootNode: NodeExt = uastCtx.root()
     println(s"Root node: $rootNode")
@@ -47,5 +47,36 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     println(resp.uast.asReadOnlyByteBuffer)
     println(encodedBytes)
   }
+
+  "Encoding java UAST to a new Context" should "produce the same bytes" in {
+    val node = resp.get
+
+    val encodedBytes = node.toByteBuffer
+
+    val nodeEncodedDecoded = JNode.parseFrom(encodedBytes)
+    nodeEncodedDecoded shouldEqual node
+
+    encodedBytes.capacity should be(resp.uast.asReadOnlyByteBuffer.capacity)
+    encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
+  }
+
+
+  "Encoding python UAST to a new Context" should "produce the same bytes" in {
+    val client = BblfshClient("localhost", 9432)
+    val fileName = "src/test/resources/python_file.py"
+    val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
+    val resp = client.parse(fileName, fileContent)
+    val node = resp.get
+
+    // when
+    val encodedBytes = node.toByteBuffer
+
+    val nodeEncodedDecoded = JNode.parseFrom(encodedBytes)
+    nodeEncodedDecoded shouldEqual node
+
+    encodedBytes.capacity should be(resp.uast.asReadOnlyByteBuffer.capacity)
+    encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
+  }
+
 
 }

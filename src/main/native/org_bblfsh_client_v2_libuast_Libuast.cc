@@ -164,7 +164,7 @@ class Node : public uast::Node<Node *> {
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JBOOL))) {
       return NODE_BOOL;
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JUINT))) {
-      return NODE_BOOL;
+      return NODE_UINT;
     } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JARR))) {
       return NODE_ARRAY;
     }
@@ -449,7 +449,7 @@ class Context {
   }
   // toNode returns a node associated with a JVM object.
   // Returns a new reference.
-  Node *toNode(jobject obj) { return iface->lookupOrCreate(obj); }
+  Node *toNode(jobject jnode) { return iface->lookupOrCreate(jnode); }
 
  public:
   Context() {
@@ -475,10 +475,10 @@ class Context {
 
   // Encode serializes UAST.
   // Creates a new reference.
-  jobject Encode(jobject node, UastFormat format) {
-    if (!assertNotContext(node)) return nullptr;
+  jobject Encode(jobject jnode, UastFormat format) {
+    if (!assertNotContext(jnode)) return nullptr;
 
-    Node *n = toNode(node);
+    Node *n = toNode(jnode);
     uast::Buffer data = ctx->Encode(n, format);
     return asJvmBuffer(data);
   }
@@ -547,11 +547,11 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
 // ==========================================
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
-    JNIEnv *env, jobject self, jobject node) {
+    JNIEnv *env, jobject self, jobject jnode) {
   UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument
 
   Context *p = getHandle<Context>(env, self, nativeContext);
-  return p->Encode(node, fmt);
+  return p->Encode(jnode, fmt);
 }
 
 JNIEXPORT jlong JNICALL
