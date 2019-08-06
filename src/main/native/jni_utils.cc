@@ -55,7 +55,7 @@ const char MERHOD_RE_INIT_CAUSE[] =
     "(Ljava/lang/String;Ljava/lang/Throwable;)V";
 
 // Field signatures
-const char FIELD_NODE[] = "Lorg/bblfsh/client/v2/NodeExt;";
+const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
 
 // TODO(bzz): cache classes&methods in JNI_OnLoad should speed this up
 void checkJvmException(std::string msg) {

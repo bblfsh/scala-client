@@ -156,23 +156,23 @@ object BblfshClient {
     }
   }
 
-
+  /** Factory method for iterator over an external/native node */
   def iterator(node: NodeExt, treeOrder: Int): Libuast.UastIterExt = {
     Libuast.UastIterExt(node, treeOrder)
   }
 
+  /** Factory method for iterator over an managed node */
   def iterator(node: JNode, treeOrder: Int): Libuast.UastIter = {
     Libuast.UastIter(node, treeOrder)
   }
 
   // Enables API: resp.uast.decode().load().filter("//query")
-  // TODO(bzz): implement XPath query
+  // TODO(83): implement XPath query
   // implicit class NodeExtMethods(val node: NodeExt) {
   //   def filter(query: String): List[NodeExt] = {
   //     BblfshClient.filter(node, query)
   //   }
   // }
-
 
 }
 

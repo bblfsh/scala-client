@@ -31,7 +31,7 @@ extern const char MERHOD_RE_INIT[];
 extern const char MERHOD_RE_INIT_CAUSE[];
 
 // Field signatures
-extern const char FIELD_NODE[];
+extern const char FIELD_ITER_NODE[];
 
 // Checks though JNI, if there is a pending excption on JVM side.
 //

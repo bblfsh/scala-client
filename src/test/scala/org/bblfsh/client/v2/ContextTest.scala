@@ -8,7 +8,6 @@ class ContextTest extends FlatSpec
   with BeforeAndAfter
   with Matchers {
 
-
   "ContextExt" should "be able to .dispose() twice" in {
     val client = BblfshClient("localhost", 9432)
     val fileName = "src/test/resources/SampleJavaFile.java"
@@ -20,7 +19,8 @@ class ContextTest extends FlatSpec
     val ctx = resp.uast.decode()
     ctx.dispose()
     ctx.dispose()
-  }
 
+    client.close()
+  }
 
 }

@@ -6,20 +6,13 @@ import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
 import scala.io.Source
 
 
-class BblfshLibuastIteratorTest extends FlatSpec
+class LibuastNativeIteratorTest extends FlatSpec
   with Matchers
   with BeforeAndAfter
   with BeforeAndAfterAll {
 
   var nativeRootNode: NodeExt = _
   var iter: Libuast.UastIterExt = _
-  val mangedRootNode: JNode = JArray(
-    JObject(
-      "k1" -> JString("v1"),
-      "k2" -> JObject(
-        "k3" -> JInt(24)
-      )
-    ))
 
   override def beforeAll {
     import BblfshClient._ // enables uast.* methods
@@ -40,15 +33,6 @@ class BblfshLibuastIteratorTest extends FlatSpec
   after {
     iter.close()
   }
-
-  // TODO(bzz): part of upcoming UastIter impl
-  // "Managed UAST iterator" should "return non-empty results on JVM objects" in {
-  //   it = BblfshClient.iterator(mangedRootNode, BblfshClient.PreOrder)
-  //   it.hasNext() should be(true)
-
-  //   val nodes = it.toList
-  //   nodes shouldNot be(empty)
-  // }
 
   "Native UAST iterator init()" should "initialize the fields" in {
     iter.ctx should not be(0)
@@ -93,6 +77,8 @@ class BblfshLibuastIteratorTest extends FlatSpec
     val nodes = iter.toList
     nodes shouldNot be(empty)
     println(s"Iterator returned ${nodes.size} nodes")
+
+    nodes.size should be equals (totalJnodes)
   }
 
 }

@@ -12,38 +12,40 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 object Libuast {
   final var loaded = false
 
-  // TODO(bzz): implement
-  class UastIter(node: JNode, treeOrder: Int, iter: Long, ctx: Long) extends Iterator[JNode] {
-    @native override def hasNext(): Boolean
-    @native override def next(): JNode
-
-    @native def nativeInit()
-    @native def nativeDispose()
-    override def finalize(): Unit = {
-        this.nativeDispose()
-    }
-  }
-
-  object UastIter {
-    def apply(node: JNode, treeOrder: Int): UastIter = {
-      val it = new UastIter(node, treeOrder, 0, 0)
-      it.nativeInit()
-      it
-    }
-  }
-
-  class UastIterExt(var node: NodeExt, var treeOrder: Int, var iter: Long, var ctx: Long) extends Iterator[NodeExt] {
+  abstract class UastAbstractIter[T](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
+    extends Iterator[T] {
     private var closed = false
-    override def hasNext(): Boolean = {
-      !closed
-    }
-    override def next(): NodeExt = {
+    private var lookedAhead = false
+    private var nextNode: T = _
+
+    private def lookahead(): T = {
+      lookedAhead = true
       val node = nativeNext(iter)
       if (node == null) {
         close()
       }
       node
     }
+
+    override def hasNext(): Boolean = {
+      if (closed) {
+        return false
+      }
+      if (lookedAhead) {
+        return true
+      }
+      nextNode = lookahead()
+      nextNode != null
+    }
+
+    override def next(): T = {
+      if (!lookedAhead) {
+        nextNode = lookahead()
+      }
+      lookedAhead = false
+      nextNode // never null, iff called after .hasNext
+    }
+
     def close() = {
       if (!closed) {
         nativeDispose()
@@ -51,12 +53,21 @@ object Libuast {
       }
     }
 
+    def nativeNext(iterPtr: Long): T
+    def nativeInit()
+    def nativeDispose()
+
+    override def finalize(): Unit = {
+      this.nativeDispose()
+    }
+  }
+
+  /** Iterator over the given external/native node */
+  class UastIterExt(node: NodeExt, treeOrder: Int, iter: Long, ctx: Long)
+    extends UastAbstractIter(node, treeOrder, iter, ctx) {
     @native def nativeNext(iterPtr: Long): NodeExt
     @native def nativeInit()
     @native def nativeDispose()
-    override def finalize(): Unit = {
-        this.nativeDispose()
-    }
   }
 
   object UastIterExt {
@@ -67,37 +78,21 @@ object Libuast {
     }
   }
 
-  // FIXM(bzz): remove once hasNext/next are implemented
-  //class UastIterExt(node: NodeExt, treeOrder: Int, nIter: Long, nCtx: Long) extends Iterator[NodeExt] {
-  //  private var closed = false
-  //  private var iterPtr: ByteBuffer = newIterator(node, treeOrder)
-  //
-  //  override def hasNext(): Boolean = {
-  //    !closed
-  //  }
-  //
-  //  override def next(): NodeExt = {
-  //    val res = nextIterator(iterPtr)
-  //    if (res == null) {
-  //      close()
-  //    }
-  //    res
-  //  }
-  //
-  //  def close() = {
-  //    if (!closed) {
-  //      disposeIterator(iterPtr)
-  //      closed = true
-  //    }
-  //  }
-  //
-  //  @native def newIterator(node: NodeExt, treeOrder: Int): ByteBuffer
-  //
-  //  @native def nextIterator(ptr: ByteBuffer): NodeExt
-  //
-  //  @native def disposeIterator(ptr: ByteBuffer)
-  //}
+  /** Iterator over the given managed node */
+  class UastIter(node: JNode, treeOrder: Int, iter: Long, ctx: Long)
+    extends UastAbstractIter(node, treeOrder, iter, ctx) {
+    @native def nativeNext(iterPtr: Long): JNode
+    @native def nativeInit()
+    @native def nativeDispose()
+  }
 
+  object UastIter {
+    def apply(node: JNode, treeOrder: Int): UastIter = {
+      val it = new UastIter(node, treeOrder, 0, 0)
+      it.nativeInit()
+      it
+    }
+  }
 
   // Extract the native module from the jar
   private final def loadBinaryLib(name: String) = {
@@ -137,16 +132,8 @@ class Libuast {
     }
   }
 
+  // TODO(#83): implement
   @native def filter(node: NodeExt, query: String): List[NodeExt]
-
-  //  def iterator(node: JNode, treeOrder: Int) =
-  //    new Libuast.UastIter(node, treeOrder)
-  //  def iterator(node: NodeExt, treeOrder: Int) =
-  //    new Libuast.UastIterExt(node, treeOrder)
-
-  // bblfsh.pyuast
-  /** Get an iterator over a node */
-  @native def iterator()
 
   /** Decode UAST from a byte array */
   @native def decode(buf: ByteBuffer): ContextExt

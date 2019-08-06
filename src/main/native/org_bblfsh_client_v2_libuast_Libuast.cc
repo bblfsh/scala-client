@@ -128,7 +128,7 @@ class ContextExt {
   ~ContextExt() { delete (ctx); }
 
   // lookup searches for a specific node handle.
-  // Helper for iterators. Returns a new reference.
+  // Helper for iterators.
   jobject lookup(NodeHandle node) { return toJ(node); }
 
   jobject RootNode() {
@@ -405,7 +405,7 @@ class Interface : public uast::NodeCreator<Node *> {
   // Returns a new reference.
   jobject toJ(Node *node) {
     if (!node) return nullptr;
-    jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
+    jobject obj = getJNIEnv()->NewGlobalRef(node->obj);  // FIXME why global ?
     return obj;
   }
 
@@ -495,6 +495,16 @@ class Context {
     return toJ(root);  // new ref
   }
 
+  // Iterate returns iterator over an external UAST tree.
+  // Borrows the reference.
+  uast::Iterator<Node *> *Iterate(jobject jnode, TreeOrder order) {
+    if (!assertNotContext(jnode)) return nullptr;
+
+    Node *n = toNode(jnode);
+    auto iter = ctx->Iterate(n, order);
+    return iter;
+  }
+
   // Encode serializes UAST.
   // Creates a new reference.
   jobject Encode(jobject jnode, UastFormat format) {
@@ -561,13 +571,58 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
     JNIEnv *env, jobject self) {
+  jobject jnode = ObjectField(env, self, "node", FIELD_ITER_NODE);
+  if (!jnode) {  // FIXME: a global reference is need here
+    return;
+  }
+
+  Context *ctx = new Context();
+
+  int order = 0;  // FIXME read from self.treeOrder
+  auto it = ctx->Iterate(jnode, (TreeOrder)order);
+
+  // this.iter = it;
+  setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
+  // this.ctx = ctx;
+  setHandle<Context>(env, self, ctx, "ctx");
   return;
 }
 
-JNIEXPORT jboolean JNICALL
-Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_hasNext(JNIEnv *env,
-                                                                jobject self) {
-  return false;
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
+    JNIEnv *env, jobject self) {
+  // this.ctx - delete Context as iterator owns it
+  auto ctx = getHandle<Context>(env, self, "ctx");
+  setHandle<ContextExt>(env, self, 0, "ctx");
+  delete (ctx);
+  // FIXME: delete all the nodes
+
+  // this.iter
+  auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
+  setHandle<uast::Iterator<Node *>>(env, self, 0, "iter");
+  delete (iter);
+  return;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeNext(
+    JNIEnv *env, jobject self, jlong iterPtr) {
+  // this.iter
+  auto iter = reinterpret_cast<uast::Iterator<Node *> *>(iterPtr);
+
+  try {
+    if (!iter->next()) {
+      return nullptr;
+    }
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  Node *node = iter->node();
+  if (!node) return nullptr;
+
+  return node->toJ();  // new global ref
 }
 
 // UastIterExt
@@ -575,16 +630,16 @@ JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
     JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
 
-  jobject node = ObjectField(env, self, "node", FIELD_NODE);
-  if (!node) {
+  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_NODE);
+  if (!nodeExt) {
     return;
   }
 
   // borrow ContextExt from NodeExt
-  ContextExt *ctx = getHandle<ContextExt>(env, node, "ctx");
+  ContextExt *ctx = getHandle<ContextExt>(env, nodeExt, "ctx");
 
   int order = 0;  // FIXME read from self.treeOrder
-  auto it = ctx->Iterate(node, (TreeOrder)order);
+  auto it = ctx->Iterate(nodeExt, (TreeOrder)order);
 
   // this.iter = it;
   setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
@@ -596,14 +651,13 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
     JNIEnv *env, jobject self) {
-  // this.ctx - don't delete ContextExt, as it's borrowed
+  // this.ctx - don't delete ContextExt, it's borrowed from NodeExt
   setHandle<ContextExt>(env, self, 0, "ctx");
 
   // this.iter
   auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
   setHandle<uast::Iterator<NodeHandle>>(env, self, 0, "iter");
   delete (iter);
-
   return;
 }
 

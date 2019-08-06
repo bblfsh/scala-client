@@ -9,19 +9,11 @@ extern "C" {
 #endif
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
- * Method:    hasNext
- * Signature: ()Z
+ * Method:    nativeNext
+ * Signature: (J)Lorg/bblfsh/client/v2/JNode;
  */
-JNIEXPORT jboolean JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_hasNext
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
- * Method:    next
- * Signature: ()Lorg/bblfsh/client/v2/JNode;
- */
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_next
-  (JNIEnv *, jobject);
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeNext
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast_UastIter
