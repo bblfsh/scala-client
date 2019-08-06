@@ -70,7 +70,8 @@ class LibuastManagedIteratorTest extends FlatSpec
       .map(_ ("@type").asInstanceOf[JString].str)
       .toList
 
-  // port of the test.py#testIteratorPreOrder
+  // Equivalent of the test.py#testIteratorPreOrder
+  // https://github.com/bblfsh/python-client/blob/15ffb98bfa09e6aae4d1580f0e4f02eb2a530205/bblfsh/test.py#L270
   "Managed UAST iterator" should "return nodes in PreOrder" in {
     val poIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PreOrder)
     var nodes = getNodeTypes(poIter)
@@ -79,4 +80,7 @@ class LibuastManagedIteratorTest extends FlatSpec
     nodes should have size (poActual.size)
     nodes shouldEqual poActual
   }
+
+  // TODO(#108) more tests coverage for other iteration orders
+
 }

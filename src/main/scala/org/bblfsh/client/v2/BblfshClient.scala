@@ -100,7 +100,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
 object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
-  // TODO(bzz): expose new 'children' order, use enum/case class
+  // TODO(#108): expose all order, including new 'children' from
   //            https://github.com/bblfsh/libuast/pull/106
   val PreOrder = 0
   val PostOrder = 1

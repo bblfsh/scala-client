@@ -695,7 +695,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
     JNIEnv *env, jobject self, jobject jnode) {
-  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument
+  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
 
   Context *p = getHandle<Context>(env, self, nativeContext);
   return p->Encode(jnode, fmt);
@@ -726,7 +726,7 @@ Java_org_bblfsh_client_v2_ContextExt_root(JNIEnv *env, jobject self) {
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
     JNIEnv *env, jobject self, jobject node) {
-  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
+  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
 
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->Encode(node, fmt);
