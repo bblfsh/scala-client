@@ -182,6 +182,28 @@ jobject ObjectField(JNIEnv *env, jobject obj, const char *name,
   return fld;
 }
 
+jint IntField(JNIEnv *env, jobject obj, const char *name,
+              const char *signature) {
+  jfieldID fId = FieldID(env, obj, name, signature);
+  if (!fId) {
+    jstring jmsg =
+        env->NewStringUTF(std::string("failed to get field ID for field name '")
+                              .append(name)
+                              .append("' with signature '")
+                              .append(signature)
+                              .append("'")
+                              .c_str());
+    jthrowable re =
+        (jthrowable)NewJavaObject(env, CLS_RE, MERHOD_RE_INIT, jmsg);
+    env->Throw(re);
+    return -1;
+  }
+  jint fld = env->GetIntField(obj, fId);
+  checkJvmException(
+      std::string("failed get an Int from field '").append(name).append("'"));
+  return fld;
+}
+
 jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                    const char *className) {
   jclass cls = env->FindClass(className);

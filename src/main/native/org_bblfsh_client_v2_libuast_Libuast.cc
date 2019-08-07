@@ -578,7 +578,11 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 
   Context *ctx = new Context();
 
-  int order = 0;  // FIXME read from self.treeOrder
+  jint order = IntField(env, self, "treeOrder", "I");
+  if (order < 0) {
+    return;
+  }
+
   auto it = ctx->Iterate(jnode, (TreeOrder)order);
 
   // this.iter = it;
@@ -638,7 +642,11 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
   // borrow ContextExt from NodeExt
   ContextExt *ctx = getHandle<ContextExt>(env, nodeExt, "ctx");
 
-  int order = 0;  // FIXME read from self.treeOrder
+  jint order = IntField(env, self, "treeOrder", "I");
+  if (order < 0) {
+    return;
+  }
+
   auto it = ctx->Iterate(nodeExt, (TreeOrder)order);
 
   // this.iter = it;

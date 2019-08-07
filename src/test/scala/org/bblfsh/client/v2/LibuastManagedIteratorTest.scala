@@ -32,15 +32,12 @@ class LibuastManagedIteratorTest extends FlatSpec
 
     nodes(0) should not be null
     nodes(0) shouldBe a[JArray]
-
-    println(s"Found ${nodes.size} nodes $nodes")
   }
 
   "Managed UAST iterator" should "go though all nodes of small object" in {
     iter = BblfshClient.iterator(mangedRootNode, BblfshClient.PreOrder)
     val nodes = iter.toList
 
-    println(s"Found ${nodes.size} nodes $nodes")
     nodes.size should be(3) // number of composite nodes
   }
 
@@ -73,14 +70,23 @@ class LibuastManagedIteratorTest extends FlatSpec
   // Equivalent of the test.py#testIteratorPreOrder
   // https://github.com/bblfsh/python-client/blob/15ffb98bfa09e6aae4d1580f0e4f02eb2a530205/bblfsh/test.py#L270
   "Managed UAST iterator" should "return nodes in PreOrder" in {
-    val poIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PreOrder)
-    var nodes = getNodeTypes(poIter)
+    val preIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PreOrder)
+    val nodes = getNodeTypes(preIter)
 
     val poActual = Seq("root", "son1", "son1_1", "son1_2", "son2", "son2_1", "son2_2")
     nodes should have size (poActual.size)
     nodes shouldEqual poActual
   }
 
-  // TODO(#108) more tests coverage for other iteration orders
+  "Managed UAST iterator" should "return nodes in PostOrder" in {
+    val postIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PostOrder)
+    val nodes = getNodeTypes(postIter)
+
+    val poActual = Seq("son1_1", "son1_2", "son1", "son2_1", "son2_2", "son2", "root")
+    nodes should have size (poActual.size)
+    nodes shouldEqual poActual
+  }
+
+  // TODO(#108) more tests coverage for other iteration orders, refactor to a table-driven test
 
 }

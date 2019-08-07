@@ -42,11 +42,12 @@ void checkJvmException(std::string);
 JNIEnv *getJNIEnv();
 jobject NewJavaObject(JNIEnv *, const char *, const char *, ...);
 jfieldID FieldID(JNIEnv *, jobject, const char *, const char *);
+
+jint IntField(JNIEnv *, jobject, const char *, const char *);
 jobject ObjectField(JNIEnv *, jobject, const char *, const char *);
 
 jint IntMethod(JNIEnv *, const char *, const char *, const char *,
                const jobject *);
-
 jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
                      const jobject *, ...);
 
