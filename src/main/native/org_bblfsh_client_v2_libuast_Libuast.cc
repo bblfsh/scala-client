@@ -405,7 +405,7 @@ class Interface : public uast::NodeCreator<Node *> {
   // Returns a new reference.
   jobject toJ(Node *node) {
     if (!node) return nullptr;
-    jobject obj = getJNIEnv()->NewGlobalRef(node->obj);  // FIXME why global ?
+    jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
     return obj;
   }
 
@@ -572,18 +572,18 @@ JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
     JNIEnv *env, jobject self) {
   jobject jnode = ObjectField(env, self, "node", FIELD_ITER_NODE);
-  if (!jnode) {  // FIXME: a global reference is need here
+  if (!jnode) {
     return;
   }
 
   Context *ctx = new Context();
-
   jint order = IntField(env, self, "treeOrder", "I");
   if (order < 0) {
     return;
   }
 
-  auto it = ctx->Iterate(jnode, (TreeOrder)order);
+  // global ref will be deleted by Interface destructor on ctx deletion
+  auto it = ctx->Iterate(env->NewGlobalRef(jnode), (TreeOrder)order);
 
   // this.iter = it;
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
@@ -599,7 +599,6 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
   auto ctx = getHandle<Context>(env, self, "ctx");
   setHandle<ContextExt>(env, self, 0, "ctx");
   delete (ctx);
-  // FIXME: delete all the nodes
 
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
