@@ -46,10 +46,10 @@ object Libuast {
     }
 
     override def next(): T = {
-      if (!lookedAhead) {
-        nextNode = lookahead()
+      if (hasNext()) {
+        lookedAhead = false
+        return nextNode
       }
-      lookedAhead = false
       nextNode
     }
 
