@@ -27,15 +27,15 @@ extern const char METHOD_JNODE_VALUE_AT[];
 extern const char METHOD_JOBJ_ADD[];
 extern const char METHOD_JARR_ADD[];
 extern const char METHOD_OBJ_TO_STR[];
-extern const char MERHOD_RE_INIT[];
-extern const char MERHOD_RE_INIT_CAUSE[];
+extern const char METHOD_RE_INIT[];
+extern const char METHOD_RE_INIT_CAUSE[];
 
 // Field signatures
 extern const char FIELD_ITER_NODE[];
 
-// Checks though JNI, if there is a pending excption on JVM side.
+// Checks through JNI, if there is a pending excption on the JVM side.
 //
-// Throws new RuntimeExpection to JVM in case there is,
+// Throws new RuntimeExpection to the JVM in case there is,
 // uses the origial one as a cause and the given string as a message.
 void checkJvmException(std::string);
 

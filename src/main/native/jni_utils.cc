@@ -50,8 +50,8 @@ const char METHOD_JARR_ADD[] =
 
 const char METHOD_OBJ_TO_STR[] = "()Ljava/lang/String;";
 
-const char MERHOD_RE_INIT[] = "(Ljava/lang/String;)V";
-const char MERHOD_RE_INIT_CAUSE[] =
+const char METHOD_RE_INIT[] = "(Ljava/lang/String;)V";
+const char METHOD_RE_INIT_CAUSE[] =
     "(Ljava/lang/String;Ljava/lang/Throwable;)V";
 
 // Field signatures
@@ -94,12 +94,12 @@ void checkJvmException(std::string msg) {
 
     // new RuntimeException(jmsg, err)
     jmethodID initId =
-        env->GetMethodID(exceptionCls, "<init>", MERHOD_RE_INIT_CAUSE);
+        env->GetMethodID(exceptionCls, "<init>", METHOD_RE_INIT_CAUSE);
     if (env->ExceptionCheck() || !initId) {
       env->ExceptionClear();
       env->ThrowNew(exceptionCls,
                     msg.append(" - failed to get method id for signature ")
-                        .append(MERHOD_RE_INIT_CAUSE)
+                        .append(METHOD_RE_INIT_CAUSE)
                         .c_str());
       return;
     }
@@ -111,7 +111,7 @@ void checkJvmException(std::string msg) {
       env->ThrowNew(exceptionCls,
                     msg.append(" - failed to create a new instance of ")
                         .append(CLS_RE)
-                        .append(MERHOD_RE_INIT_CAUSE)
+                        .append(METHOD_RE_INIT_CAUSE)
                         .c_str());
       return;
     }
@@ -171,7 +171,7 @@ jobject ObjectField(JNIEnv *env, jobject obj, const char *name,
                               .append("'")
                               .c_str());
     jthrowable re =
-        (jthrowable)NewJavaObject(env, CLS_RE, MERHOD_RE_INIT, jmsg);
+        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
     env->Throw(re);
     return nullptr;
   }
@@ -194,7 +194,7 @@ jint IntField(JNIEnv *env, jobject obj, const char *name,
                               .append("'")
                               .c_str());
     jthrowable re =
-        (jthrowable)NewJavaObject(env, CLS_RE, MERHOD_RE_INIT, jmsg);
+        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
     env->Throw(re);
     return -1;
   }
