@@ -128,12 +128,11 @@ class ContextExt {
   ~ContextExt() { delete (ctx); }
 
   // lookup searches for a specific node handle.
-  // Helper for iterators.
   jobject lookup(NodeHandle node) { return toJ(node); }
 
   jobject RootNode() {
     NodeHandle root = ctx->RootNode();
-    return toJ(root);
+    return lookup(root);
   }
 
   // Iterate returns iterator over an external UAST tree.
