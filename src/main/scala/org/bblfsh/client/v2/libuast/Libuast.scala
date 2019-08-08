@@ -12,6 +12,12 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 object Libuast {
   final var loaded = false
 
+  /**
+    * Skeletal Node iterator implementation that delegates to Libuast.
+    *
+    * It brides the gap between the contracts of a Scala iterator (.hasNext()/.next()) and
+    * a native Libuast iterator (.next() == null at the end).
+    * */
   abstract class UastAbstractIter[T](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
     extends Iterator[T] {
     private var closed = false
@@ -27,6 +33,7 @@ object Libuast {
       node
     }
 
+    /** True only if the next element is not null */
     override def hasNext(): Boolean = {
       if (closed) {
         return false
@@ -43,7 +50,7 @@ object Libuast {
         nextNode = lookahead()
       }
       lookedAhead = false
-      nextNode // never null, iff called after .hasNext
+      nextNode
     }
 
     def close() = {
@@ -62,7 +69,7 @@ object Libuast {
     }
   }
 
-  /** Iterator over the given external/native node */
+  /** Iterator over children of the given external/native node */
   class UastIterExt(node: NodeExt, treeOrder: Int, iter: Long, ctx: Long)
     extends UastAbstractIter(node, treeOrder, iter, ctx) {
     @native def nativeNext(iterPtr: Long): NodeExt
@@ -78,7 +85,7 @@ object Libuast {
     }
   }
 
-  /** Iterator over the given managed node */
+  /** Iterator over children of the given managed node */
   class UastIter(node: JNode, treeOrder: Int, iter: Long, ctx: Long)
     extends UastAbstractIter(node, treeOrder, iter, ctx) {
     @native def nativeNext(iterPtr: Long): JNode
