@@ -19,6 +19,10 @@ JavaVM *jvm;
 namespace {
 constexpr char nativeContext[] = "nativeContext";
 
+// Reads the opaque native pointer out of the field of the given object.
+//
+// The field is specified by its name and signature.
+// Opaque pointer is casted to the given native type T.
 template <typename T>
 T *getHandle(JNIEnv *env, jobject obj, const char *name, const char *sig) {
   jfieldID fId = FieldID(env, obj, name, sig);
@@ -29,6 +33,10 @@ T *getHandle(JNIEnv *env, jobject obj, const char *name, const char *sig) {
   return reinterpret_cast<T *>(handle);
 }
 
+// Reads the opaque native pointer out of the given object's field.
+//
+// The field is specified by its name.
+// Opaque pointer is casted to the given native type T.
 template <typename T>
 T *getHandle(JNIEnv *env, jobject obj, const char *name) {
   return getHandle<T>(env, obj, name, "J");
