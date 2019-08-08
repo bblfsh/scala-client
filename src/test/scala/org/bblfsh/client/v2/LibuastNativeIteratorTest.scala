@@ -70,13 +70,11 @@ class LibuastNativeIteratorTest extends FlatSpec
   "Native UAST iterator" should "return non-empty results on decoded objects" in {
     val wholeTree = nativeRootNode.load()
     val totalJnodes = countNodes(wholeTree)
-    println(s"Total number of nodes in JVM ${totalJnodes}")
 
     iter.hasNext() should be(true)
 
     val nodes = iter.toList
     nodes shouldNot be(empty)
-    println(s"Iterator returned ${nodes.size} nodes")
 
     nodes.size should be equals (totalJnodes)
   }
