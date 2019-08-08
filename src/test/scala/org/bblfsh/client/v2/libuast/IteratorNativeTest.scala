@@ -1,12 +1,12 @@
-package org.bblfsh.client.v2
+package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.libuast.Libuast
+import org.bblfsh.client.v2.{BblfshClient, JArray, JNode, JObject, NodeExt}
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
 
 import scala.io.Source
 
 
-class LibuastNativeIteratorTest extends FlatSpec
+class IteratorNativeTest extends FlatSpec
   with Matchers
   with BeforeAndAfter
   with BeforeAndAfterAll {
@@ -15,7 +15,7 @@ class LibuastNativeIteratorTest extends FlatSpec
   var iter: Libuast.UastIterExt = _
 
   override def beforeAll {
-    import BblfshClient._ // enables uast.* methods
+    import org.bblfsh.client.v2.BblfshClient._ // enables uast.* methods
 
     val client = BblfshClient("localhost", 9432)
     val parse = (file: String) => {

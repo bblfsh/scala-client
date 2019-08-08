@@ -1,6 +1,7 @@
 package org.bblfsh.client.v2.libuast
 
 import org.bblfsh.client.v2.{ContextExt, JNode, NodeExt}
+import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
 
 import scala.collection.Iterator
 import java.io.File
@@ -136,9 +137,6 @@ class Libuast {
       Libuast.loadBinaryLib("libscalauast")
     }
   }
-
-  // TODO(#83): implement
-  @native def filter(node: NodeExt, query: String): List[NodeExt]
 
   /** Decode UAST from a byte array */
   @native def decode(buf: ByteBuffer): ContextExt

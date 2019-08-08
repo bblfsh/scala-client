@@ -73,8 +73,19 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
 
     val bytes3 = node.toByteArray
     bytes3 should not be (null)
-    bytes3 shouldBe a[Array[Byte]]
+    bytes3 shouldBe a[Array[_]]
     ByteBuffer.wrap(bytes3) should equal(bytes1)
+  }
+
+  "XPath query" should "filter native UAST" in {
+    val uast = resp.uast.decode().root()
+    val it = BblfshClient.filter(uast, "//uast:Position")
+
+    it.hasNext should be(true)
+    it.toList should have size(8)
+
+    it.close()
+    it.hasNext should be(false)
   }
 
 }

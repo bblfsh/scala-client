@@ -1,9 +1,10 @@
-package org.bblfsh.client.v2
+package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.libuast.Libuast
+import org.bblfsh.client.v2.{BblfshClient, JArray, JInt, JNode, JObject, JString}
+// TODO import org.bblfsh.client.v2.nodes._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
 
-class LibuastManagedIteratorTest extends FlatSpec
+class IteratorManagedTest extends FlatSpec
   with Matchers
   with BeforeAndAfter
   with BeforeAndAfterAll {
