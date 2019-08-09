@@ -34,23 +34,20 @@ object Libuast {
     }
 
     /** True only if the next element is not null */
-    override def hasNext(): Boolean = {
-      if (closed) {
-        return false
-      }
-      if (nextNode.isDefined) {
-        return true
-      }
+    override def hasNext(): Boolean = if (closed) {
+      false
+    } else if (nextNode.isDefined) {
+      true
+    } else {
       nextNode = lookahead()
       nextNode.isDefined
     }
 
-    override def next(): T = {
-      if (hasNext()) {
-        val next = nextNode.get
-        nextNode = None
-        return next
-      }
+    override def next(): T = if (hasNext()) {
+      val next = nextNode.get
+      nextNode = None
+      next
+    } else {
       null
     }
 
