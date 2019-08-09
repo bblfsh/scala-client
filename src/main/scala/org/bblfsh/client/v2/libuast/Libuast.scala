@@ -18,19 +18,19 @@ object Libuast {
     * It brides the gap between the contracts of a Scala iterator (.hasNext()/.next()) and
     * a native Libuast iterator (.next() == null at the end).
     * */
-  abstract class UastAbstractIter[T](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
+  abstract class UastAbstractIter[T >:Null](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
     extends Iterator[T] {
     private var closed = false
-    private var lookedAhead = false
-    private var nextNode: T = _
+    private var nextNode: Option[T] = None
 
-    private def lookahead(): T = {
-      lookedAhead = true
+    private def lookahead(): Option[T] = {
       val node = nativeNext(iter)
       if (node == null) {
         close()
+        None
+      } else {
+        Some(node)
       }
-      node
     }
 
     /** True only if the next element is not null */
@@ -38,19 +38,20 @@ object Libuast {
       if (closed) {
         return false
       }
-      if (lookedAhead) {
+      if (nextNode.isDefined) {
         return true
       }
       nextNode = lookahead()
-      nextNode != null
+      nextNode.isDefined
     }
 
     override def next(): T = {
       if (hasNext()) {
-        lookedAhead = false
-        return nextNode
+        val next = nextNode.get
+        nextNode = None
+        return next
       }
-      nextNode
+      null
     }
 
     def close() = {
