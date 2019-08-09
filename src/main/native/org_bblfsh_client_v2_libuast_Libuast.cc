@@ -604,7 +604,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
   // this.ctx - delete Context as iterator owns it
   auto ctx = getHandle<Context>(env, self, "ctx");
-  setHandle<ContextExt>(env, self, 0, "ctx");
+  setHandle<Context>(env, self, 0, "ctx");
   delete (ctx);
 
   // this.iter
