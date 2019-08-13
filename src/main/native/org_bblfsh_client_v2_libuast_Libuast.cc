@@ -210,7 +210,6 @@ class Node : public uast::Node<Node *> {
   jobject obj;  // Node owns a (global) reference
   NodeKind kind;
 
-  jobject keys;
   std::string *str;
 
   // kindOf returns a kind of a JVM object.
@@ -244,7 +243,7 @@ class Node : public uast::Node<Node *> {
 
   // Node creates a new node associated with a given JVM object and sets the
   // kind. Creates a new global reference.
-  Node(Interface *i, NodeKind k, jobject v) : keys(nullptr), str(nullptr) {
+  Node(Interface *i, NodeKind k, jobject v) : str(nullptr) {
     iface = i;
     obj = getJNIEnv()->NewGlobalRef(v);
     kind = k;
@@ -252,7 +251,7 @@ class Node : public uast::Node<Node *> {
 
   // Node creates a new node associated with a given JVM object and
   // automatically determines the kind. Creates a new global reference.
-  Node(Interface *i, jobject v) : keys(nullptr), str(nullptr) {
+  Node(Interface *i, jobject v) : str(nullptr) {
     iface = i;
     obj = getJNIEnv()->NewGlobalRef(v);
     kind = kindOf(v);
@@ -260,10 +259,6 @@ class Node : public uast::Node<Node *> {
 
   ~Node() {
     JNIEnv *env = getJNIEnv();
-    if (keys) {
-      env->DeleteGlobalRef(keys);
-      keys = nullptr;
-    }
     if (obj) {
       env->DeleteGlobalRef(obj);
     }
