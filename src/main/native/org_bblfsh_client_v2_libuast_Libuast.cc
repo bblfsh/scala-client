@@ -190,7 +190,7 @@ jobject filterUastIterExt(ContextExt *ctx, jstring jquery, JNIEnv *env) {
     return nullptr;
   }
 
-  // new UastIterExt(), no nativeInit(). Shall we pass rootNode?
+  // new UastIterExt()
   jobject iter = NewJavaObject(env, CLS_ITER, METHOD_ITER_INIT, 0, 0, it, ctx);
   if (env->ExceptionCheck() || !iter) {
     delete (it);
@@ -539,13 +539,25 @@ class Context {
   }
 
   // Iterate returns iterator over an external UAST tree.
-  // Borrows the reference.
+  // Creates a new reference.
   uast::Iterator<Node *> *Iterate(jobject jnode, TreeOrder order) {
     if (!assertNotContext(jnode)) return nullptr;
 
     Node *n = toNode(jnode);
     auto iter = ctx->Iterate(n, order);
     return iter;
+  }
+
+  // Filter queries UAST.
+  // Creates a new reference.
+  uast::Iterator<Node *> *Filter(jobject node, std::string query) {
+    if (!assertNotContext(node)) return nullptr;
+
+    Node *unode = toNode(node);
+    if (unode == nullptr) unode = ctx->RootNode();
+
+    auto it = ctx->Filter(unode, query);
+    return it;
   }
 
   // Encode serializes UAST.
@@ -638,7 +650,10 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
-  // this.ctx - delete Context as iterator owns it
+  // FIXME:
+  //  either delete iff .nativeInit() was called
+  //  or never delete it, so client should do that instead
+  // this.ctx - delete the Context as iterator owns it
   auto ctx = getHandle<Context>(env, self, "ctx");
   setHandle<Context>(env, self, 0, "ctx");
   delete (ctx);
@@ -736,6 +751,33 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
 // ==========================================
 //              v2.Context()
 // ==========================================
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
+    JNIEnv *env, jobject self, jstring jquery, jobject jnode) {
+  Context *ctx = getHandle<Context>(env, self, nativeContext);
+
+  const char *q = env->GetStringUTFChars(jquery, 0);
+  std::string query = std::string(q);
+  env->ReleaseStringUTFChars(jquery, q);
+
+  uast::Iterator<Node *> *it = nullptr;
+  try {
+    // global ref will be deleted by Interface destructor on ctx deletion
+    it = ctx->Filter(env->NewGlobalRef(jnode), query);
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  // new UastIter()
+  jobject iter =
+      NewJavaObject(env, CLS_JITER, METHOD_JITER_INIT, 0, 0, it, ctx);
+  if (env->ExceptionCheck() || !iter) {
+    delete (it);
+    checkJvmException("failed create new UastIter class");
+  }
+  return iter;
+}
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
     JNIEnv *env, jobject self, jobject jnode) {

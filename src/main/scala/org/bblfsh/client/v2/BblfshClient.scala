@@ -167,5 +167,12 @@ object BblfshClient {
     node.filter(query)
   }
 
+  /** Factory method for iterator over an managed node, filtered by XPath query */
+  def filter(node: JNode, query: String):  Libuast.UastIter = Libuast.synchronized {
+    val ctx = Context()
+    ctx.filter(query, node)
+    // do not dispose the context, iterator steals it
+  }
+
 }
 
