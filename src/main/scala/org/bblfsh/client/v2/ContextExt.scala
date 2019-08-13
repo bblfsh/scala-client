@@ -29,7 +29,7 @@ case class ContextExt(nativeContext: Long) {
   */
 case class Context(nativeContext: Long) {
     @native def root(): JNode
-    @native def filter(query: String): UastIter // FIXME implement
+    @native def filter(query: String): UastIter
     @native def encode(n: JNode): ByteBuffer
 
     @native def dispose()

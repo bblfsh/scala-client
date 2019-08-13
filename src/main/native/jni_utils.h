@@ -21,6 +21,7 @@ extern const char CLS_JUINT[];
 extern const char CLS_JARR[];
 extern const char CLS_JOBJ[];
 extern const char CLS_ITER[];
+extern const char CLS_JITER[];
 
 // Method signatures
 extern const char METHOD_JNODE_KEY_AT[];
@@ -31,6 +32,7 @@ extern const char METHOD_OBJ_TO_STR[];
 extern const char METHOD_RE_INIT[];
 extern const char METHOD_RE_INIT_CAUSE[];
 extern const char METHOD_ITER_INIT[];
+extern const char METHOD_JITER_INIT[];
 
 // Field signatures
 extern const char FIELD_ITER_NODE[];
