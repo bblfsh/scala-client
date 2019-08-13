@@ -104,4 +104,20 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
 
   // TODO(bzz): add test for multi-thread filtering
 
+  "XPath query" should "work another thread" in {
+    val ctx = resp.uast.decode()
+    val root = ctx.root()
+    val th = new Thread(new Runnable {
+      def run() {
+        val filtered = root.filter("//*[@role='Type']")
+        filtered.toSeq should have size (1)
+      }
+    })
+    th.start
+
+    th.synchronized {
+      th.wait
+    }
+  }
+
 }
