@@ -27,22 +27,56 @@ extern const char METHOD_JNODE_VALUE_AT[];
 extern const char METHOD_JOBJ_ADD[];
 extern const char METHOD_JARR_ADD[];
 extern const char METHOD_OBJ_TO_STR[];
+extern const char METHOD_RE_INIT[];
+extern const char METHOD_RE_INIT_CAUSE[];
 
-// Checks though JNI, if there is a pending excption on JVM side.
+// Field signatures
+extern const char FIELD_ITER_NODE[];
+
+// Checks through JNI, if there is a pending excption on the JVM side.
 //
-// Throws new RuntimeExpection to JVM in case there is,
-// uses the origial one as a cause and the given string as a message.
+// Throws new RuntimeException to the JVM in case there is,
+// uses the original one as a cause and the given string as a message.
 void checkJvmException(std::string);
 
+// Reads the JVM pointer of the current native thread.
+//
+// If the thread was not created by JVM - it will be attached to the JVM first.
+// Those threads need to be detached later on, in order to avoid memory leaks.
 JNIEnv *getJNIEnv();
-jobject NewJavaObject(JNIEnv *, const char *, const char *, ...);
-jfieldID getField(JNIEnv *env, jobject obj, const char *name);
 
+// Constructs new Java object of a given className and constructor signature.
+jobject NewJavaObject(JNIEnv *, const char *, const char *, ...);
+
+// Returns the field ID of the field of the given object.
+// The field is specified by its name and signature.
+jfieldID FieldID(JNIEnv *, jobject, const char *, const char *);
+
+// Reads the value of an Int field of a given object.
+// The field is specified by its name and signature.
+jint IntField(JNIEnv *, jobject, const char *, const char *);
+
+// Reads the value of an Object field of a given object.
+// The field is specified by its name and signature.
+jobject ObjectField(JNIEnv *, jobject, const char *, const char *);
+
+// Returns the method ID for a method of a given class or interface name.
+// The method is determined by its name and signature.
+jmethodID MethodID(JNIEnv *, const char *, const char *, const char *);
+
+// Calls a method of the given class or interface name that returns an Int.
+// The method is determined by its name and signature.
 jint IntMethod(JNIEnv *, const char *, const char *, const char *,
                const jobject *);
 
+// Calls a method of the given class or interface name that returns an Object.
+// The method is determined by its name and signature.
 jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
                      const jobject *, ...);
 
-jmethodID MethodID(JNIEnv *, const char *, const char *, const char *);
+// Constructs new object the given class name and throws it to JVM.
+//
+// A fully qualified class name must name a valid Throwable type.
+// It does not interfere with the native control flow.
+void ThrowByName(JNIEnv *, const char *, const char *);
 #endif

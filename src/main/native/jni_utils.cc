@@ -50,6 +50,13 @@ const char METHOD_JARR_ADD[] =
 
 const char METHOD_OBJ_TO_STR[] = "()Ljava/lang/String;";
 
+const char METHOD_RE_INIT[] = "(Ljava/lang/String;)V";
+const char METHOD_RE_INIT_CAUSE[] =
+    "(Ljava/lang/String;Ljava/lang/Throwable;)V";
+
+// Field signatures
+const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
+
 // TODO(bzz): cache classes&methods in JNI_OnLoad should speed this up
 void checkJvmException(std::string msg) {
   JNIEnv *env = getJNIEnv();
@@ -58,23 +65,15 @@ void checkJvmException(std::string msg) {
     env->ExceptionClear();
 
     auto exceptionCls = env->FindClass(CLS_RE);
-    if (env->ExceptionCheck()) {
+    if (env->ExceptionCheck() || !exceptionCls) {
       env->ExceptionClear();
       env->Throw(env->ExceptionOccurred());
       return;
     }
 
-    jclass cls = env->FindClass(CLS_OBJ);
-    if (env->ExceptionCheck()) {
-      env->ExceptionClear();
-      env->ThrowNew(
-          exceptionCls,
-          msg.append(" - failed to find class ").append(CLS_OBJ).data());
-      return;
-    }
-
-    jmethodID toString = env->GetMethodID(cls, "toString", METHOD_OBJ_TO_STR);
-    if (env->ExceptionCheck()) {
+    jmethodID toString =
+        env->GetMethodID(exceptionCls, "toString", METHOD_OBJ_TO_STR);
+    if (env->ExceptionCheck() || !toString) {
       env->ExceptionClear();
       env->ThrowNew(exceptionCls,
                     msg.append(" - failed to find method toString").data());
@@ -83,19 +82,39 @@ void checkJvmException(std::string msg) {
 
     jstring s = (jstring)env->CallObjectMethod(err, toString);
     if (env->ExceptionCheck() || !s) {
+      env->ExceptionClear();
       env->ThrowNew(exceptionCls,
                     msg.append(" - failed co call method toString").data());
       return;
     }
 
     const char *utf = env->GetStringUTFChars(s, 0);
+    jstring jmsg = env->NewStringUTF(msg.append(": ").append(utf).c_str());
     env->ReleaseStringUTFChars(s, utf);
 
-    // new RuntimeException(msg.data(), err)
-    jmethodID initId = env->GetMethodID(
-        cls, "<init>", "(Ljava/lang/String;Ljava/lang/Throwable;)V");
-    jthrowable exception = (jthrowable)env->NewObject(
-        exceptionCls, initId, msg.append(": ").append(utf).data(), err);
+    // new RuntimeException(jmsg, err)
+    jmethodID initId =
+        env->GetMethodID(exceptionCls, "<init>", METHOD_RE_INIT_CAUSE);
+    if (env->ExceptionCheck() || !initId) {
+      env->ExceptionClear();
+      env->ThrowNew(exceptionCls,
+                    msg.append(" - failed to get method id for signature ")
+                        .append(METHOD_RE_INIT_CAUSE)
+                        .c_str());
+      return;
+    }
+
+    jthrowable exception =
+        (jthrowable)env->NewObject(exceptionCls, initId, jmsg, err);
+    if (env->ExceptionCheck() || !exception) {
+      env->ExceptionClear();
+      env->ThrowNew(exceptionCls,
+                    msg.append(" - failed to create a new instance of ")
+                        .append(CLS_RE)
+                        .append(METHOD_RE_INIT_CAUSE)
+                        .c_str());
+      return;
+    }
 
     env->Throw(exception);
   }
@@ -122,14 +141,67 @@ jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign,
   return instance;
 }
 
-jfieldID getField(JNIEnv *env, jobject obj, const char *name) {
+jfieldID FieldID(JNIEnv *env, jobject obj, const char *field,
+                 const char *typeSignature) {
   jclass cls = env->GetObjectClass(obj);
   checkJvmException("failed get the class of an object");
 
-  jfieldID jfid = env->GetFieldID(cls, name, "J");
-  checkJvmException(std::string("failed get a field ").append(name));
+  // Note: printing the type from Scala to find the type needed for GetFieldID
+  // third argument using getClass.getName sometimes return objects different
+  // from the ones needed for the signature. To find the right type to use do
+  // this from Scala: (instance).getClass.getDeclaredField("fieldName")
+  jfieldID fId = env->GetFieldID(cls, field, typeSignature);
+  checkJvmException(std::string("failed get a field ID '")
+                        .append(field)
+                        .append("' for type signature '")
+                        .append(typeSignature)
+                        .append("'"));
 
-  return jfid;
+  return fId;
+}
+jobject ObjectField(JNIEnv *env, jobject obj, const char *name,
+                    const char *signature) {
+  jfieldID fId = FieldID(env, obj, name, signature);
+  if (!fId) {
+    jstring jmsg =
+        env->NewStringUTF(std::string("failed to get field ID for field name '")
+                              .append(name)
+                              .append("' with signature '")
+                              .append(signature)
+                              .append("'")
+                              .c_str());
+    jthrowable re =
+        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
+    env->Throw(re);
+    return nullptr;
+  }
+  jobject fld = env->GetObjectField(obj, fId);
+  checkJvmException(std::string("failed get an object from field '")
+                        .append(name)
+                        .append("'"));
+  return fld;
+}
+
+jint IntField(JNIEnv *env, jobject obj, const char *name,
+              const char *signature) {
+  jfieldID fId = FieldID(env, obj, name, signature);
+  if (!fId) {
+    jstring jmsg =
+        env->NewStringUTF(std::string("failed to get field ID for field name '")
+                              .append(name)
+                              .append("' with signature '")
+                              .append(signature)
+                              .append("'")
+                              .c_str());
+    jthrowable re =
+        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
+    env->Throw(re);
+    return -1;
+  }
+  jint fld = env->GetIntField(obj, fId);
+  checkJvmException(
+      std::string("failed get an Int from field '").append(name).append("'"));
+  return fld;
 }
 
 jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
@@ -183,4 +255,11 @@ jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
                         .append(method));
 
   return res;
+}
+
+void ThrowByName(JNIEnv *env, const char *className, const char *msg) {
+  jclass cls = env->FindClass(className);
+  if (cls) {
+    env->ThrowNew(cls, msg);
+  }
 }

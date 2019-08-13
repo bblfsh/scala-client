@@ -17,14 +17,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter
 
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
- * Method:    iterator
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_iterator
-  (JNIEnv *, jobject);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast
  * Method:    decode
  * Signature: (Ljava/nio/ByteBuffer;)Lorg/bblfsh/client/v2/ContextExt;
  */

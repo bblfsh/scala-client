@@ -100,7 +100,8 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
 object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
-  // TODO(bzz): expose new 'children' order, use enum/case class
+  // TODO(#108): expose all order, including new 'children' from
+  //            https://github.com/bblfsh/libuast/pull/106
   val PreOrder = 0
   val PostOrder = 1
   val LevelOrder = 2
@@ -155,23 +156,23 @@ object BblfshClient {
     }
   }
 
+  /** Factory method for iterator over an external/native node */
+  def iterator(node: NodeExt, treeOrder: Int): Libuast.UastIterExt = {
+    Libuast.UastIterExt(node, treeOrder)
+  }
 
-  // TODO(bzz): implement iterator
-  // def iterator(node: NodeExt, treeOrder: Int): Libuast.NodeIterator = {
-  //   new Libuast.NodeIterator(node, treeOrder)
-  // }
-  // def iterator(node: JNode, treeOrder: Int): Libuast.NodeIterator = {
-  //   new Libuast.NodeIterator(node, treeOrder)
-  // }
+  /** Factory method for iterator over an managed node */
+  def iterator(node: JNode, treeOrder: Int): Libuast.UastIter = {
+    Libuast.UastIter(node, treeOrder)
+  }
 
   // Enables API: resp.uast.decode().load().filter("//query")
-  // TODO(bzz): implement XPath query
+  // TODO(83): implement XPath query
   // implicit class NodeExtMethods(val node: NodeExt) {
   //   def filter(query: String): List[NodeExt] = {
   //     BblfshClient.filter(node, query)
   //   }
   // }
-
 
 }
 

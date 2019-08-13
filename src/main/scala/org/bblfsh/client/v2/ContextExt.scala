@@ -8,8 +8,8 @@ import java.nio.ByteBuffer
   * This is equivalent of pyuast.ContextExt API
   */
 case class ContextExt(nativeContext: Long) {
-    @native def root(): NodeExt
     // @native def load(): JNode // TODO(bzz): clarify when it's needed VS just .root().load()
+    @native def root(): NodeExt
     @native def filter()
     @native def encode(n: NodeExt): ByteBuffer
 

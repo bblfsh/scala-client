@@ -6,6 +6,8 @@
 #include "org_bblfsh_client_v2_Context__.h"
 #include "org_bblfsh_client_v2_NodeExt.h"
 #include "org_bblfsh_client_v2_libuast_Libuast.h"
+#include "org_bblfsh_client_v2_libuast_Libuast_UastIter.h"
+#include "org_bblfsh_client_v2_libuast_Libuast_UastIterExt.h"
 
 #include "libuast.h"
 #include "libuast.hpp"
@@ -17,32 +19,42 @@ JavaVM *jvm;
 namespace {
 constexpr char nativeContext[] = "nativeContext";
 
-jfieldID getHandleField(JNIEnv *env, jobject obj, const char *name) {
-  jclass cls = env->GetObjectClass(obj);
-  if (env->ExceptionOccurred() || !cls) {
-    return nullptr;
-  }
+// Reads the opaque native pointer out of the field of the given object.
+//
+// The field is specified by its name and signature.
+// Opaque pointer is casted to the given native type T.
+template <typename T>
+T *getHandle(JNIEnv *env, jobject obj, const char *name, const char *sig) {
+  jfieldID fId = FieldID(env, obj, name, sig);
+  if (!fId) return nullptr;
 
-  jfieldID jfid = env->GetFieldID(cls, name, "J");
-  if (env->ExceptionOccurred() || !jfid) {
-    return nullptr;
-  }
-  return jfid;
+  jlong handle = env->GetLongField(obj, fId);
+  checkJvmException("failed to get long field " + std::string(name));
+  return reinterpret_cast<T *>(handle);
+}
+
+// Reads the opaque native pointer out of the given object's field.
+//
+// The field is specified by its name.
+// Opaque pointer is casted to the given native type T.
+template <typename T>
+T *getHandle(JNIEnv *env, jobject obj, const char *name) {
+  return getHandle<T>(env, obj, name, "J");
 }
 
 template <typename T>
-T *getHandle(JNIEnv *env, jobject obj, const char *name) {
-  jlong handle = env->GetLongField(obj, getHandleField(env, obj, name));
-  if (env->ExceptionOccurred() || !handle) {
-    return nullptr;
-  }
-  return reinterpret_cast<T *>(handle);
+void setHandle(JNIEnv *env, jobject obj, T *t, const char *name,
+               const char *sig) {
+  jfieldID fId = FieldID(env, obj, name, sig);
+  if (!fId) return;
+
+  jlong handle = reinterpret_cast<jlong>(t);
+  env->SetLongField(obj, fId, handle);
 }
 
 template <typename T>
 void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
-  jlong handle = reinterpret_cast<jlong>(t);
-  env->SetLongField(obj, getHandleField(env, obj, name), handle);
+  setHandle<T>(env, obj, t, name, "J");
 }
 
 jobject asJvmBuffer(uast::Buffer buf) {
@@ -88,7 +100,7 @@ class ContextExt {
     return jObj;
   }
 
-  // toHandle casts an object to NodeExt and returns its handle.
+  // toHandle casts an object to NodeExt and reads its handle field.
   // Borrows the reference.
   NodeHandle toHandle(jobject obj) {
     if (!obj) return 0;
@@ -98,16 +110,20 @@ class ContextExt {
     checkJvmException("failed to find class " + std::string(CLS_NODE));
 
     if (!env->IsInstanceOf(obj, cls)) {
-      auto err = std::string("ContextExt.toHandle() called not on")
+      auto err = std::string("ContextExt.toHandle() argument is not")
                      .append(CLS_NODE)
                      .append(" type");
       ctx->SetError(err);
       return 0;
     }
 
-    auto handle =
-        (NodeHandle)env->GetLongField(obj, getField(env, obj, "handle"));
-    checkJvmException("failed to get field Node.handle");
+    jfieldID fId = FieldID(env, obj, "handle", "J");
+    if (!fId) {
+      return 0;
+    }
+
+    auto handle = (NodeHandle)env->GetLongField(obj, fId);
+    checkJvmException("failed to get field NodeExt.handle");
 
     return handle;
   }
@@ -119,9 +135,22 @@ class ContextExt {
 
   ~ContextExt() { delete (ctx); }
 
+  // lookup searches for a specific node handle.
+  jobject lookup(NodeHandle node) { return toJ(node); }
+
   jobject RootNode() {
     NodeHandle root = ctx->RootNode();
-    return toJ(root);
+    return lookup(root);
+  }
+
+  // Iterate returns iterator over an external UAST tree.
+  // Borrows the reference.
+  uast::Iterator<NodeHandle> *Iterate(jobject node, TreeOrder order) {
+    if (!assertNotContext(node)) return nullptr;
+
+    NodeHandle h = toHandle(node);
+    auto iter = ctx->Iterate(h, order);
+    return iter;
   }
 
   // Encode serializes the external UAST.
@@ -473,6 +502,16 @@ class Context {
     return toJ(root);  // new ref
   }
 
+  // Iterate returns iterator over an external UAST tree.
+  // Borrows the reference.
+  uast::Iterator<Node *> *Iterate(jobject jnode, TreeOrder order) {
+    if (!assertNotContext(jnode)) return nullptr;
+
+    Node *n = toNode(jnode);
+    auto iter = ctx->Iterate(n, order);
+    return iter;
+  }
+
   // Encode serializes UAST.
   // Creates a new reference.
   jobject Encode(jobject jnode, UastFormat format) {
@@ -483,19 +522,18 @@ class Context {
     return asJvmBuffer(data);
   }
 
-  jobject LoadFrom(jobject src) {  // JNode
+  jobject LoadFrom(jobject src) {  // NodeExt
     JNIEnv *env = getJNIEnv();
 
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, src, "ctx");
-    checkJvmException("failed to get Node.ctx");
+    checkJvmException("failed to get NodeExt.ctx");
 
     auto sctx = nodeExtCtx->ctx;
     NodeHandle snode =
         reinterpret_cast<NodeHandle>(getHandle<NodeHandle>(env, src, "handle"));
-    checkJvmException("failed to get Node.handle");
+    checkJvmException("failed to get NodeExt.handle");
 
     Node *node = uast::Load(sctx, snode, ctx);
-    checkJvmException("failed to uast::Load()");
     return toJ(node);
   }
 };
@@ -503,7 +541,7 @@ class Context {
 }  // namespace
 
 // ==========================================
-//          v2.libuast.Libuast()
+//          v2.libuast.Libuast
 // ==========================================
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
@@ -536,6 +574,129 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   return jCtxExt;
 }
 
+// UastIter
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
+    JNIEnv *env, jobject self) {
+  jobject jnode = ObjectField(env, self, "node", FIELD_ITER_NODE);
+  if (!jnode) {
+    return;
+  }
+
+  Context *ctx = new Context();
+  jint order = IntField(env, self, "treeOrder", "I");
+  if (order < 0) {
+    return;
+  }
+
+  // global ref will be deleted by Interface destructor on ctx deletion
+  auto it = ctx->Iterate(env->NewGlobalRef(jnode), (TreeOrder)order);
+
+  // this.iter = it;
+  setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
+  // this.ctx = ctx;
+  setHandle<Context>(env, self, ctx, "ctx");
+  return;
+}
+
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
+    JNIEnv *env, jobject self) {
+  // this.ctx - delete Context as iterator owns it
+  auto ctx = getHandle<Context>(env, self, "ctx");
+  setHandle<Context>(env, self, 0, "ctx");
+  delete (ctx);
+
+  // this.iter
+  auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
+  setHandle<uast::Iterator<Node *>>(env, self, 0, "iter");
+  delete (iter);
+  return;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeNext(
+    JNIEnv *env, jobject self, jlong iterPtr) {
+  // this.iter
+  auto iter = reinterpret_cast<uast::Iterator<Node *> *>(iterPtr);
+
+  try {
+    if (!iter->next()) {
+      return nullptr;
+    }
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  Node *node = iter->node();
+  if (!node) return nullptr;
+
+  return node->toJ();  // new global ref
+}
+
+// UastIterExt
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
+    JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
+
+  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_NODE);
+  if (!nodeExt) {
+    return;
+  }
+
+  // borrow ContextExt from NodeExt
+  ContextExt *ctx = getHandle<ContextExt>(env, nodeExt, "ctx");
+
+  jint order = IntField(env, self, "treeOrder", "I");
+  if (order < 0) {
+    return;
+  }
+
+  auto it = ctx->Iterate(nodeExt, (TreeOrder)order);
+
+  // this.iter = it;
+  setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
+  // this.ctx = ctx;
+  setHandle<ContextExt>(env, self, ctx, "ctx");
+  return;
+}
+
+JNIEXPORT void JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
+    JNIEnv *env, jobject self) {
+  // this.ctx - don't delete ContextExt, it's borrowed from NodeExt
+  setHandle<ContextExt>(env, self, 0, "ctx");
+
+  // this.iter
+  auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
+  setHandle<uast::Iterator<NodeHandle>>(env, self, 0, "iter");
+  delete (iter);
+  return;
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
+    JNIEnv *env, jobject self, jlong iterPtr) {
+  // this.iter
+  auto iter = reinterpret_cast<uast::Iterator<NodeHandle> *>(iterPtr);
+
+  try {
+    if (!iter->next()) {
+      return nullptr;
+    }
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  NodeHandle node = iter->node();
+  if (node == 0) return nullptr;
+
+  ContextExt *ctx = getHandle<ContextExt>(env, self, "ctx");
+  return ctx->lookup(node);
+}
+
 // TODO(#83): implement
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
     JNIEnv *, jobject, jobject, jstring) {
@@ -548,7 +709,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
     JNIEnv *env, jobject self, jobject jnode) {
-  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument
+  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
 
   Context *p = getHandle<Context>(env, self, nativeContext);
   return p->Encode(jnode, fmt);
@@ -560,14 +721,12 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   return (long)c;
 }
 
-JNIEXPORT void JNICALL
-Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env, jobject self){
+JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
+                                                                 jobject self) {
   Context *p = getHandle<Context>(env, self, nativeContext);
   setHandle<Context>(env, self, 0, nativeContext);
   delete p;
 };
-
-
 
 // ==========================================
 //              v2.ContextExt()
@@ -581,7 +740,7 @@ Java_org_bblfsh_client_v2_ContextExt_root(JNIEnv *env, jobject self) {
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
     JNIEnv *env, jobject self, jobject node) {
-  UastFormat fmt = UAST_BINARY;  // TODO(bzz): make it argument & enum
+  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
 
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
   return p->Encode(node, fmt);
