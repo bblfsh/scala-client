@@ -91,7 +91,7 @@ val resp = client.parse(filename, fileContent, Mode.SEMANTIC)
 println(resp.get)
 
 // Filtered response
-println(client.filter(resp.get, "//uast:Import[@role='Import']"))
+println(client.filter(resp.get, "//uast:Import"))
 ```
 
 Command line:
