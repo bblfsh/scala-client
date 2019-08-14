@@ -19,7 +19,7 @@ class FilterManagedTest extends FlatSpec
     ))
 
   override def beforeAll() = {
-    println(s"Libuast.loaded: ${Libuast.loaded}")
+    System.err.println(s"Libuast.loaded: ${Libuast.loaded}")
     // to load native JNI lib \wo the full client
   }
 

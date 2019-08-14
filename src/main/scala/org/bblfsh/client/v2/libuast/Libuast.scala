@@ -14,7 +14,7 @@ object Libuast {
   final var loaded = false
 
   if (!loaded) {
-    println("Loading native libscalauast")
+    System.err.println("Loading native libscalauast")
     Libuast.loadBinaryLib("libscalauast")
   }
 
