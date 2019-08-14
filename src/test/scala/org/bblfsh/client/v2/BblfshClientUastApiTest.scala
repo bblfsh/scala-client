@@ -78,7 +78,7 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
   }
 
   "XPath query" should "filter native UAST" in {
-    val uast = resp.uast.decode().root()
+    val uast: NodeExt = resp.uast.decode().root()
     val it = BblfshClient.filter(uast, "//uast:Position")
 
     it.hasNext should be(true)
@@ -90,7 +90,7 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
 
   "XPath query" should "filter managed UAST" in {
     val ctx = resp.uast.decode()
-    val uast = ctx.root().load()
+    val uast: JNode = ctx.root().load()
     ctx.dispose()
 
     val it = BblfshClient.filter(uast, "//uast:Position")
@@ -101,9 +101,9 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
     it.close()
     it.hasNext should be(false)
   }
-  
+
   "XPath query" should "work another thread" in {
-    val ctx = resp.uast.decode()
+    val ctx: ContextExt = resp.uast.decode()
     val root = ctx.root()
     val th = new Thread(new Runnable {
       def run() {

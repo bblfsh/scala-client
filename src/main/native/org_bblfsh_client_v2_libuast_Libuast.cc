@@ -645,13 +645,10 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
-  // FIXME:
-  //  either delete iff .nativeInit() was called
-  //  or never delete it, so client should do that instead
-  // this.ctx - delete the Context as iterator owns it
+  // this.ctx - delete as iterator owns it for both .iterate()/.filter() cases
   auto ctx = getHandle<Context>(env, self, "ctx");
-  setHandle<Context>(env, self, 0, "ctx");
   delete (ctx);
+  setHandle<Context>(env, self, 0, "ctx");
 
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
