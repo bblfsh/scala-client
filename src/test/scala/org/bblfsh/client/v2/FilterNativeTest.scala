@@ -27,7 +27,7 @@ class FilterNativeTest extends FlatSpec
     it.hasNext() should be(true)
 
     val pos = it.toList
-    pos should have size (8)
+    pos should have size (8) // Tiny.java contains 8 nodes with position
 
     it.close()
     it.hasNext() should be(false)
@@ -39,7 +39,7 @@ class FilterNativeTest extends FlatSpec
     it.hasNext() should be(true)
 
     val pos = it.toList
-    pos should have size (8)
+    pos should have size (8)  // Tiny.java contains 8 nodes with position
   }
 
 }

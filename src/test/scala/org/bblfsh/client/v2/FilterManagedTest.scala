@@ -32,7 +32,7 @@ class FilterManagedTest extends FlatSpec
     it.hasNext() should be(true)
 
     val pos = it.toList
-    pos should have size (1)
+    pos should have size (1) // Tiny.java contains 1 file node
 
     it.close()
     it.hasNext() should be(false)
