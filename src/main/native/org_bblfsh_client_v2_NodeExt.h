@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load
   (JNIEnv *, jobject);
 
+/*
+ * Class:     org_bblfsh_client_v2_NodeExt
+ * Method:    filter
+ * Signature: (Ljava/lang/String;)Lorg/bblfsh/client/v2/libuast/Libuast/UastIterExt;
+ */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

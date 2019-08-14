@@ -1,6 +1,7 @@
 package org.bblfsh.client.v2.libuast
 
 import org.bblfsh.client.v2.{ContextExt, JNode, NodeExt}
+import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
 
 import scala.collection.Iterator
 import java.io.File
@@ -12,13 +13,19 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 object Libuast {
   final var loaded = false
 
+  if (!loaded) {
+    System.err.println("Loading native libscalauast")
+    Libuast.loadBinaryLib("libscalauast")
+  }
+
+
   /**
     * Skeletal Node iterator implementation that delegates to Libuast.
     *
     * It brides the gap between the contracts of a Scala iterator (.hasNext()/.next()) and
     * a native Libuast iterator (.next() == null at the end).
-    * */
-  abstract class UastAbstractIter[T >:Null](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
+    **/
+  abstract class UastAbstractIter[T >: Null](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
     extends Iterator[T] {
     private var closed = false
     private var nextNode: Option[T] = None
@@ -128,17 +135,7 @@ object Libuast {
 }
 
 class Libuast {
-  initialize()
-
-  // Note: moving this to the Object doesn't synchronize correctly
-  private def initialize() = Libuast.synchronized {
-    if (!Libuast.loaded) {
-      Libuast.loadBinaryLib("libscalauast")
-    }
-  }
-
-  // TODO(#83): implement
-  @native def filter(node: NodeExt, query: String): List[NodeExt]
+  Libuast
 
   /** Decode UAST from a byte array */
   @native def decode(buf: ByteBuffer): ContextExt

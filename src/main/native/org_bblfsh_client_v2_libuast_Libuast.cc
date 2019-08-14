@@ -105,7 +105,7 @@ class ContextExt {
   NodeHandle toHandle(jobject obj) {
     if (!obj) return 0;
 
-    JNIEnv *env = getJNIEnv();
+    JNIEnv *env = getJNIEnv();  // TODO: refactor to JNI util LongField()
     jclass cls = env->FindClass(CLS_NODE);
     checkJvmException("failed to find class " + std::string(CLS_NODE));
 
@@ -153,6 +153,18 @@ class ContextExt {
     return iter;
   }
 
+  // Filter queries an external UAST.
+  // Borrows the reference.
+  uast::Iterator<NodeHandle> *Filter(jobject node, std::string query) {
+    if (!assertNotContext(node)) return nullptr;
+
+    NodeHandle unode = toHandle(node);
+    if (unode == 0) unode = ctx->RootNode();
+
+    auto it = ctx->Filter(unode, query);
+    return it;
+  }
+
   // Encode serializes the external UAST.
   // Borrows the reference.
   jobject Encode(jobject node, UastFormat format) {
@@ -162,6 +174,30 @@ class ContextExt {
     return asJvmBuffer(data);
   }
 };
+
+// creates new UastIterExt from the given context
+jobject filterUastIterExt(ContextExt *ctx, jstring jquery, JNIEnv *env) {
+  const char *q = env->GetStringUTFChars(jquery, 0);
+  std::string query = std::string(q);
+  env->ReleaseStringUTFChars(jquery, q);
+
+  auto node = ctx->RootNode();
+  uast::Iterator<NodeHandle> *it = nullptr;
+  try {
+    it = ctx->Filter(node, query);
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  // new UastIterExt()
+  jobject iter = NewJavaObject(env, CLS_ITER, METHOD_ITER_INIT, 0, 0, it, ctx);
+  if (env->ExceptionCheck() || !iter) {
+    delete (it);
+    checkJvmException("failed create new UastIterExt class");
+  }
+  return iter;
+}
 
 // ================================================
 // UAST Node interface (called from libuast)
@@ -174,7 +210,6 @@ class Node : public uast::Node<Node *> {
   jobject obj;  // Node owns a (global) reference
   NodeKind kind;
 
-  jobject keys;
   std::string *str;
 
   // kindOf returns a kind of a JVM object.
@@ -208,7 +243,7 @@ class Node : public uast::Node<Node *> {
 
   // Node creates a new node associated with a given JVM object and sets the
   // kind. Creates a new global reference.
-  Node(Interface *i, NodeKind k, jobject v) : keys(nullptr), str(nullptr) {
+  Node(Interface *i, NodeKind k, jobject v) : str(nullptr) {
     iface = i;
     obj = getJNIEnv()->NewGlobalRef(v);
     kind = k;
@@ -216,7 +251,7 @@ class Node : public uast::Node<Node *> {
 
   // Node creates a new node associated with a given JVM object and
   // automatically determines the kind. Creates a new global reference.
-  Node(Interface *i, jobject v) : keys(nullptr), str(nullptr) {
+  Node(Interface *i, jobject v) : str(nullptr) {
     iface = i;
     obj = getJNIEnv()->NewGlobalRef(v);
     kind = kindOf(v);
@@ -224,10 +259,6 @@ class Node : public uast::Node<Node *> {
 
   ~Node() {
     JNIEnv *env = getJNIEnv();
-    if (keys) {
-      env->DeleteGlobalRef(keys);
-      keys = nullptr;
-    }
     if (obj) {
       env->DeleteGlobalRef(obj);
     }
@@ -503,13 +534,25 @@ class Context {
   }
 
   // Iterate returns iterator over an external UAST tree.
-  // Borrows the reference.
+  // Creates a new reference.
   uast::Iterator<Node *> *Iterate(jobject jnode, TreeOrder order) {
     if (!assertNotContext(jnode)) return nullptr;
 
     Node *n = toNode(jnode);
     auto iter = ctx->Iterate(n, order);
     return iter;
+  }
+
+  // Filter queries UAST.
+  // Creates a new reference.
+  uast::Iterator<Node *> *Filter(jobject node, std::string query) {
+    if (!assertNotContext(node)) return nullptr;
+
+    Node *unode = toNode(node);
+    if (unode == nullptr) unode = ctx->RootNode();
+
+    auto it = ctx->Filter(unode, query);
+    return it;
   }
 
   // Encode serializes UAST.
@@ -602,10 +645,10 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
-  // this.ctx - delete Context as iterator owns it
+  // this.ctx - delete as iterator owns it for both .iterate()/.filter() cases
   auto ctx = getHandle<Context>(env, self, "ctx");
-  setHandle<Context>(env, self, 0, "ctx");
   delete (ctx);
+  setHandle<Context>(env, self, 0, "ctx");
 
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
@@ -697,15 +740,36 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
   return ctx->lookup(node);
 }
 
-// TODO(#83): implement
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter(
-    JNIEnv *, jobject, jobject, jstring) {
-  return nullptr;
-}
-
 // ==========================================
 //              v2.Context()
 // ==========================================
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
+    JNIEnv *env, jobject self, jstring jquery, jobject jnode) {
+  Context *ctx = getHandle<Context>(env, self, nativeContext);
+
+  const char *q = env->GetStringUTFChars(jquery, 0);
+  std::string query = std::string(q);
+  env->ReleaseStringUTFChars(jquery, q);
+
+  uast::Iterator<Node *> *it = nullptr;
+  try {
+    // global ref will be deleted by Interface destructor on ctx deletion
+    it = ctx->Filter(env->NewGlobalRef(jnode), query);
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
+    return nullptr;
+  }
+
+  // new UastIter()
+  jobject iter =
+      NewJavaObject(env, CLS_JITER, METHOD_JITER_INIT, 0, 0, it, ctx);
+  if (env->ExceptionCheck() || !iter) {
+    delete (it);
+    checkJvmException("failed create new UastIter class");
+  }
+  return iter;
+}
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
     JNIEnv *env, jobject self, jobject jnode) {
@@ -738,6 +802,12 @@ Java_org_bblfsh_client_v2_ContextExt_root(JNIEnv *env, jobject self) {
   return p->RootNode();
 }
 
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_filter(
+    JNIEnv *env, jobject self, jstring jquery) {
+  ContextExt *ctx = getHandle<ContextExt>(env, self, nativeContext);
+  return filterUastIterExt(ctx, jquery, env);
+}
+
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
     JNIEnv *env, jobject self, jobject node) {
   UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
@@ -763,6 +833,12 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
   jobject node = ctx->LoadFrom(self);
   delete (ctx);
   return node;
+}
+
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter(
+    JNIEnv *env, jobject self, jstring jquery) {
+  auto *ctx = getHandle<ContextExt>(env, self, "ctx");
+  return filterUastIterExt(ctx, jquery, env);
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {

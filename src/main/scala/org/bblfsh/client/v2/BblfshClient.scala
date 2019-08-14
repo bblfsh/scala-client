@@ -114,10 +114,6 @@ object BblfshClient {
     maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE
   ): BblfshClient = new BblfshClient(host, port, maxMsgSize)
 
-  def filter(node: NodeExt, query: String): List[NodeExt] = Libuast.synchronized {
-    libuast.filter(node, query)
-  }
-
   /**
     * Decodes bytes from wired format of bblfsh protocol.v2.
     * Requires a buffer in Direct mode.
@@ -166,13 +162,17 @@ object BblfshClient {
     Libuast.UastIter(node, treeOrder)
   }
 
-  // Enables API: resp.uast.decode().load().filter("//query")
-  // TODO(83): implement XPath query
-  // implicit class NodeExtMethods(val node: NodeExt) {
-  //   def filter(query: String): List[NodeExt] = {
-  //     BblfshClient.filter(node, query)
-  //   }
-  // }
+  /** Factory method for iterator over an native node, filtered by XPath query */
+  def filter(node: NodeExt, query: String):  Libuast.UastIterExt = Libuast.synchronized {
+    node.filter(query)
+  }
+
+  /** Factory method for iterator over an managed node, filtered by XPath query */
+  def filter(node: JNode, query: String):  Libuast.UastIter = Libuast.synchronized {
+    val ctx = Context()
+    ctx.filter(query, node)
+    // do not dispose the context, iterator steals it
+  }
 
 }
 

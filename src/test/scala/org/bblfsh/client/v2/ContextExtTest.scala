@@ -4,7 +4,7 @@ import org.scalatest.{BeforeAndAfter, FlatSpec, Matchers}
 
 import scala.io.Source
 
-class ContextTest extends FlatSpec
+class ContextExtTest extends FlatSpec
   with BeforeAndAfter
   with Matchers {
 

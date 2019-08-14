@@ -38,6 +38,8 @@ const char CLS_JBOOL[] = "org/bblfsh/client/v2/JBool";
 const char CLS_JUINT[] = "org/bblfsh/client/v2/JUint";
 const char CLS_JARR[] = "org/bblfsh/client/v2/JArray";
 const char CLS_JOBJ[] = "org/bblfsh/client/v2/JObject";
+const char CLS_ITER[] = "org/bblfsh/client/v2/libuast/Libuast$UastIterExt";
+const char CLS_JITER[] = "org/bblfsh/client/v2/libuast/Libuast$UastIter";
 
 // Method signatures
 const char METHOD_JNODE_KEY_AT[] = "(I)Ljava/lang/String;";
@@ -53,6 +55,9 @@ const char METHOD_OBJ_TO_STR[] = "()Ljava/lang/String;";
 const char METHOD_RE_INIT[] = "(Ljava/lang/String;)V";
 const char METHOD_RE_INIT_CAUSE[] =
     "(Ljava/lang/String;Ljava/lang/Throwable;)V";
+
+const char METHOD_ITER_INIT[] = "(Lorg/bblfsh/client/v2/NodeExt;IJJ)V";
+const char METHOD_JITER_INIT[] = "(Lorg/bblfsh/client/v2/JNode;IJJ)V";
 
 // Field signatures
 const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";

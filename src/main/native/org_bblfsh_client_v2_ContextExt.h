@@ -18,10 +18,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_root
 /*
  * Class:     org_bblfsh_client_v2_ContextExt
  * Method:    filter
- * Signature: ()V
+ * Signature: (Ljava/lang/String;)Lorg/bblfsh/client/v2/libuast/Libuast/UastIterExt;
  */
-JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_ContextExt_filter
-  (JNIEnv *, jobject);
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_filter
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_bblfsh_client_v2_ContextExt

@@ -73,8 +73,49 @@ class BblfshClientUastApiTest extends BblfshClientBaseTest {
 
     val bytes3 = node.toByteArray
     bytes3 should not be (null)
-    bytes3 shouldBe a[Array[Byte]]
+    bytes3 shouldBe a[Array[_]]
     ByteBuffer.wrap(bytes3) should equal(bytes1)
+  }
+
+  "XPath query" should "filter native UAST" in {
+    val uast: NodeExt = resp.uast.decode().root()
+    val it = BblfshClient.filter(uast, "//uast:Position")
+
+    it.hasNext should be(true)
+    it.toList should have size(8)
+
+    it.close()
+    it.hasNext should be(false)
+  }
+
+  "XPath query" should "filter managed UAST" in {
+    val ctx = resp.uast.decode()
+    val uast: JNode = ctx.root().load()
+    ctx.dispose()
+
+    val it = BblfshClient.filter(uast, "//uast:Position")
+
+    it.hasNext should be(true)
+    it.toList should have size(8)
+
+    it.close()
+    it.hasNext should be(false)
+  }
+
+  "XPath query" should "work another thread" in {
+    val ctx: ContextExt = resp.uast.decode()
+    val root = ctx.root()
+    val th = new Thread(new Runnable {
+      def run() {
+        val filtered = root.filter("//*[@role='Type']")
+        filtered.toSeq should have size (1)
+      }
+    })
+    th.start
+
+    th.synchronized {
+      th.wait
+    }
   }
 
 }

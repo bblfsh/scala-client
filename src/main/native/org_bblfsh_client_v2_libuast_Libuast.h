@@ -9,14 +9,6 @@ extern "C" {
 #endif
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
- * Method:    filter
- * Signature: (Lorg/bblfsh/client/v2/NodeExt;Ljava/lang/String;)Lscala/collection/immutable/List;
- */
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_filter
-  (JNIEnv *, jobject, jobject, jstring);
-
-/*
- * Class:     org_bblfsh_client_v2_libuast_Libuast
  * Method:    decode
  * Signature: (Ljava/nio/ByteBuffer;)Lorg/bblfsh/client/v2/ContextExt;
  */

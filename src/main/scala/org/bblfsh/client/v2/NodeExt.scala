@@ -3,7 +3,10 @@ package org.bblfsh.client.v2
 import java.io.Serializable
 import java.nio.ByteBuffer
 
+import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
+
 import scala.collection.mutable
+
 
 /**
   * UAST representation for the nodes originated from the Go side.
@@ -14,6 +17,7 @@ import scala.collection.mutable
   */
 case class NodeExt(ctx: Long, handle: Long) {
   @native def load(): JNode
+  @native def filter(query: String): UastIterExt
 }
 
 

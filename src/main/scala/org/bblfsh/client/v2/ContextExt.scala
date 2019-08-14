@@ -2,6 +2,8 @@ package org.bblfsh.client.v2
 	
 import java.nio.ByteBuffer
 
+import org.bblfsh.client.v2.libuast.Libuast.{UastIter, UastIterExt}
+
 /**
   * Represents Go-side constructed tree, result of Libuast.decode()
   *
@@ -10,7 +12,7 @@ import java.nio.ByteBuffer
 case class ContextExt(nativeContext: Long) {
     // @native def load(): JNode // TODO(bzz): clarify when it's needed VS just .root().load()
     @native def root(): NodeExt
-    @native def filter()
+    @native def filter(query: String): UastIterExt
     @native def encode(n: NodeExt): ByteBuffer
 
     @native def dispose()
@@ -27,7 +29,7 @@ case class ContextExt(nativeContext: Long) {
   */
 case class Context(nativeContext: Long) {
     @native def root(): JNode
-    @native def filter()
+    @native def filter(query: String, node: JNode): UastIter
     @native def encode(n: JNode): ByteBuffer
 
     @native def dispose()
