@@ -25,6 +25,12 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     iter.close()
   }
 
+// TODO(#110) implement value type returns
+//  "Filtering UAST" should "work for Value types" in {
+//    val iter = BblfshClient.filterNumber(resp.get, "count(//*)")
+//    iter.toList should have size (517) // total number of nodes (not the number of results which is 1)
+//  }
+
   "Filtering UAST" should "work in Annotated mode" in {
     val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
     val resp = client.parse(fileName, fileContent, Mode.ANNOTATED)

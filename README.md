@@ -79,24 +79,19 @@ API
 ```scala
 import scala.io.Source
 import org.bblfsh.client.BblfshClient
+import gopkg.in.bblfsh.sdk.v2.protocol.driver.Mode
 
-val client = BblfshClient("0.0.0.0", 9432)
+val client = BblfshClient("localhost", 9432)
 
 val filename = "/path/to/file.py" // client responsible for encoding it to utf-8
 val fileContent = Source.fromFile(filename).getLines.mkString("\n")
-val resp = client.parse(filename, fileContent)
+val resp = client.parse(filename, fileContent, Mode.SEMANTIC)
 
 // Full response
-println(resp.uast.get)
+println(resp.get)
 
 // Filtered response
-println(client.filter(resp.uast.get, "//Import[@roleImport]"))
-
-// Filtered responses using XPath functions returning types
-// other than NodeLists (Bool, Number, String):
-println(client.filterBool(resp.uast.get, "boolean(//*[@strtOffset or @endOffset])"))
-println(client.filterString(resp.uast.get, "name(//*[1])"))
-println(client.filterNumber(resp.uast.get, "count(//*)"))
+println(client.filter(resp.get, "//uast:Import[@role='Import']"))
 ```
 
 Command line:
