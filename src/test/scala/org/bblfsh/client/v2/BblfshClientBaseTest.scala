@@ -21,5 +21,7 @@ class BblfshClientBaseTest extends FlatSpec
 
   override def afterAll {
     client.close()
+    System.runFinalization()
+    System.gc()
   }
 }
