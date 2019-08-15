@@ -1,16 +1,16 @@
 ## Babelfish Scala client [![Build Status](https://travis-ci.org/bblfsh/scala-client.svg?branch=master)](https://travis-ci.org/bblfsh/scala-client)
 
-This a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
+This is a Scala/JNI implementation of the [Babelfish](https://doc.bblf.sh/) client.
 It uses [ScalaPB](https://scalapb.github.io/grpc.html) for Protobuf/gRPC code
 generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries.
 
 ### Status
 
-Current `scala-client` v1.x only supports bblfsh protocol and UASTv1.
+Latest`scala-client` v2.x supports [UASTv2 protocol](https://doc.bblf.sh/uast/uast-specification-v2.html).
 
 ### Installation
 
-#### Manual
+#### Building from sources
 ```
 git clone https://github.com/bblfsh/scala-client.git
 cd scala-client
@@ -37,7 +37,7 @@ Changing the JDK directory to the one right for your system.
 The `bblfsh-client` package is available thorugh [Maven
 central](http://search.maven.org/#search%7Cga%7C1%7Cbblfsh), so it can be easily
 added as a dependency in various package management systems.  Examples of how to
-handle it for most commons systems are included below; for other systems just look
+handle it for most common systems are included below; for other systems just look
 at Maven central's dependency information.
 
 ```xml
@@ -73,7 +73,7 @@ docker run --privileged --rm -it -p 9432:9432 --name bblfsh bblfsh/bblfshd
 ```
 
 Please, read the [getting started](https://doc.bblf.sh/using-babelfish/getting-started.html)
-guide to learn more about how to use and deploy a bblfsh server.
+guide to learn more about how to use and deploy a bblfsh server, install language drivers, etc.
 
 API
 ```scala
