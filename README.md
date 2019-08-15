@@ -32,6 +32,8 @@ If the build fails because it can't find the `jni.h` header file, run it with:
 
 Changing the JDK directory to the one right for your system.
 
+For more developer documentation please check our [CONTRIBUTING](./CONTRIBUTING.md) guideline.
+
 #### Apache Maven
 
 The `bblfsh-client` package is available thorugh [Maven
@@ -103,7 +105,7 @@ java -jar build/bblfsh-client-assembly-*.jar -f <file.py>
 or if you want to use a XPath query:
 
 ```
-java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//Import[@roleImport]"
+java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//uast:Import"
 ```
 
 Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)
