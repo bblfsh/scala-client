@@ -29,19 +29,22 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     * @param lang    (optional) language to parse, default auto-detect \w enry
     * @param timeout (disabled) bblfsh request timeout, seconds
     *                Right now this does not have any effect in v2.
+    * @param mode    (optional) mode to parse, default to bblfshd 'default' mode
     * @return UAST in parse response.
     */
   def parseWithOptions(
     name: String,
     content: String,
     lang: String,
-    timeout: Long
+    timeout: Long,
+    mode: Mode
   ): ParseResponse = {
-    // FIXME(bzz): make timout work in v2 again
+    // TODO(#100): make timeout work in v2 again
     val req = ParseRequest(
       filename = name,
       content = content,
-      language = lang
+      language = lang,
+      mode = mode
     )
     stub.parse(req)
   }
@@ -61,7 +64,13 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     name: String,
     content: String,
     lang: String = ""
-  ): ParseResponse = parseWithOptions(name, content, lang, DEFAULT_TIMEOUT_SEC)
+  ): ParseResponse = parseWithOptions(name, content, lang, DEFAULT_TIMEOUT_SEC, Mode.DEFAULT_MODE)
+
+  def parse(
+    name: String,
+    content: String,
+    mode: Mode
+  ): ParseResponse = parseWithOptions(name, content, "", DEFAULT_TIMEOUT_SEC, mode)
 
   /**
     * Parses the given file name and content,
@@ -80,7 +89,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
     content: String,
     timeout: Long,
     lang: String = ""
-  ): ParseResponse = parseWithOptions(name, content, lang, timeout)
+  ): ParseResponse = parseWithOptions(name, content, lang, timeout, Mode.DEFAULT_MODE)
 
   def supportedLanguages(): SupportedLanguagesResponse = {
     val req = SupportedLanguagesRequest()

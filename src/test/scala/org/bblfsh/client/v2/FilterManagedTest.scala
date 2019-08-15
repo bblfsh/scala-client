@@ -27,6 +27,11 @@ class FilterManagedTest extends FlatSpec
     ctx = Context()
   }
 
+  override def afterAll() = {
+    System.runFinalization()
+    System.gc()
+  }
+
   "XPath filter" should "find all positions under context" in {
     val it = ctx.filter("//file", managedRoot)
     it.hasNext() should be(true)

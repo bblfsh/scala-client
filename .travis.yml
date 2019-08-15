@@ -39,6 +39,7 @@ jobs:
         - ./sbt assembly test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
+        - ls hs_* 1> /dev/null 2>&1 && cat hs_*
 
     - &release
       name: 'Cross-compile, release & publish to Sonatype'
