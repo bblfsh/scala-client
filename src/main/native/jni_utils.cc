@@ -62,7 +62,7 @@ const char METHOD_JITER_INIT[] = "(Lorg/bblfsh/client/v2/JNode;IJJ)V";
 // Field signatures
 const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
 
-// TODO(bzz): cache classes&methods in JNI_OnLoad should speed this up
+// TODO(#114): cache classes&methods in JNI_OnLoad should speed this up
 void checkJvmException(std::string msg) {
   JNIEnv *env = getJNIEnv();
   auto err = env->ExceptionOccurred();
@@ -224,14 +224,14 @@ jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
 }
 
 jint IntMethod(JNIEnv *env, const char *method, const char *signature,
-               const char *className, const jobject *object) {
+               const char *className, const jobject object) {
   jmethodID mId = MethodID(env, method, signature, className);
   checkJvmException(std::string("failed to get method ")
                         .append(className)
                         .append(".")
                         .append(method));
 
-  jint res = env->CallIntMethod(*object, mId);
+  jint res = env->CallIntMethod(object, mId);
   checkJvmException(std::string("failed to call method ")
                         .append(className)
                         .append(".")
@@ -243,7 +243,7 @@ jint IntMethod(JNIEnv *env, const char *method, const char *signature,
 }
 
 jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
-                     const char *className, const jobject *object, ...) {
+                     const char *className, const jobject object, ...) {
   jmethodID mId = MethodID(env, method, signature, className);
   checkJvmException(std::string("failed to get method ")
                         .append(className)
@@ -252,7 +252,7 @@ jobject ObjectMethod(JNIEnv *env, const char *method, const char *signature,
 
   va_list varargs;
   va_start(varargs, object);
-  jobject res = env->CallObjectMethodV(*object, mId, varargs);
+  jobject res = env->CallObjectMethodV(object, mId, varargs);
   va_end(varargs);
   checkJvmException(std::string("failed to get varargs for ")
                         .append(className)
