@@ -19,7 +19,7 @@ class IteratorManagedTest extends FlatSpec
     ))
 
   after {
-    iter.nativeDispose() // FIXME: rename to .dispose()
+    iter.close()
   }
 
   "Managed UAST iterator" should "return non-empty results on JVM objects" in {
@@ -77,6 +77,8 @@ class IteratorManagedTest extends FlatSpec
     val poActual = Seq("root", "son1", "son1_1", "son1_2", "son2", "son2_1", "son2_2")
     nodes should have size (poActual.size)
     nodes shouldEqual poActual
+
+    preIter.close()
   }
 
   "Managed UAST iterator" should "return nodes in PostOrder" in {
@@ -86,6 +88,8 @@ class IteratorManagedTest extends FlatSpec
     val poActual = Seq("son1_1", "son1_2", "son1", "son2_1", "son2_2", "son2", "root")
     nodes should have size (poActual.size)
     nodes shouldEqual poActual
+
+    postIter.close()
   }
 
   // TODO(#108) more tests coverage for other iteration orders, refactor to a table-driven test

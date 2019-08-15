@@ -1,4 +1,5 @@
 #include <cassert>
+#include <unordered_map>
 
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
@@ -363,6 +364,7 @@ class Node : public uast::Node<Node *> {
     JNIEnv *env = getJNIEnv();
     jobject val =
         ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
+    // TODO(#113) investigate, it looks like a potential memory leak
     return lookupOrCreate(env->NewGlobalRef(val));  // new ref
   }
 
@@ -399,11 +401,25 @@ class Node : public uast::Node<Node *> {
   }
 };
 
+struct EqByObj {
+  bool operator()(jobject a, jobject b) const {
+    return getJNIEnv()->IsSameObject(a, b);
+  }
+};
+
+struct HashByObj {
+  std::size_t operator()(jobject obj) const noexcept {
+    auto hash = IntMethod(getJNIEnv(), "hashCode", "()I", CLS_OBJ, obj);
+    checkJvmException("failed to call hashCode()");
+    return hash;
+  }
+};
+
 class Context;
 
 class Interface : public uast::NodeCreator<Node *> {
  private:
-  std::map<jobject, Node *> obj2node;
+  std::unordered_map<jobject, Node *, HashByObj, EqByObj> obj2node;
 
   // lookupOrCreate either creates a new object or returns existing one.
   // In the second case it creates a new reference.
@@ -414,7 +430,7 @@ class Interface : public uast::NodeCreator<Node *> {
     if (node) return node;
 
     node = new Node(this, obj);
-    obj2node[obj] = node;
+    obj2node[node->obj] = node;
     return node;
   }
 
@@ -422,7 +438,7 @@ class Interface : public uast::NodeCreator<Node *> {
   // Steals the reference.
   Node *create(NodeKind kind, jobject obj) {
     Node *node = new Node(this, kind, obj);
-    obj2node[obj] = node;
+    obj2node[node->obj] = node;
     return node;
   }
 
@@ -440,9 +456,9 @@ class Interface : public uast::NodeCreator<Node *> {
   }
 
   // toJ returns a JVM object associated with a node.
-  // Returns a new reference.
   jobject toJ(Node *node) {
     if (!node) return nullptr;
+    // TODO(#113) investigate, it looks like a potential memory leak
     jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
     return obj;
   }
@@ -633,7 +649,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   }
 
   // global ref will be deleted by Interface destructor on ctx deletion
-  auto it = ctx->Iterate(env->NewGlobalRef(jnode), (TreeOrder)order);
+  auto it = ctx->Iterate(jnode, (TreeOrder)order);
 
   // this.iter = it;
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
@@ -754,8 +770,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 
   uast::Iterator<Node *> *it = nullptr;
   try {
-    // global ref will be deleted by Interface destructor on ctx deletion
-    it = ctx->Filter(env->NewGlobalRef(jnode), query);
+    it = ctx->Filter(jnode, query);
   } catch (const std::exception &e) {
     ThrowByName(env, CLS_RE, e.what());
     return nullptr;
@@ -819,8 +834,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
-  setHandle<ContextExt>(env, self, 0, nativeContext);
-  delete p;
+  if (!p) {
+    delete p;
+    setHandle<ContextExt>(env, self, 0, nativeContext);
+  }
 }
 
 // ==========================================
