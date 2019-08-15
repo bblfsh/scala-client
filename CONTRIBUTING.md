@@ -38,11 +38,10 @@ $ g++ -shared -Wall -g -std=c++11 -O0 \
 To run a single test from CLI one can:
 
 ```
-./sbt "testOnly org.bblfsh.client.v2.libuast.IteratorNativeTest -- -z \"Native UAST iterator should return non-empty results on decoded objects\""
+./sbt 'testOnly org.bblfsh.client.v2.libuast.IteratorNativeTest -- -z "Native UAST iterator should return non-empty results on decoded objects"'
 ```
 
-When using `lldb`, this would become a bit more involved as the classpath needs to be
-manually setup for `java` executable:
+When using `lldb`, the classpath needs to be manually set for the `java` executable:
 
 ```
 PATH="/usr/bin:$PATH" lldb -- java -ea -Xcheck:jni -Djava.library.path=src/main/resources -cp "target/classes:target/test-classes:src/main/resources:${HOME}/.ivy2/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-3.0.1.jar:${HOME}/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.11.jar:${HOME}/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.5.jar:${HOME}/.ivy2/cache/org.scalactic/scalactic_2.11/bundles/scalactic_2.11-3.0.1.jar:${HOME}/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.5.jar:build/bblfsh-client-assembly-2.0.0-SNAPSHOT.jar:target/*" \
@@ -55,7 +54,7 @@ Actual test output will be saved in `iterator-native-test.txt`.
 
 ## When inside the debugger
 
-This is somhow `lldb` specific, but the idea will be the same in GDB.
+These instructions are for `lldb`, but the steps should be similar in `gdb`.
 To load the debug symbols do:
 
 ```
@@ -65,10 +64,10 @@ continue
 target symbols add src/main/resources/lib/libscalauast.dylib.dSYM
 ```
 
-If that does not load the symbols, you have to make sure libscalauast library has
+If that does not load the symbols, you have to make sure `libscalauast` library has
 already been loaded to the process by `target modules list`.
-On rare occasions, the library can be loaded but the symbols will still refuse
-to load, it most probably mean that the library is from a different fs path.
+If the library loads but symbols are not correctly displayed, it probably means
+the library is at the wrong filesystem path.
 Stop the debugger and do `rm -rf ./target/classes/lib/libscalauast.dylib*`
 
 To actually debug, set a breakpoint like:
@@ -96,7 +95,7 @@ A small curated list of really useful resources on Go&JNI debugging:
 
 ## JNI details
 
-Here are some resources to understand the JNI machinery and it's best practices:
+Here are some resources to understand the JNI machinery and its best practices:
  - https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html
  - https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/functions.html
  - https://developer.android.com/training/articles/perf-jni
