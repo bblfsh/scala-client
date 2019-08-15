@@ -71,12 +71,12 @@ jmethodID MethodID(JNIEnv *, const char *, const char *, const char *);
 // Calls a method of the given class or interface name that returns an Int.
 // The method is determined by its name and signature.
 jint IntMethod(JNIEnv *, const char *, const char *, const char *,
-               const jobject *);
+               const jobject);
 
 // Calls a method of the given class or interface name that returns an Object.
 // The method is determined by its name and signature.
 jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
-                     const jobject *, ...);
+                     const jobject, ...);
 
 // Constructs new object the given class name and throws it to JVM.
 //
