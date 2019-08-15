@@ -401,12 +401,16 @@ class Node : public uast::Node<Node *> {
   }
 };
 
+// Custom comparator for keys in std::map<object>.
+// Compares actual objects instead of JNI references.
 struct EqByObj {
   bool operator()(jobject a, jobject b) const {
     return getJNIEnv()->IsSameObject(a, b);
   }
 };
 
+// Custom hasing function for keys in std::map<object>.
+// Deligates actual hasing to the managed .hashCode() impl.
 struct HashByObj {
   std::size_t operator()(jobject obj) const noexcept {
     auto hash = IntMethod(getJNIEnv(), "hashCode", "()I", CLS_OBJ, obj);

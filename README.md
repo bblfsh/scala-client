@@ -6,7 +6,7 @@ generation and [libuast](https://github.com/bblfsh/libuast) for XPath queries.
 
 ### Status
 
-Latest`scala-client` v2.x supports [UASTv2 protocol](https://doc.bblf.sh/uast/uast-specification-v2.html).
+The latest `scala-client` *v2.x* supports the [UASTv2 protocol](https://doc.bblf.sh/uast/uast-specification-v2.html).
 
 ### Installation
 
