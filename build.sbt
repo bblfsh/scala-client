@@ -166,8 +166,8 @@ def compileUnix(sourceFiles: String) = {
   }
 
   val osName = System.getProperty("os.name").toLowerCase()
-  if (osName.contains("mac os x")) { // TODO(bzz): change back to '-fPIC -O2' for release
-    val cmd:String = "g++ -shared -Wall -g -std=c++11 " +
+  if (osName.contains("mac os x")) {
+    val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/darwin " +

@@ -276,7 +276,7 @@ class Node : public uast::Node<Node *> {
       const char methodName[] = "str";
       JNIEnv *env = getJNIEnv();
       jstring jstr = (jstring)ObjectMethod(
-          env, methodName, "()Ljava/lang/String;", CLS_JSTR, &obj);
+          env, methodName, "()Ljava/lang/String;", CLS_JSTR, obj);
 
       const char *utf = env->GetStringUTFChars(jstr, 0);
       str = new std::string(utf);
@@ -339,7 +339,7 @@ class Node : public uast::Node<Node *> {
     return value;
   }
   size_t Size() {
-    jint size = IntMethod(getJNIEnv(), "size", "()I", CLS_JNODE, &obj);
+    jint size = IntMethod(getJNIEnv(), "size", "()I", CLS_JNODE, obj);
     assert(int32_t(size) >= 0);
 
     return size;
@@ -349,7 +349,7 @@ class Node : public uast::Node<Node *> {
 
     JNIEnv *env = getJNIEnv();
     jstring key = (jstring)ObjectMethod(env, "keyAt", METHOD_JNODE_KEY_AT,
-                                        CLS_JNODE, &obj, i);
+                                        CLS_JNODE, obj, i);
 
     const char *k = env->GetStringUTFChars(key, 0);
     std::string *s = new std::string(k);
@@ -362,7 +362,7 @@ class Node : public uast::Node<Node *> {
 
     JNIEnv *env = getJNIEnv();
     jobject val =
-        ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, &obj, i);
+        ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
     return lookupOrCreate(env->NewGlobalRef(val));  // new ref
   }
 
@@ -375,7 +375,7 @@ class Node : public uast::Node<Node *> {
       v = NewJavaObject(env, CLS_JNULL, "()V");
     }
 
-    ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, &obj, v);
+    ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, obj, v);
     checkJvmException(std::string("failed to call ")
                           .append(CLS_JARR)
                           .append(".add() from Node::SetValue()"));
@@ -391,7 +391,7 @@ class Node : public uast::Node<Node *> {
 
     jstring k = env->NewStringUTF(key.data());
 
-    ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, &obj, k, v);
+    ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, obj, k, v);
     checkJvmException(
         std::string("failed to call JObject.add() from Node::SetKeyValue(")
             .append(key)
@@ -633,7 +633,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   }
 
   // global ref will be deleted by Interface destructor on ctx deletion
-  auto it = ctx->Iterate(env->NewGlobalRef(jnode), (TreeOrder)order);
+  auto it = ctx->Iterate(jnode, (TreeOrder)order);
 
   // this.iter = it;
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
@@ -754,8 +754,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 
   uast::Iterator<Node *> *it = nullptr;
   try {
-    // global ref will be deleted by Interface destructor on ctx deletion
-    it = ctx->Filter(env->NewGlobalRef(jnode), query);
+    it = ctx->Filter(jnode, query);
   } catch (const std::exception &e) {
     ThrowByName(env, CLS_RE, e.what());
     return nullptr;
@@ -819,8 +818,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
-  setHandle<ContextExt>(env, self, 0, nativeContext);
-  delete p;
+  if (!p) {
+    delete p;
+    setHandle<ContextExt>(env, self, 0, nativeContext);
+  }
 }
 
 // ==========================================
