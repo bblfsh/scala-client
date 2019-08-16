@@ -2,7 +2,9 @@
 
 name := "bblfsh-client"
 organization := "org.bblfsh"
-version := "2.0.0-SNAPSHOT"
+
+git.useGitDescribe := true
+enablePlugins(GitVersioning)
 
 scalaVersion := "2.11.11"
 val libuastVersion = "3.3.1"
