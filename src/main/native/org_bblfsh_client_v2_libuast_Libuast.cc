@@ -633,7 +633,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   }
 
   // global ref will be deleted by Interface destructor on ctx deletion
-  auto it = ctx->Iterate(env->NewGlobalRef(jnode), (TreeOrder)order);
+  auto it = ctx->Iterate(jnode, (TreeOrder)order);
 
   // this.iter = it;
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
@@ -754,8 +754,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 
   uast::Iterator<Node *> *it = nullptr;
   try {
-    // global ref will be deleted by Interface destructor on ctx deletion
-    it = ctx->Filter(env->NewGlobalRef(jnode), query);
+    it = ctx->Filter(jnode, query);
   } catch (const std::exception &e) {
     ThrowByName(env, CLS_RE, e.what());
     return nullptr;
@@ -819,8 +818,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
-  setHandle<ContextExt>(env, self, 0, nativeContext);
-  delete p;
+  if (!p) {
+    delete p;
+    setHandle<ContextExt>(env, self, 0, nativeContext);
+  }
 }
 
 // ==========================================
