@@ -1,4 +1,5 @@
 #include <cassert>
+#include <unordered_map>
 
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
@@ -363,6 +364,7 @@ class Node : public uast::Node<Node *> {
     JNIEnv *env = getJNIEnv();
     jobject val =
         ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
+    // TODO(#113) investigate, it looks like a potential memory leak
     return lookupOrCreate(env->NewGlobalRef(val));  // new ref
   }
 
@@ -399,11 +401,29 @@ class Node : public uast::Node<Node *> {
   }
 };
 
+// Custom comparator for keys in std::map<object>.
+// Compares actual objects instead of JNI references.
+struct EqualByObj {
+  bool operator()(jobject a, jobject b) const {
+    return getJNIEnv()->IsSameObject(a, b);
+  }
+};
+
+// Custom hasing function for keys in std::map<object>.
+// Deligates actual hasing to the managed .hashCode() impl.
+struct HashByObj {
+  std::size_t operator()(jobject obj) const noexcept {
+    auto hash = IntMethod(getJNIEnv(), "hashCode", "()I", CLS_OBJ, obj);
+    checkJvmException("failed to call hashCode()");
+    return hash;
+  }
+};
+
 class Context;
 
 class Interface : public uast::NodeCreator<Node *> {
  private:
-  std::map<jobject, Node *> obj2node;
+  std::unordered_map<jobject, Node *, HashByObj, EqualByObj> obj2node;
 
   // lookupOrCreate either creates a new object or returns existing one.
   // In the second case it creates a new reference.
@@ -414,7 +434,7 @@ class Interface : public uast::NodeCreator<Node *> {
     if (node) return node;
 
     node = new Node(this, obj);
-    obj2node[obj] = node;
+    obj2node[node->obj] = node;
     return node;
   }
 
@@ -422,7 +442,7 @@ class Interface : public uast::NodeCreator<Node *> {
   // Steals the reference.
   Node *create(NodeKind kind, jobject obj) {
     Node *node = new Node(this, kind, obj);
-    obj2node[obj] = node;
+    obj2node[node->obj] = node;
     return node;
   }
 
@@ -440,9 +460,9 @@ class Interface : public uast::NodeCreator<Node *> {
   }
 
   // toJ returns a JVM object associated with a node.
-  // Returns a new reference.
   jobject toJ(Node *node) {
     if (!node) return nullptr;
+    // TODO(#113) investigate, it looks like a potential memory leak
     jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
     return obj;
   }
