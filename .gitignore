@@ -4,6 +4,9 @@ target
 *~
 .idea
 src/libuast-native
+src/main/proto
+!src/main/proto/github.com/gogo/protobuf/gogoproto/gogo.proto
+src/main/resources
 .history
 Libuast.so
 build/*
