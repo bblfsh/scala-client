@@ -365,7 +365,7 @@ class Node : public uast::Node<Node *> {
     jobject val =
         ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
     // TODO(#113) investigate, it looks like a potential memory leak
-    return lookupOrCreate(env->NewGlobalRef(val));  // new ref
+    return lookupOrCreate(val);  // borrows the reference
   }
 
   void SetValue(size_t i, Node *val) {
@@ -430,12 +430,13 @@ class Interface : public uast::NodeCreator<Node *> {
   Node *lookupOrCreate(jobject obj) {
     if (!obj) return nullptr;
 
-    Node *node = obj2node[obj];
-    if (node) return node;
-
-    node = new Node(this, obj);
-    obj2node[node->obj] = node;
-    return node;
+    if (obj2node.count(obj) > 0) {
+      return obj2node[obj];
+    } else {
+      Node* node = new Node(this, obj);
+      obj2node[node->obj] = node;
+      return node;
+    }
   }
 
   // create makes a new object with a specified kind.
