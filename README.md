@@ -80,7 +80,7 @@ guide to learn more about how to use and deploy a bblfsh server, install languag
 API
 ```scala
 import scala.io.Source
-import org.bblfsh.client.BblfshClient
+import org.bblfsh.client.v2.BblfshClient, BblfshClient._
 import gopkg.in.bblfsh.sdk.v2.protocol.driver.Mode
 
 val client = BblfshClient("localhost", 9432)
