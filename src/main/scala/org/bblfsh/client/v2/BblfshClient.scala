@@ -161,6 +161,14 @@ object BblfshClient {
     }
   }
 
+  /** Enables API: client.filter and client.iterator for client an instance of BblfshClient */
+  implicit class BblfshClientMethods(val client: BblfshClient) {
+    def filter(node: NodeExt, query: String) = BblfshClient.filter(node, query)
+    def filter(node: JNode, query: String) = BblfshClient.filter(node, query)
+    def iterator(node: NodeExt, treeOrder: Int) = BblfshClient.iterator(node, treeOrder)
+    def iterator(node: JNode, treeOrder: Int) = BblfshClient.iterator(node, treeOrder)
+  }
+
   /** Factory method for iterator over an external/native node */
   def iterator(node: NodeExt, treeOrder: Int): Libuast.UastIterExt = {
     Libuast.UastIterExt(node, treeOrder)
