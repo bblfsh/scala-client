@@ -461,11 +461,10 @@ class Interface : public uast::NodeCreator<Node *> {
   }
 
   // toJ returns a JVM object associated with a node.
+  // It borrows the reference
   jobject toJ(Node *node) {
     if (!node) return nullptr;
-    // TODO(#113) investigate, it looks like a potential memory leak
-    jobject obj = getJNIEnv()->NewGlobalRef(node->obj);
-    return obj;
+    return node->obj;
   }
 
   // abstract methods from NodeCreator
@@ -509,7 +508,7 @@ class Interface : public uast::NodeCreator<Node *> {
 };
 
 // toJ returns a JVM object associated with a node.
-// Returns a new reference.
+// Returns a borrowed reference.
 jobject Node::toJ() { return iface->toJ(this); }
 
 // lookupOrCreate either creates a new object or returns existing one.
@@ -523,7 +522,7 @@ class Context {
   uast::Context<Node *> *ctx;
 
   // toJ returns a JVM object associated with a node.
-  // Returns a new reference.
+  // Borrows the reference.
   jobject toJ(Node *node) {
     if (!node) return nullptr;
     return iface->toJ(node);
@@ -548,10 +547,10 @@ class Context {
   }
 
   // RootNode returns a root UAST node, if set.
-  // Returns a new reference.
+  // Returns a borrowed ref
   jobject RootNode() {
     Node *root = ctx->RootNode();
-    return toJ(root);  // new ref
+    return toJ(root);  // borrowed ref
   }
 
   // Iterate returns iterator over an external UAST tree.
@@ -853,8 +852,14 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
                                                                  jobject self) {
   auto ctx = new Context();
   jobject node = ctx->LoadFrom(self);
+  // We need to make a local reference to node since ctx is going to be destroyed
+  // before returning, and the global references that each Node carries with it.
+  // If we do not copy node in a local ref, we return a null, whereas copying it in
+  // a local ref ensures the native part returns the value to Java and after that
+  // disposes of the local refs
+  jobject result = getJNIEnv()->NewLocalRef(node);
   delete (ctx);
-  return node;
+  return result;
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter(
