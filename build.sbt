@@ -180,7 +180,7 @@ def compileUnix(sourceFiles: String) = {
 
     checkedProcess(cmd, "macOS build")
   } else {
-    val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
+    val cmd:String = "g++ -shared -Wl,-Bsymbolic -Wall -fPIC -O2 -std=c++11 " +
       "-I/usr/include " +
       "-I" + javaHome + "/include/ " +
       "-I" + javaHome + "/include/linux " +
