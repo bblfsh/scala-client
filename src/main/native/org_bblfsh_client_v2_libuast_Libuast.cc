@@ -629,7 +629,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   jobject jCtxExt = NewJavaObject(env, CLS_CTX, "(J)V", p);
   if (env->ExceptionCheck() || !jCtxExt) {
     jCtxExt = nullptr;
-    delete (ctx);
+    // This also deletes the underlying ctx
     delete (p);
     checkJvmException("failed to instantiate ContextExt class");
   }
@@ -838,7 +838,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_ContextExt_dispose(JNIEnv *env, jobject self) {
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
-  if (!p) {
+  if (p) {
     delete p;
     setHandle<ContextExt>(env, self, 0, nativeContext);
   }
