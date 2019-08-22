@@ -7,7 +7,7 @@ git.useGitDescribe := true
 enablePlugins(GitVersioning)
 
 scalaVersion := "2.11.11"
-val libuastVersion = "3.3.1"
+val libuastVersion = "3.4.2"
 val sdkMajor = "v3"
 val sdkVersion = s"${sdkMajor}.1.0"
 val protoDir = "src/main/proto"
