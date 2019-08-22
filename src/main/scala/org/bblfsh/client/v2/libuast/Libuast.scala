@@ -1,6 +1,6 @@
 package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.{ContextExt, JNode, NodeExt}
+import org.bblfsh.client.v2.{ContextExt, JNode, NodeExt, TreeOrder}
 import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
 
 import scala.collection.Iterator
@@ -139,4 +139,7 @@ class Libuast {
 
   /** Decode UAST from a byte array */
   @native def decode(buf: ByteBuffer): ContextExt
+
+  /** Lifts the tree order values from the libuast */
+  @native def getTreeOrders(): TreeOrder
 }

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <map>
 
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
@@ -841,6 +842,25 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter(
   auto *ctx = getHandle<ContextExt>(env, self, "ctx");
   return filterUastIterExt(ctx, jquery, env);
 }
+
+
+// ==========================================
+//                Tree Orders
+// ==========================================
+
+// Exposes tree orders from the libuast to Scala
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getTreeOrders(JNIEnv *env,
+                                                                                  jobject self) {
+    jobject jObj = NewJavaObject(env, CLS_TO, "(IIIIII)V",
+                                 ANY_ORDER,
+                                 PRE_ORDER,
+                                 POST_ORDER,
+                                 LEVEL_ORDER,
+                                 CHILDREN_ORDER,
+                                 POSITION_ORDER);
+    return jObj;
+}
+
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env;
