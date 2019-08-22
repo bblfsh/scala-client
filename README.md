@@ -80,7 +80,7 @@ guide to learn more about how to use and deploy a bblfsh server, install languag
 API
 ```scala
 import scala.io.Source
-import org.bblfsh.client.BblfshClient
+import org.bblfsh.client.v2.BblfshClient, BblfshClient._
 import gopkg.in.bblfsh.sdk.v2.protocol.driver.Mode
 
 val client = BblfshClient("localhost", 9432)
@@ -93,7 +93,7 @@ val resp = client.parse(filename, fileContent, Mode.SEMANTIC)
 println(resp.get)
 
 // Filtered response
-println(client.filter(resp.get, "//uast:Import"))
+println(client.filter(resp.get, "//uast:Identifier"))
 ```
 
 Command line:
@@ -105,7 +105,7 @@ java -jar build/bblfsh-client-assembly-*.jar -f <file.py>
 or if you want to use a XPath query:
 
 ```
-java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//uast:Import"
+java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//uast:Identifier"
 ```
 
 Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)
