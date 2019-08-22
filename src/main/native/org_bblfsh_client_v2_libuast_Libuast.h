@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
   (JNIEnv *, jobject, jobject);
 
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast
+ * Method:    getTreeOrders
+ * Signature: ()Lorg/bblfsh/client/v2/TreeOrder;
+ */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getTreeOrders
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

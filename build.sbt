@@ -1,5 +1,3 @@
-
-
 name := "bblfsh-client"
 organization := "org.bblfsh"
 

@@ -109,14 +109,16 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
 object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
-  // TODO(#108): expose all order, including new 'children' from
-  //            https://github.com/bblfsh/libuast/pull/106
-  val PreOrder = 0
-  val PostOrder = 1
-  val LevelOrder = 2
-  val PositionOrder = 3
-
   private val libuast = new Libuast
+
+  private val treeOrder = libuast.getTreeOrders
+
+  val AnyOrder = treeOrder.AnyOrder
+  val PreOrder = treeOrder.PreOrder
+  val PostOrder = treeOrder.PostOrder
+  val LevelOrder = treeOrder.LevelOrder
+  val ChildrenOrder = treeOrder.ChildrenOrder
+  val PositionOrder = treeOrder.PositionOrder
 
   def apply(
     host: String, port: Int,
