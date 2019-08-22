@@ -7,7 +7,22 @@ As all source{d} projects, this project follows the
 # Developer documentation
 
 This section has more extended documentation for a brave developer willing to
-contribute by diving into and debugging the native glue code in `src/main/native`.
+contribute by diving into and coding / debugging for the native glue code in `src/main/native`.
+
+## Generate C headers for native code
+A method should be marked as `@native` in the Scala part for us to be able to code it natively in C side. 
+Example:
+
+```scala
+case class Context(nativeContext: Long) {
+    @native def root(): JNode
+    @native def filter(query: String, node: JNode): UastIter
+    @native def encode(n: JNode): ByteBuffer
+    @native def dispose()
+}
+```
+
+To generate the header files `.h` in `src/main/native`, we should do `sbt javah`.
 
 ## Build libuast with debug symbols
 This is not strictly necessary, but will help you to navigate though the stack-traces.
@@ -46,7 +61,7 @@ When using `lldb`, the classpath needs to be manually set for the `java` executa
 ```
 PATH="/usr/bin:$PATH" lldb -- java -ea -Xcheck:jni -Djava.library.path=src/main/resources -cp "target/classes:target/test-classes:src/main/resources:${HOME}/.ivy2/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-3.0.1.jar:${HOME}/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.11.11.jar:${HOME}/.ivy2/cache/org.scala-lang.modules/scala-xml_2.11/bundles/scala-xml_2.11-1.0.5.jar:${HOME}/.ivy2/cache/org.scalactic/scalactic_2.11/bundles/scalactic_2.11-3.0.1.jar:${HOME}/.ivy2/cache/commons-io/commons-io/jars/commons-io-2.5.jar:build/bblfsh-client-assembly-2.0.0-SNAPSHOT.jar:target/*" \
   org.scalatest.tools.Runner \
-  -s org.bblfsh.client.v2.libuast.IteratorNativeTest \
+    -s org.bblfsh.client.v2.libuast.IteratorNativeTest \
   -z "Native UAST iterator" \
   -f iterator-native-test.txt
 ```
