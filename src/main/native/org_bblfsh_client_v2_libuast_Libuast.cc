@@ -92,12 +92,13 @@ bool assertNotContext(jobject obj) {
 class ContextExt {
  private:
   uast::Context<NodeHandle> *ctx;
-
+  jobject jCtxExt;
+    
   jobject toJ(NodeHandle node) {
     if (node == 0) return nullptr;
 
     JNIEnv *env = getJNIEnv();
-    jobject jObj = NewJavaObject(env, CLS_NODE, "(JJ)V", this, node);
+    jobject jObj = NewJavaObject(env, CLS_NODE, "(Lorg/bblfsh/client/v2/ContextExt;J)V", jCtxExt, node);
     return jObj;
   }
 
@@ -134,7 +135,12 @@ class ContextExt {
 
   ContextExt(uast::Context<NodeHandle> *c) : ctx(c) {}
 
-  ~ContextExt() { delete (ctx); }
+  ~ContextExt() {
+    delete (ctx);
+
+    if (jCtxExt)
+      getJNIEnv()->DeleteGlobalRef(jCtxExt);
+  }
 
   // lookup searches for a specific node handle.
   jobject lookup(NodeHandle node) { return toJ(node); }
@@ -144,6 +150,13 @@ class ContextExt {
     return lookup(root);
   }
 
+  // Attaches a Scala ContextExt object to the C ContextExt
+  // We need this because a NodeExt from Scala side includes
+  // a Scala ContextExt and a handle to the native C node
+  void setJavaContext(jobject ctx) {
+    jCtxExt = getJNIEnv()->NewGlobalRef(ctx);
+  }
+    
   // Iterate returns iterator over an external UAST tree.
   // Borrows the reference.
   uast::Iterator<NodeHandle> *Iterate(jobject node, TreeOrder order) {
@@ -624,9 +637,13 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
   uast::Context<NodeHandle> *ctx = uast::Decode(ubuf, format);
   // ReleasePrimitiveArrayCritical
 
-  auto p = new ContextExt(ctx);
+  ContextExt *p = new ContextExt(ctx);
 
   jobject jCtxExt = NewJavaObject(env, CLS_CTX, "(J)V", p);
+
+  // Associates the JVM context ext to the native ContextExt
+  p->setJavaContext(jCtxExt);
+  
   if (env->ExceptionCheck() || !jCtxExt) {
     jCtxExt = nullptr;
     // This also deletes the underlying ctx

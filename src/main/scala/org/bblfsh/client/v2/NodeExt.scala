@@ -12,10 +12,10 @@ import scala.collection.mutable
   * UAST representation for the nodes originated from the Go side.
   * This is equivalent of pyuast.NodeExt API.
   *
-  * @param ctx pointer to the native ContextExt
+  * @param ctx a reference to the external context
   * @param handle pointer to the native Node
   */
-case class NodeExt(ctx: Long, handle: Long) {
+case class NodeExt(ctx: ContextExt, handle: Long) {
   @native def load(): JNode
   @native def filter(query: String): UastIterExt
 }
