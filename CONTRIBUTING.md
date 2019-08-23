@@ -10,7 +10,7 @@ This section has more extended documentation for a brave developer willing to
 contribute by diving into and coding / debugging for the native glue code in `src/main/native`.
 
 ## Generate C headers for native code
-A method should be marked as `@native` in the Scala part for us to be able to code it natively in C side. 
+A method must be marked as `@native` in the Scala part for us to be able to code it natively in C. 
 Example:
 
 ```scala
