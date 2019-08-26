@@ -6,6 +6,8 @@
 
 // Fully qualified Java class names
 extern const char CLS_NODE[];
+extern const char CLS_CTX_EXT[];
+extern const char CLS_CTX[];
 extern const char CLS_CTX[];
 extern const char CLS_OBJ[];
 extern const char CLS_RE[];
@@ -37,6 +39,10 @@ extern const char METHOD_JITER_INIT[];
 
 // Field signatures
 extern const char FIELD_ITER_NODE[];
+extern const char FIELD_ITER_EXT_NODE[];
+extern const char FIELD_NODE_EXT_CTX[];
+extern const char FIELD_ITER_CTX[];
+extern const char FIELD_ITER_EXT_CTX[];
 
 // Checks through JNI, if there is a pending excption on the JVM side.
 //

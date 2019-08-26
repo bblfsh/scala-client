@@ -58,17 +58,22 @@ void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
   setHandle<T>(env, obj, t, name, "J");
 }
 
+void setObjectField(JNIEnv *env, jobject obj, jobject field, const char *name, const char *sig) {
+  jfieldID fId = FieldID(env, obj, name, sig);
+  env->SetObjectField(obj, fId, field);
+}
+
 jobject asJvmBuffer(uast::Buffer buf) {
   JNIEnv *env = getJNIEnv();
   return env->NewDirectByteBuffer(buf.ptr, buf.size);
 }
 
-// Checks if a given object is of Node/JNode class
+// Checks if a given object is of ContextExt class
 bool isContext(jobject obj, JNIEnv *env) {
   if (!obj) return false;
 
-  jclass ctxCls = env->FindClass(CLS_CTX);
-  checkJvmException("failed to find class " + std::string(CLS_CTX));
+  jclass ctxCls = env->FindClass(CLS_CTX_EXT);
+  checkJvmException("failed to find class " + std::string(CLS_CTX_EXT));
 
   return env->IsInstanceOf(obj, ctxCls);
 }
@@ -190,7 +195,7 @@ class ContextExt {
 };
 
 // creates new UastIterExt from the given context
-jobject filterUastIterExt(ContextExt *ctx, jstring jquery, JNIEnv *env) {
+jobject filterUastIterExt(ContextExt *ctx, jobject jCtx, jstring jquery, JNIEnv *env) {
   const char *q = env->GetStringUTFChars(jquery, 0);
   std::string query = std::string(q);
   env->ReleaseStringUTFChars(jquery, q);
@@ -205,7 +210,8 @@ jobject filterUastIterExt(ContextExt *ctx, jstring jquery, JNIEnv *env) {
   }
 
   // new UastIterExt()
-  jobject iter = NewJavaObject(env, CLS_ITER, METHOD_ITER_INIT, 0, 0, it, ctx);
+  jobject iter = NewJavaObject(env, CLS_ITER, METHOD_ITER_INIT, 0, 0, it, jCtx);
+  
   if (env->ExceptionCheck() || !iter) {
     delete (it);
     checkJvmException("failed create new UastIterExt class");
@@ -600,8 +606,11 @@ class Context {
 
   jobject LoadFrom(jobject src) {  // NodeExt
     JNIEnv *env = getJNIEnv();
-
-    ContextExt *nodeExtCtx = getHandle<ContextExt>(env, src, "ctx");
+    // NodeExt contains a ctx: ContextExt and ContextExt the
+    // handle for the native context, called nativeContext
+    jobject jCtxExt = ObjectField(env, src, "ctx", FIELD_NODE_EXT_CTX);
+    ContextExt *nodeExtCtx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
+    
     checkJvmException("failed to get NodeExt.ctx");
 
     auto sctx = nodeExtCtx->ctx;
@@ -639,7 +648,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 
   ContextExt *p = new ContextExt(ctx);
 
-  jobject jCtxExt = NewJavaObject(env, CLS_CTX, "(J)V", p);
+  jobject jCtxExt = NewJavaObject(env, CLS_CTX_EXT, "(J)V", p);
 
   // Associates the JVM context ext to the native ContextExt
   p->setJavaContext(jCtxExt);
@@ -664,6 +673,8 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   }
 
   Context *ctx = new Context();
+  jobject jCtx = NewJavaObject(env, CLS_CTX, "(J)V", ctx);
+
   jint order = IntField(env, self, "treeOrder", "I");
   if (order < 0) {
     return;
@@ -671,22 +682,21 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 
   // global ref will be deleted by Interface destructor on ctx deletion
   auto it = ctx->Iterate(jnode, (TreeOrder)order);
-
+  
   // this.iter = it;
-  setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
-  // this.ctx = ctx;
-  setHandle<Context>(env, self, ctx, "ctx");
+  setHandle<uast::Iterator<Node *>>(env, self, it, "iter"); 
+  // this.ctx = Context(ctx);
+  setObjectField(env, self, jCtx, "ctx", FIELD_ITER_CTX);
+  
   return;
 }
 
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
-  // this.ctx - delete as iterator owns it for both .iterate()/.filter() cases
-  auto ctx = getHandle<Context>(env, self, "ctx");
-  delete (ctx);
-  setHandle<Context>(env, self, 0, "ctx");
-
+  // this.ctx will be disposed by Context finalizer
+  setObjectField(env, self, nullptr, "ctx", FIELD_ITER_CTX);
+  
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
   setHandle<uast::Iterator<Node *>>(env, self, 0, "iter");
@@ -712,22 +722,27 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeNext(
   Node *node = iter->node();
   if (!node) return nullptr;
 
-  return node->toJ();  // new global ref
+  return node->toJ();  // borrows ref
 }
 
 // UastIterExt
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
     JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
-
-  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_NODE);
+  
+  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_EXT_NODE);
   if (!nodeExt) {
     return;
   }
+  
+  jobject jCtxExt = ObjectField(env, nodeExt, "ctx", FIELD_NODE_EXT_CTX);
+
+  if (!jCtxExt)
+    return;
 
   // borrow ContextExt from NodeExt
-  ContextExt *ctx = getHandle<ContextExt>(env, nodeExt, "ctx");
-
+  ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
+  
   jint order = IntField(env, self, "treeOrder", "I");
   if (order < 0) {
     return;
@@ -737,17 +752,18 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
 
   // this.iter = it;
   setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
-  // this.ctx = ctx;
-  setHandle<ContextExt>(env, self, ctx, "ctx");
+  // this.ctx = jCtxExt;
+  setObjectField(env, self, jCtxExt, "ctx", FIELD_ITER_EXT_CTX);
+  
   return;
 }
 
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
     JNIEnv *env, jobject self) {
-  // this.ctx - don't delete ContextExt, it's borrowed from NodeExt
-  setHandle<ContextExt>(env, self, 0, "ctx");
-
+  // this.ctx will be disposed by ContextExt finalizer
+  setObjectField(env, self, nullptr, "ctx", FIELD_ITER_EXT_CTX);
+  
   // this.iter
   auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
   setHandle<uast::Iterator<NodeHandle>>(env, self, 0, "iter");
@@ -773,7 +789,8 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
   NodeHandle node = iter->node();
   if (node == 0) return nullptr;
 
-  ContextExt *ctx = getHandle<ContextExt>(env, self, "ctx");
+  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_ITER_EXT_CTX);
+  ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
   return ctx->lookup(node);
 }
 
@@ -799,7 +816,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 
   // new UastIter()
   jobject iter =
-      NewJavaObject(env, CLS_JITER, METHOD_JITER_INIT, 0, 0, it, ctx);
+      NewJavaObject(env, CLS_JITER, METHOD_JITER_INIT, 0, 0, it, self);
   if (env->ExceptionCheck() || !iter) {
     delete (it);
     checkJvmException("failed create new UastIter class");
@@ -824,8 +841,11 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
                                                                  jobject self) {
   Context *p = getHandle<Context>(env, self, nativeContext);
-  setHandle<Context>(env, self, 0, nativeContext);
-  delete p;
+  
+  if (p) {
+    delete p;
+    setHandle<Context>(env, self, 0, nativeContext);
+  }
 };
 
 // ==========================================
@@ -841,7 +861,7 @@ Java_org_bblfsh_client_v2_ContextExt_root(JNIEnv *env, jobject self) {
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_filter(
     JNIEnv *env, jobject self, jstring jquery) {
   ContextExt *ctx = getHandle<ContextExt>(env, self, nativeContext);
-  return filterUastIterExt(ctx, jquery, env);
+  return filterUastIterExt(ctx, self, jquery, env);
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
@@ -881,8 +901,9 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter(
     JNIEnv *env, jobject self, jstring jquery) {
-  auto *ctx = getHandle<ContextExt>(env, self, "ctx");
-  return filterUastIterExt(ctx, jquery, env);
+  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_NODE_EXT_CTX);
+  ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
+  return filterUastIterExt(ctx, jCtxExt, jquery, env);
 }
 
 
