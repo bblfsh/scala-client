@@ -26,7 +26,8 @@ JNIEnv *getJNIEnv() {
 
 // Class fully qualified names
 const char CLS_NODE[] = "org/bblfsh/client/v2/NodeExt";
-const char CLS_CTX[] = "org/bblfsh/client/v2/ContextExt";
+const char CLS_CTX_EXT[] = "org/bblfsh/client/v2/ContextExt";
+const char CLS_CTX[] = "org/bblfsh/client/v2/Context";
 const char CLS_TO[] = "org/bblfsh/client/v2/TreeOrder";
 const char CLS_OBJ[] = "java/lang/Object";
 const char CLS_RE[] = "java/lang/RuntimeException";
@@ -57,11 +58,15 @@ const char METHOD_RE_INIT[] = "(Ljava/lang/String;)V";
 const char METHOD_RE_INIT_CAUSE[] =
     "(Ljava/lang/String;Ljava/lang/Throwable;)V";
 
-const char METHOD_ITER_INIT[] = "(Lorg/bblfsh/client/v2/NodeExt;IJJ)V";
-const char METHOD_JITER_INIT[] = "(Lorg/bblfsh/client/v2/JNode;IJJ)V";
+const char METHOD_ITER_INIT[] = "(Lorg/bblfsh/client/v2/NodeExt;IJLorg/bblfsh/client/v2/ContextExt;)V";
+const char METHOD_JITER_INIT[] = "(Lorg/bblfsh/client/v2/JNode;IJLorg/bblfsh/client/v2/Context;)V";
 
 // Field signatures
 const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
+const char FIELD_ITER_CTX[] = "Lorg/bblfsh/client/v2/Context;";
+const char FIELD_ITER_EXT_NODE[] = "Ljava/lang/Object;";
+const char FIELD_ITER_EXT_CTX[] = "Lorg/bblfsh/client/v2/ContextExt;";
+const char FIELD_NODE_EXT_CTX[] = "Lorg/bblfsh/client/v2/ContextExt;";
 
 // TODO(#114): cache classes&methods in JNI_OnLoad should speed this up
 void checkJvmException(std::string msg) {

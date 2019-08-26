@@ -1,6 +1,6 @@
 package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.{ContextExt, JNode, NodeExt, TreeOrder}
+import org.bblfsh.client.v2.{ContextExt, Context, JNode, NodeExt, TreeOrder}
 import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
 
 import scala.collection.Iterator
@@ -25,8 +25,8 @@ object Libuast {
     * It brides the gap between the contracts of a Scala iterator (.hasNext()/.next()) and
     * a native Libuast iterator (.next() == null at the end).
     **/
-  abstract class UastAbstractIter[T >: Null](var node: T, var treeOrder: Int, var iter: Long, var ctx: Long)
-    extends Iterator[T] {
+  abstract class UastAbstractIter[T >: Null](var node: T, var treeOrder: Int, var iter: Long)
+      extends Iterator[T] {
     private var closed = false
     private var nextNode: Option[T] = None
 
@@ -75,8 +75,8 @@ object Libuast {
   }
 
   /** Iterator over children of the given external/native node */
-  class UastIterExt(node: NodeExt, treeOrder: Int, iter: Long, ctx: Long)
-    extends UastAbstractIter(node, treeOrder, iter, ctx) {
+  class UastIterExt(node: NodeExt, treeOrder: Int, iter: Long, var ctx: ContextExt)
+    extends UastAbstractIter(node, treeOrder, iter) {
     @native def nativeNext(iterPtr: Long): NodeExt
     @native def nativeInit()
     @native def nativeDispose()
@@ -84,15 +84,15 @@ object Libuast {
 
   object UastIterExt {
     def apply(node: NodeExt, treeOrder: Int): UastIterExt = {
-      val it = new UastIterExt(node, treeOrder, 0, 0)
+      val it = new UastIterExt(node, treeOrder, 0, ContextExt(0))
       it.nativeInit()
       it
     }
   }
 
   /** Iterator over children of the given managed node */
-  class UastIter(node: JNode, treeOrder: Int, iter: Long, ctx: Long)
-    extends UastAbstractIter(node, treeOrder, iter, ctx) {
+  class UastIter(node: JNode, treeOrder: Int, iter: Long, var ctx: Context)
+    extends UastAbstractIter(node, treeOrder, iter) {
     @native def nativeNext(iterPtr: Long): JNode
     @native def nativeInit()
     @native def nativeDispose()
@@ -100,7 +100,7 @@ object Libuast {
 
   object UastIter {
     def apply(node: JNode, treeOrder: Int): UastIter = {
-      val it = new UastIter(node, treeOrder, 0, 0)
+      val it = new UastIter(node, treeOrder, 0, Context(0))
       it.nativeInit()
       it
     }

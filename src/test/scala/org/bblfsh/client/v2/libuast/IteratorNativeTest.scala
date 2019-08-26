@@ -45,7 +45,7 @@ class IteratorNativeTest extends FlatSpec
     iter.close()
 
     iter.hasNext() should be(false)
-    iter.ctx should be(0)
+    iter.ctx should be(null)
     iter.iter should be(0)
   }
 
