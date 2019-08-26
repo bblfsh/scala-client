@@ -144,7 +144,7 @@ class ContextExt {
     delete (ctx);
 
     if (jCtxExt)
-      getJNIEnv()->DeleteGlobalRef(jCtxExt);
+      getJNIEnv()->DeleteWeakGlobalRef(jCtxExt);
   }
 
   // lookup searches for a specific node handle.
@@ -159,7 +159,7 @@ class ContextExt {
   // We need this because a NodeExt from Scala side includes
   // a Scala ContextExt and a handle to the native C node
   void setJavaContext(jobject ctx) {
-    jCtxExt = getJNIEnv()->NewGlobalRef(ctx);
+    jCtxExt = getJNIEnv()->NewWeakGlobalRef(ctx);
   }
     
   // Iterate returns iterator over an external UAST tree.
