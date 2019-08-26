@@ -149,7 +149,16 @@ object BblfshClient {
     def decode(): ContextExt = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
       buf.copyTo(bufDirectCopy)
-      BblfshClient.decode(bufDirectCopy)
+      val result = BblfshClient.decode(bufDirectCopy)
+      // Sometimes the direct buffer can take a lot to deallocate,
+      // causing Out of Memory, because it is not allocated in
+      // in the JVM heap and will only be deallocated them when
+      // JVM does not have more space in its heap
+      // This line alleviates the problem
+      // Problem can be tested if we remove it and do a
+      // loop decoding a file
+      System.gc()
+      result
     }
   }
 
