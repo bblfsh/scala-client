@@ -212,7 +212,7 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
   downloadUnpackLibuast("darwin")
 
   val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -std=c++11 " +
-      "-I" + osxHome + "/SDK/MacOSX10.11.sdk/usr/include/ " +
+      "-I" + osxHome + "/SDK/MacOSX10.13.sdk/usr/include/ " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
       "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
       "-Isrc/main/resources/libuast " +
