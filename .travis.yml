@@ -1,4 +1,4 @@
-dist: xenial 
+dist: xenial
 language: scala
 jdk:
   - openjdk8
@@ -40,7 +40,6 @@ jobs:
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
         - ls hs_* 1> /dev/null 2>&1 && cat hs_*
-
     - &release
       name: 'Cross-compile, release & publish to Sonatype'
       stage: release
@@ -58,11 +57,15 @@ jobs:
         - curl -sSL "https://github.com/karalabe/xgo/blob/647f256c447ee20f9bf13ebc42e612d55994a383/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
         - mv v1 "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
         - rm -rf /tmp/osxcross "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
-      script:
         - cd $TRAVIS_BUILD_DIR
+      script:
         - ./sbt assembly || travis_terminate 1
         - ./sbt publishLocal
         - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
         - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
         - ./sbt publishSigned
         - ./sbt sonatypeRelease
+    - <<: *release
+      name: 'Check that project can be cross-compiled correctly'
+      stage: test
+      script: ./sbt assembly test
