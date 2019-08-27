@@ -36,14 +36,12 @@ extern const char METHOD_RE_INIT[];
 extern const char METHOD_RE_INIT_CAUSE[];
 extern const char METHOD_ITER_INIT[];
 extern const char METHOD_JITER_INIT[];
+extern const char METHOD_NODE_INIT[];
 
 // Field signatures
 extern const char FIELD_ITER_NODE[];
-extern const char FIELD_ITER_EXT_NODE[];
-extern const char FIELD_NODE_EXT_CTX[];
-extern const char FIELD_ITER_CTX[];
-extern const char FIELD_ITER_EXT_CTX[];
-
+extern const char FIELD_CTX[];
+extern const char FIELD_CTX_EXT[];
 // Checks through JNI, if there is a pending excption on the JVM side.
 //
 // Throws new RuntimeException to the JVM in case there is,

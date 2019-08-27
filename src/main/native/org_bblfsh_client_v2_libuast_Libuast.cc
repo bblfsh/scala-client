@@ -51,6 +51,7 @@ void setHandle(JNIEnv *env, jobject obj, T *t, const char *name,
 
   jlong handle = reinterpret_cast<jlong>(t);
   env->SetLongField(obj, fId, handle);
+  checkJvmException("failed to set handle for" + std::string(name));
 }
 
 template <typename T>
@@ -61,6 +62,7 @@ void setHandle(JNIEnv *env, jobject obj, T *t, const char *name) {
 void setObjectField(JNIEnv *env, jobject obj, jobject field, const char *name, const char *sig) {
   jfieldID fId = FieldID(env, obj, name, sig);
   env->SetObjectField(obj, fId, field);
+  checkJvmException("failed to set object field for" + std::string(name));
 }
 
 jobject asJvmBuffer(uast::Buffer buf) {
@@ -103,7 +105,7 @@ class ContextExt {
     if (node == 0) return nullptr;
 
     JNIEnv *env = getJNIEnv();
-    jobject jObj = NewJavaObject(env, CLS_NODE, "(Lorg/bblfsh/client/v2/ContextExt;J)V", jCtxExt, node);
+    jobject jObj = NewJavaObject(env, CLS_NODE, METHOD_NODE_INIT, jCtxExt, node);
     return jObj;
   }
 
@@ -158,7 +160,7 @@ class ContextExt {
   // Attaches a Scala ContextExt object to the C ContextExt
   // We need this because a NodeExt from Scala side includes
   // a Scala ContextExt and a handle to the native C node
-  void setJavaContext(jobject ctx) {
+  void setManagedContext(jobject ctx) {
     jCtxExt = getJNIEnv()->NewWeakGlobalRef(ctx);
   }
 
@@ -606,9 +608,8 @@ class Context {
 
   jobject LoadFrom(jobject src) {  // NodeExt
     JNIEnv *env = getJNIEnv();
-    // NodeExt contains a ctx: ContextExt and ContextExt the
-    // handle for the native context, called nativeContext
-    jobject jCtxExt = ObjectField(env, src, "ctx", FIELD_NODE_EXT_CTX);
+    // NodeExt contains a ctx: ContextExt (JVM ref) and a nativeContext: ContextExt (handle)
+    jobject jCtxExt = ObjectField(env, src, "ctx", FIELD_CTX_EXT);
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
 
     checkJvmException("failed to get NodeExt.ctx");
@@ -650,8 +651,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 
   jobject jCtxExt = NewJavaObject(env, CLS_CTX_EXT, "(J)V", p);
 
-  // Associates the JVM context ext to the native ContextExt
-  p->setJavaContext(jCtxExt);
+  // Saves weak reference to JVM ContextExt in the native ContextExt
+  p->setManagedContext(jCtxExt);
 
   if (env->ExceptionCheck() || !jCtxExt) {
     jCtxExt = nullptr;
@@ -686,7 +687,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   // this.iter = it;
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
   // this.ctx = Context(ctx);
-  setObjectField(env, self, jCtx, "ctx", FIELD_ITER_CTX);
+  setObjectField(env, self, jCtx, "ctx", FIELD_CTX);
 
   return;
 }
@@ -695,7 +696,7 @@ JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
   // this.ctx will be disposed by Context finalizer
-  setObjectField(env, self, nullptr, "ctx", FIELD_ITER_CTX);
+  setObjectField(env, self, nullptr, "ctx", FIELD_CTX);
 
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
@@ -730,13 +731,12 @@ JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
     JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
 
-  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_EXT_NODE);
+  jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_NODE);
   if (!nodeExt) {
     return;
   }
 
-  jobject jCtxExt = ObjectField(env, nodeExt, "ctx", FIELD_NODE_EXT_CTX);
-
+  jobject jCtxExt = ObjectField(env, nodeExt, "ctx", FIELD_CTX_EXT);
   if (!jCtxExt)
     return;
 
@@ -753,7 +753,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
   // this.iter = it;
   setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
   // this.ctx = jCtxExt;
-  setObjectField(env, self, jCtxExt, "ctx", FIELD_ITER_EXT_CTX);
+  setObjectField(env, self, jCtxExt, "ctx", FIELD_CTX_EXT);
 
   return;
 }
@@ -762,7 +762,7 @@ JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
     JNIEnv *env, jobject self) {
   // this.ctx will be disposed by ContextExt finalizer
-  setObjectField(env, self, nullptr, "ctx", FIELD_ITER_EXT_CTX);
+  setObjectField(env, self, nullptr, "ctx", FIELD_CTX_EXT);
 
   // this.iter
   auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
@@ -789,7 +789,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeNext(
   NodeHandle node = iter->node();
   if (node == 0) return nullptr;
 
-  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_ITER_EXT_CTX);
+  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_CTX_EXT);
   ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
   return ctx->lookup(node);
 }
@@ -892,7 +892,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
   // We need to make a local reference to node since ctx is going to be destroyed
   // before returning, and the global references that each Node carries with it.
   // If we do not copy node in a local ref, we return a null, whereas copying it in
-  // a local ref ensures the native part returns the value to Java and after that
+  // a local ref ensures the native part returns the value to Scala and after that
   // disposes of the local refs
   jobject result = getJNIEnv()->NewLocalRef(node);
   delete (ctx);
@@ -901,7 +901,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_filter(
     JNIEnv *env, jobject self, jstring jquery) {
-  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_NODE_EXT_CTX);
+  jobject jCtxExt = ObjectField(env, self, "ctx", FIELD_CTX_EXT);
   ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
   return filterUastIterExt(ctx, jCtxExt, jquery, env);
 }
