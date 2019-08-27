@@ -98,7 +98,7 @@ class ContextExt {
  private:
   uast::Context<NodeHandle> *ctx;
   jobject jCtxExt;
-    
+
   jobject toJ(NodeHandle node) {
     if (node == 0) return nullptr;
 
@@ -161,7 +161,7 @@ class ContextExt {
   void setJavaContext(jobject ctx) {
     jCtxExt = getJNIEnv()->NewWeakGlobalRef(ctx);
   }
-    
+
   // Iterate returns iterator over an external UAST tree.
   // Borrows the reference.
   uast::Iterator<NodeHandle> *Iterate(jobject node, TreeOrder order) {
@@ -211,7 +211,7 @@ jobject filterUastIterExt(ContextExt *ctx, jobject jCtx, jstring jquery, JNIEnv 
 
   // new UastIterExt()
   jobject iter = NewJavaObject(env, CLS_ITER, METHOD_ITER_INIT, 0, 0, it, jCtx);
-  
+
   if (env->ExceptionCheck() || !iter) {
     delete (it);
     checkJvmException("failed create new UastIterExt class");
@@ -377,14 +377,14 @@ class Node : public uast::Node<Node *> {
 
     return s;
   }
+  // Borrows the reference
   Node *ValueAt(size_t i) {
     if (!obj || i >= Size()) return nullptr;
 
     JNIEnv *env = getJNIEnv();
     jobject val =
         ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
-    // TODO(#113) investigate, it looks like a potential memory leak
-    return lookupOrCreate(val);  // borrows the reference
+    return lookupOrCreate(val);
   }
 
   void SetValue(size_t i, Node *val) {
@@ -429,7 +429,7 @@ struct EqualByObj {
 };
 
 // Custom hasing function for keys in std::map<object>.
-// Deligates actual hasing to the managed .hashCode() impl.
+// Delegates actual hasing to the managed .hashCode() impl.
 struct HashByObj {
   std::size_t operator()(jobject obj) const noexcept {
     auto hash = IntMethod(getJNIEnv(), "hashCode", "()I", CLS_OBJ, obj);
@@ -451,15 +451,15 @@ class Interface : public uast::NodeCreator<Node *> {
 
     if (obj2node.count(obj) > 0) {
       return obj2node[obj];
-    } else {
-      Node* node = new Node(this, obj);
-      obj2node[node->obj] = node;
-      return node;
     }
+
+    Node *node = new Node(this, obj);
+    obj2node[node->obj] = node;
+    return node;
   }
 
   // create makes a new object with a specified kind.
-  // Steals the reference.
+  // Creates new reference.
   Node *create(NodeKind kind, jobject obj) {
     Node *node = new Node(this, kind, obj);
     obj2node[node->obj] = node;
@@ -610,7 +610,7 @@ class Context {
     // handle for the native context, called nativeContext
     jobject jCtxExt = ObjectField(env, src, "ctx", FIELD_NODE_EXT_CTX);
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
-    
+
     checkJvmException("failed to get NodeExt.ctx");
 
     auto sctx = nodeExtCtx->ctx;
@@ -652,7 +652,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 
   // Associates the JVM context ext to the native ContextExt
   p->setJavaContext(jCtxExt);
-  
+
   if (env->ExceptionCheck() || !jCtxExt) {
     jCtxExt = nullptr;
     // This also deletes the underlying ctx
@@ -682,12 +682,12 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
 
   // global ref will be deleted by Interface destructor on ctx deletion
   auto it = ctx->Iterate(jnode, (TreeOrder)order);
-  
+
   // this.iter = it;
-  setHandle<uast::Iterator<Node *>>(env, self, it, "iter"); 
+  setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
   // this.ctx = Context(ctx);
   setObjectField(env, self, jCtx, "ctx", FIELD_ITER_CTX);
-  
+
   return;
 }
 
@@ -696,7 +696,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeDispose(
     JNIEnv *env, jobject self) {
   // this.ctx will be disposed by Context finalizer
   setObjectField(env, self, nullptr, "ctx", FIELD_ITER_CTX);
-  
+
   // this.iter
   auto iter = getHandle<uast::Iterator<Node *>>(env, self, "iter");
   setHandle<uast::Iterator<Node *>>(env, self, 0, "iter");
@@ -729,12 +729,12 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeNext(
 JNIEXPORT void JNICALL
 Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
     JNIEnv *env, jobject self) {  // sets iter and ctx, given node: NodeExt
-  
+
   jobject nodeExt = ObjectField(env, self, "node", FIELD_ITER_EXT_NODE);
   if (!nodeExt) {
     return;
   }
-  
+
   jobject jCtxExt = ObjectField(env, nodeExt, "ctx", FIELD_NODE_EXT_CTX);
 
   if (!jCtxExt)
@@ -742,7 +742,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
 
   // borrow ContextExt from NodeExt
   ContextExt *ctx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
-  
+
   jint order = IntField(env, self, "treeOrder", "I");
   if (order < 0) {
     return;
@@ -754,7 +754,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
   setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
   // this.ctx = jCtxExt;
   setObjectField(env, self, jCtxExt, "ctx", FIELD_ITER_EXT_CTX);
-  
+
   return;
 }
 
@@ -763,7 +763,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeDispose(
     JNIEnv *env, jobject self) {
   // this.ctx will be disposed by ContextExt finalizer
   setObjectField(env, self, nullptr, "ctx", FIELD_ITER_EXT_CTX);
-  
+
   // this.iter
   auto iter = getHandle<uast::Iterator<NodeHandle>>(env, self, "iter");
   setHandle<uast::Iterator<NodeHandle>>(env, self, 0, "iter");
@@ -841,7 +841,7 @@ Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
                                                                  jobject self) {
   Context *p = getHandle<Context>(env, self, nativeContext);
-  
+
   if (p) {
     delete p;
     setHandle<Context>(env, self, 0, nativeContext);
