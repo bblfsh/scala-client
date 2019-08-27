@@ -61,12 +61,12 @@ const char METHOD_RE_INIT_CAUSE[] =
 const char METHOD_ITER_INIT[] = "(Lorg/bblfsh/client/v2/NodeExt;IJLorg/bblfsh/client/v2/ContextExt;)V";
 const char METHOD_JITER_INIT[] = "(Lorg/bblfsh/client/v2/JNode;IJLorg/bblfsh/client/v2/Context;)V";
 
+const char METHOD_NODE_INIT[] = "(Lorg/bblfsh/client/v2/ContextExt;J)V";
+
 // Field signatures
 const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
-const char FIELD_ITER_CTX[] = "Lorg/bblfsh/client/v2/Context;";
-const char FIELD_ITER_EXT_NODE[] = "Ljava/lang/Object;";
-const char FIELD_ITER_EXT_CTX[] = "Lorg/bblfsh/client/v2/ContextExt;";
-const char FIELD_NODE_EXT_CTX[] = "Lorg/bblfsh/client/v2/ContextExt;";
+const char FIELD_CTX[] = "Lorg/bblfsh/client/v2/Context;";
+const char FIELD_CTX_EXT[] = "Lorg/bblfsh/client/v2/ContextExt;";
 
 // TODO(#114): cache classes&methods in JNI_OnLoad should speed this up
 void checkJvmException(std::string msg) {
