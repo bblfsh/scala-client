@@ -81,8 +81,7 @@ jobs:
         - ./sbt publishLocal
         - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
         - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
-        - ./sbt publishSigned
-        - ./sbt sonatypeRelease
+        - ./sbt publishSigned sonatypeDrop sonatypeRelease
 
     - <<: *release
       name: 'Check that project can be cross-compiled correctly'
