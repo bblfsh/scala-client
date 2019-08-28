@@ -20,11 +20,13 @@ stages:
 
 env:
   global:
-   - OSXCROSS_REV=f67ce5033d0a01292c9ef156b95c025a3e1edcbc
-   - SDK_VERSION=10.13
+   - OSXCROSS_PATCH_REV=f67ce5033d0a01292c9ef156b95c025a3e1edcbc
+   - OSXCROSS_REV=3034f7149716d815bc473d0a7b35d17e4cf175aa
+   - XGO_REV=2d6d1848fb02b001c4019f4f4556720d4e8c4cea
+   - SDK_VERSION=10.11
    - DARWIN_VERSION=15
    - OSX_VERSION_MIN=10.6
-   - OSXCROSS_SDK_URL="https://github.com/phracker/MacOSX-SDKs/releases/download/10.13/MacOSX10.13.sdk.tar.xz"
+   - OSXCROSS_SDK_URL="https://s3.dockerproject.org/darwin/v2/MacOSX10.11.sdk.tar.xz"
 
 jobs:
   include:
@@ -33,30 +35,33 @@ jobs:
       install: &test_setup_anchor
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
-        - sudo apt-get update
         - sudo apt-get install -y --no-install-recommends g++ gcc gcc-multilib libc6-dev libc6-dev-i386 patch xz-utils
       script:
         - ./sbt assembly test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
         - ls hs_* 1> /dev/null 2>&1 && cat hs_*
+
     - &release
       name: 'Cross-compile, release & publish to Sonatype'
       stage: release
       env:
          - OSXCROSS_PATH="$HOME/osxcross"
       before_install:
-        - sudo apt-get update
-        - sudo apt-get install -y --no-install-recommends g++ gcc gcc-multilib libc6-dev libc6-dev-i386 patch xz-utils clang mingw-w64
+        - sudo apt-get install -y --no-install-recommends clang mingw-w64
       install:
         - mkdir -p /tmp/osxcross
         - cd /tmp/osxcross
         - curl -sSL "https://codeload.github.com/tpoechtrager/osxcross/tar.gz/${OSXCROSS_REV}" | tar -C "${PWD}" --strip=1 -xzf -
         - curl -sSL -o tarballs/MacOSX${SDK_VERSION}.sdk.tar.xz ${OSXCROSS_SDK_URL}
+        - sudo tools/get_dependencies.sh
         - UNATTENDED=yes ./build.sh >/dev/null
+        - curl -sSL "https://github.com/karalabe/xgo/blob/${XGO_REV}/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
+        - mv v1 "target/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
+        # Fixes __hash_table file with a patch included in osxcross
+        - curl -sSL "https://github.com/tpoechtrager/osxcross/blob/${OSXCROSS_PATCH_REV}/patches/libcxx__hash_table.patch?raw=true" -o hash_table.patch
+        - patch -d target/SDK/MacOSX${SDK_VERSION}.sdk/ -N -p1 < hash_table.patch
         - mv target "${OSXCROSS_PATH}"
-        - curl -sSL "https://github.com/karalabe/xgo/blob/647f256c447ee20f9bf13ebc42e612d55994a383/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
-        - mv v1 "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
         - rm -rf /tmp/osxcross "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
         - cd $TRAVIS_BUILD_DIR
       script:
@@ -66,6 +71,7 @@ jobs:
         - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
         - ./sbt publishSigned
         - ./sbt sonatypeRelease
+
     - <<: *release
       name: 'Check that project can be cross-compiled correctly'
       stage: test
