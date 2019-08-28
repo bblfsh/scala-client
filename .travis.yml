@@ -75,4 +75,4 @@ jobs:
     - <<: *release
       name: 'Check that project can be cross-compiled correctly'
       stage: test
-      script: ./sbt assembly test
+      script: ./sbt assembly

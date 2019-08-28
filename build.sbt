@@ -73,7 +73,7 @@ credentials += Credentials(
   SONATYPE_PASSWORD)
 
 val SONATYPE_PASSPHRASE = scala.util.Properties.envOrElse("SONATYPE_PASSPHRASE", "not set")
-val javaHome = scala.util.Properties.envOrElse("JAVA_HOME", "/usr/lib/jvm/java-8-openjdk-amd64")
+val JAVA_HOME = scala.util.Properties.envOrElse("JAVA_HOME", "/usr/lib/jvm/java-8-openjdk-amd64")
 
 useGpg := false
 pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg"
@@ -169,8 +169,8 @@ def compileUnix(sourceFiles: String) = {
   if (osName.contains("mac os x")) {
     val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
       "-I/usr/include " +
-      "-I" + javaHome + "/include/ " +
-      "-I" + javaHome + "/include/darwin " +
+      "-I" + JAVA_HOME + "/include/ " +
+      "-I" + JAVA_HOME + "/include/darwin " +
       "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dylib " + // sic, must be in the classpath for the test
       sourceFiles +
@@ -180,8 +180,8 @@ def compileUnix(sourceFiles: String) = {
   } else {
     val cmd:String = "g++ -shared -Wl,-Bsymbolic -Wall -fPIC -O2 -std=c++11 " +
       "-I/usr/include " +
-      "-I" + javaHome + "/include/ " +
-      "-I" + javaHome + "/include/linux " +
+      "-I" + JAVA_HOME + "/include/ " +
+      "-I" + JAVA_HOME + "/include/linux " +
       "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.so " +
       sourceFiles +
@@ -218,8 +218,8 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
 
   val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -std=c++11 " +
       "-I" + osxHome + s"/SDK/MacOSX${sdkVersion}.sdk/usr/include/ " +
-      "-I" + javaHome + "/include " +
-      "-I" + javaHome + "/include/linux " +
+      "-I" + JAVA_HOME + "/include " +
+      "-I" + JAVA_HOME + "/include/linux " +
       "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles +
