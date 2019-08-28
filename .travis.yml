@@ -20,6 +20,13 @@ stages:
 
 env:
   global:
+   # TODO(#87): Improve CI
+   # OSXCROSS_PATCH_REV and OSXCROSS_REV versions of osxcross repo.
+   # OSXCROSS_REV is used to retrieve a version of that tool that does not include the .patch file for
+   # hash_table. Cannot use the most recent one for downloading the tool and the repo because it lacks
+   # some dependencies now. This boilerplate can be deleted if OSX_VERSION_MIN is bumped to 10.7.
+   # macOS SDK for that version does include stdlib, and we could just download osxcross without any
+   # patch (build.sh there does the work of patching as long as stlib is included in SDK)
    - OSXCROSS_PATCH_REV=f67ce5033d0a01292c9ef156b95c025a3e1edcbc
    - OSXCROSS_REV=3034f7149716d815bc473d0a7b35d17e4cf175aa
    - XGO_REV=2d6d1848fb02b001c4019f4f4556720d4e8c4cea
