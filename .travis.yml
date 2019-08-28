@@ -35,7 +35,7 @@ jobs:
       install: &test_setup_anchor
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
-        - sudo apt-get update
+        - sudo apt-get clean && sudo rm -r /var/lib/apt/lists/* && sudo apt-get update
         - sudo apt-get install -y --no-install-recommends g++ gcc gcc-multilib libc6-dev libc6-dev-i386 patch xz-utils
       script:
         - ./sbt assembly test
@@ -49,6 +49,7 @@ jobs:
       env:
          - OSXCROSS_PATH="$HOME/osxcross"
       before_install:
+        - sudo apt-get clean && sudo rm -r /var/lib/apt/lists/* && sudo apt-get update
         - sudo apt-get install -y --no-install-recommends clang mingw-w64
       install:
         - mkdir -p /tmp/osxcross
