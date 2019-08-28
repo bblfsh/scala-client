@@ -73,6 +73,7 @@ credentials += Credentials(
   SONATYPE_PASSWORD)
 
 val SONATYPE_PASSPHRASE = scala.util.Properties.envOrElse("SONATYPE_PASSPHRASE", "not set")
+val javaHome = scala.util.Properties.envOrElse("JAVA_HOME", "/usr/lib/jvm/java-8-openjdk-amd64")
 
 useGpg := false
 pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg"
@@ -163,12 +164,8 @@ compileScalaLibuast := {
 def compileUnix(sourceFiles: String) = {
   import sys.process._
 
-  var javaHome = System.getenv("JAVA_HOME")
-  if (javaHome == null) {
-    javaHome = "/usr/lib/jvm/java-8-openjdk-amd64"
-  }
-
   val osName = System.getProperty("os.name").toLowerCase()
+
   if (osName.contains("mac os x")) {
     val cmd:String = "g++ -shared -Wall -fPIC -O2 -std=c++11 " +
       "-I/usr/include " +
@@ -204,17 +201,25 @@ def crossCompileMacOS(sourceFiles: String): Unit = {
   }
 
   val osxHome = System.getenv("OSXCROSS_PATH")
+  // This is defined in .travis.yml
+  val sdkVersion = System.getenv("SDK_VERSION")
+
   if (osxHome == null || osxHome.isEmpty) {
     println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
+    return
+  }
+
+  if (sdkVersion == null || sdkVersion.isEmpty) {
+    println("SDK_VERSION variable not defined, it should be to cross-compile for macOS")
     return
   }
 
   downloadUnpackLibuast("darwin")
 
   val cmd = osxHome + "/bin/o64-clang++-libc++ -shared -Wall -fPIC -O2 -std=c++11 " +
-      "-I" + osxHome + "/SDK/MacOSX10.13.sdk/usr/include/ " +
-      "-I/usr/lib/jvm/java-8-openjdk-amd64/include " +
-      "-I/usr/lib/jvm/java-8-openjdk-amd64/include/linux " +
+      "-I" + osxHome + s"/SDK/MacOSX${sdkVersion}.sdk/usr/include/ " +
+      "-I" + javaHome + "/include " +
+      "-I" + javaHome + "/include/linux " +
       "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dylib " +
       sourceFiles +
