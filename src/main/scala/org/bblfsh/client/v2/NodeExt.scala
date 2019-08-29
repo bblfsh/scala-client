@@ -28,9 +28,9 @@ case class NodeExt(ctx: ContextExt, handle: Long) {
   * This is equivalent of pyuast.Node API.
   */
 sealed abstract class JNode {
-  import BblfshClient.uastBinary
+  import BblfshClient.{UastFormat, UastBinary}
 
-  def toByteArray(fmt: Int): Array[Byte] = {
+  def toByteArray(fmt: UastFormat): Array[Byte] = {
     val buf = toByteBuffer(fmt)
     val arr = new Array[Byte](buf.capacity())
     buf.get(arr)
@@ -40,10 +40,10 @@ sealed abstract class JNode {
 
   /** Use binary UAST format */
   def toByteArray: Array[Byte] = {
-    toByteArray(uastBinary)
+    toByteArray(UastBinary)
   }
 
-  def toByteBuffer(fmt: Int): ByteBuffer = {
+  def toByteBuffer(fmt: UastFormat): ByteBuffer = {
     val ctx = Context()
     val bb = ctx.encode(this, fmt)
     ctx.dispose()
@@ -52,7 +52,7 @@ sealed abstract class JNode {
 
   /** Use binary UAST format */
   def toByteBuffer: ByteBuffer = {
-    toByteBuffer(uastBinary)
+    toByteBuffer(UastBinary)
   }
 
   /* Dynamic dispatch is a convenience to be called from JNI */
@@ -87,9 +87,9 @@ sealed abstract class JNode {
 }
 
 object JNode {
-  import BblfshClient.uastBinary
+  import BblfshClient.{UastFormat, UastBinary}
 
-  private def decodeFrom(bytes: ByteBuffer, fmt: Int): JNode = {
+  private def decodeFrom(bytes: ByteBuffer, fmt: UastFormat): JNode = {
     val ctx = BblfshClient.decode(bytes, fmt)
     val node = ctx.root().load()
     ctx.dispose()
@@ -105,7 +105,7 @@ object JNode {
     * @param original UAST encoded in wire format of protocol.v2
     * @return JNode of the UAST root
     */
-  def parseFrom(original: ByteBuffer, fmt: Int): JNode = {
+  def parseFrom(original: ByteBuffer, fmt: UastFormat): JNode = {
     val bufDirect = if (!original.isDirect) {
       val bufDirectCopy = ByteBuffer.allocateDirect(original.capacity())
       original.rewind()
@@ -121,7 +121,7 @@ object JNode {
 
   /** Parse from a buffer using binary UAST format */
   def parseFrom(original: ByteBuffer): JNode = {
-    parseFrom(original, uastBinary)
+    parseFrom(original, UastBinary)
   }
 
   /**
@@ -133,7 +133,7 @@ object JNode {
     * @param bytes UAST encoded in wire format of protocol.v2
     * @return JNode of the UAST root
     */
-  def parseFrom(bytes: Array[Byte], fmt: Int): JNode = {
+  def parseFrom(bytes: Array[Byte], fmt: UastFormat): JNode = {
     val bufDirect = ByteBuffer.allocateDirect(bytes.size)
     bufDirect.put(bytes)
     bufDirect.flip()
@@ -142,7 +142,7 @@ object JNode {
 
   /** Parse from an array using binary UAST format */
   def parseFrom(bytes: Array[Byte]): JNode = {
-    parseFrom(bytes, uastBinary)
+    parseFrom(bytes, UastBinary)
   }
 }
 

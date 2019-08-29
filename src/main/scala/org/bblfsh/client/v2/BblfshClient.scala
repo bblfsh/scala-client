@@ -110,21 +110,25 @@ object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
   private val libuast = new Libuast
-  private val treeOrder = libuast.getTreeOrders
-  private val uastFormat = libuast.getUastFormats
+  private val orders = libuast.getTreeOrders
+  private val formats = libuast.getUastFormats
+
+  abstract class UastFormat(val toInt: Int)
+  abstract class TreeOrder(val toInt: Int)
 
   // Lift tree order as constants
-  val AnyOrder = treeOrder.AnyOrder
-  val PreOrder = treeOrder.PreOrder
-  val PostOrder = treeOrder.PostOrder
-  val LevelOrder = treeOrder.LevelOrder
-  val ChildrenOrder = treeOrder.ChildrenOrder
-  val PositionOrder = treeOrder.PositionOrder
+  case object UastBinary extends UastFormat(formats.uastBinary)
+  case object UastYaml extends UastFormat(formats.uastYaml)
 
-  // Lift UAST decoding / encoding formats as constants
-  val uastBinary = uastFormat.UastBinary
-  val uastYaml = uastFormat.UastYaml
+  // Lift orders from libuast as types
+  case object AnyOrder extends TreeOrder(orders.anyOrder)
+  case object PreOrder extends TreeOrder(orders.preOrder)
+  case object PostOrder extends TreeOrder(orders.postOrder)
+  case object LevelOrder extends TreeOrder(orders.levelOrder)
+  case object ChildrenOrder extends TreeOrder(orders.childrenOrder)
+  case object PositionOrder extends TreeOrder(orders.positionOrder)
 
+  /** Creates a BblfshClient with default parameters */
   def apply(
     host: String, port: Int,
     maxMsgSize: Int = DEFAULT_MAX_MSG_SIZE
@@ -137,7 +141,7 @@ object BblfshClient {
     *
     * Since v2.
     */
-  def decode(buf: ByteBuffer, fmt: Int): ContextExt = Libuast.synchronized {
+  def decode(buf: ByteBuffer, fmt: UastFormat): ContextExt = Libuast.synchronized {
     if (!buf.isDirect()) {
       throw new RuntimeException("Only directly-allocated buffer decoding is supported.")
     }
@@ -151,7 +155,7 @@ object BblfshClient {
     * Since v2.
     */
   def decode(buf: ByteBuffer): ContextExt = Libuast.synchronized {
-    decode(buf, uastBinary)
+    decode(buf, UastBinary)
   }
 
   /** Enables API: resp.uast.decode() */
@@ -162,7 +166,7 @@ object BblfshClient {
       * Always copies memory to a new buffer in Direct mode,
       * to be able to pass it to JNI.
       */
-    def decode(fmt: Int): ContextExt = {
+    def decode(fmt: UastFormat): ContextExt = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
       buf.copyTo(bufDirectCopy)
       val result = BblfshClient.decode(bufDirectCopy, fmt)
@@ -181,14 +185,14 @@ object BblfshClient {
       * Decodes in binary format
       */
     def decode(): ContextExt = {
-      decode(uastBinary)
+      decode(UastBinary)
     }
   }
 
   /** Enables API: resp.get() */
   implicit class ResponseMethods(val resp: ParseResponse) {
     /** Gets the root decoding the tree in binary format */
-    def get(fmt: Int): JNode = {
+    def get(fmt: UastFormat): JNode = {
       val ctx = resp.uast.decode(fmt)
       val node = ctx.root().load()
       ctx.dispose()
@@ -197,7 +201,7 @@ object BblfshClient {
 
     /** Gets the root node decoding the tree in binary format */
     def get(): JNode = {
-      get(uastBinary)
+      get(UastBinary)
     }
   }
 

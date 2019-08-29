@@ -1,6 +1,6 @@
 package org.bblfsh.client.v2.libuast
 
-import org.bblfsh.client.v2.{ContextExt, Context, JNode, NodeExt, TreeOrder}
+import org.bblfsh.client.v2.{ContextExt, Context, JNode, NodeExt}
 import org.bblfsh.client.v2.libuast.Libuast.UastIterExt
 
 import scala.collection.Iterator
@@ -19,17 +19,17 @@ object Libuast {
   }
 
   case class UastFormat(
-    UastBinary: Int,
-    UastYaml: Int
+    uastBinary: Int,
+    uastYaml: Int
   )
 
   case class TreeOrder(
-    AnyOrder: Int,
-    PreOrder: Int,
-    PostOrder: Int,
-    LevelOrder: Int,
-    ChildrenOrder: Int,
-    PositionOrder: Int
+    anyOrder: Int,
+    preOrder: Int,
+    postOrder: Int,
+    levelOrder: Int,
+    childrenOrder: Int,
+    positionOrder: Int
   )
 
   /**
@@ -156,7 +156,7 @@ class Libuast {
   @native def decode(buf: ByteBuffer, fmt: Int): ContextExt
 
   /** Lifts the tree order values from the libuast */
-  @native def getTreeOrders: TreeOrder
+  @native def getTreeOrders: Libuast.TreeOrder
 
   /** Lifts the uast decoding / encoding options from the libuast */
   @native def getUastFormats: Libuast.UastFormat
