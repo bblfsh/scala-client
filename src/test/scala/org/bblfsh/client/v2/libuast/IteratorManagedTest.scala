@@ -42,25 +42,64 @@ class IteratorManagedTest extends FlatSpec
     nodes.size should be(3) // number of composite nodes
   }
 
-  val pyClientTestRoot = JObject(
-    "@type" -> JString("root"),
-    "children" -> JArray(
+  def testTree: JObject = {
+    // Helper to get a position encoded into JObject
+    def encodePosition(startOffset: Int, startLine: Int, startCol: Int,
+                       endOffset: Int, endLine: Int, endCol: Int): JObject = {
+
       JObject(
-        "@type" -> JString("son1"),
-        "children" -> JArray(
-          JObject("@type" -> JString("son1_1")),
-          JObject("@type" -> JString("son1_2"))
+        "@type" -> JString("uast:Positions"),
+        "start" -> JObject(
+          "@type" -> JString("uast:Position"),
+          "offset" -> JInt(startOffset),
+          "line" -> JInt(startLine),
+          "col" -> JInt(startCol)
+        ),
+        "end" -> JObject(
+          "@type" -> JString("uast:Position"),
+          "offset" -> JInt(endOffset),
+          "line" -> JInt(endLine),
+          "col" -> JInt(endCol)
         )
-      ),
-      JObject(
-        "@type" -> JString("son2"),
-        "children" -> JArray(
-          JObject("@type" -> JString("son2_1")),
-          JObject("@type" -> JString("son2_2"))
+      )
+    }
+
+    // The actual tree
+    JObject(
+      "@type" -> JString("root"),
+      "@pos" -> encodePosition(0,1,1, 1,1,2),
+      "children" -> JArray(
+        JObject(
+          "@type" -> JString("son1"),
+          "@pos" -> encodePosition(2,2,2, 3,2,3),
+          "children" -> JArray(
+            JObject(
+              "@type" -> JString("son1_1"),
+              "@pos" -> encodePosition(10,10,1, 12,2,2)
+            ),
+            JObject(
+              "@type" -> JString("son1_2"),
+              "@pos" -> encodePosition(10,10,1, 12,2,2)
+            )
+          )
+        ),
+        JObject(
+          "@type" -> JString("son2"),
+          "@pos" -> encodePosition(100,100,1,  101,100,2),
+          "children" -> JArray(
+            JObject(
+              "@type" -> JString("son2_1"),
+              "@pos" -> encodePosition(5,5,1, 6,5,2)
+            ),
+            JObject(
+              "@type" -> JString("son2_2"),
+              "@pos" -> encodePosition(15,15,1, 16,15,2)
+            )
+          )
         )
       )
     )
-  )
+  }
 
   def getNodeTypes(iterator: Libuast.UastIter): List[String] =
     iterator
@@ -71,7 +110,7 @@ class IteratorManagedTest extends FlatSpec
   // Equivalent of the test.py#testIteratorPreOrder
   // https://github.com/bblfsh/python-client/blob/15ffb98bfa09e6aae4d1580f0e4f02eb2a530205/bblfsh/test.py#L270
   "Managed UAST iterator" should "return nodes in PreOrder" in {
-    val preIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PreOrder)
+    val preIter = BblfshClient.iterator(testTree, BblfshClient.PreOrder)
     val nodes = getNodeTypes(preIter)
 
     val poActual = Seq("root", "son1", "son1_1", "son1_2", "son2", "son2_1", "son2_2")
@@ -82,7 +121,7 @@ class IteratorManagedTest extends FlatSpec
   }
 
   "Managed UAST iterator" should "return nodes in PostOrder" in {
-    val postIter = BblfshClient.iterator(pyClientTestRoot, BblfshClient.PostOrder)
+    val postIter = BblfshClient.iterator(testTree, BblfshClient.PostOrder)
     val nodes = getNodeTypes(postIter)
 
     val poActual = Seq("son1_1", "son1_2", "son1", "son2_1", "son2_2", "son2", "root")
