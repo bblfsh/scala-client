@@ -28,17 +28,17 @@ case class NodeExt(ctx: ContextExt, handle: Long) {
   * This is equivalent of pyuast.Node API.
   */
 sealed abstract class JNode {
-  def toByteArray: Array[Byte] = {
-    val buf = toByteBuffer
+  def toByteArray(fmt: Int = BblfshClient.uastBinary): Array[Byte] = {
+    val buf = toByteBuffer(fmt)
     val arr = new Array[Byte](buf.capacity())
     buf.get(arr)
     buf.rewind()
     arr
   }
 
-  def toByteBuffer: ByteBuffer = {
+  def toByteBuffer(fmt: Int = BblfshClient.uastBinary): ByteBuffer = {
     val ctx = Context()
-    val bb = ctx.encode(this)
+    val bb = ctx.encode(this, fmt)
     ctx.dispose()
     bb
   }
@@ -75,8 +75,8 @@ sealed abstract class JNode {
 }
 
 object JNode {
-  private def decodeFrom(bytes: ByteBuffer): JNode = {
-    val ctx = BblfshClient.decode(bytes)
+  private def decodeFrom(bytes: ByteBuffer, fmt: Int = BblfshClient.uastBinary): JNode = {
+    val ctx = BblfshClient.decode(bytes, fmt)
     val node = ctx.root().load()
     ctx.dispose()
     node

@@ -924,6 +924,18 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getTreeOrder
     return jObj;
 }
 
+// ==========================================
+//           UAST encoding formats
+// ==========================================
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getUastFormats(JNIEnv *env,
+                                                                                   jobject self) {
+    jobject jObj = NewJavaObject(env, CLS_ENCS, "(II)V",
+                                 UAST_BINARY,
+                                 UAST_YAML);
+    return jObj;
+}
+
+
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env;

@@ -21,7 +21,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   private val stubInfo = DriverHostGrpc.blockingStub(channel)
 
   /**
-    * Parses file with a given name and content using 
+    * Parses file with a given name and content using
     * the provided timeout.
     *
     * @param name    file name
@@ -110,15 +110,20 @@ object BblfshClient {
   val DEFAULT_MAX_MSG_SIZE = 100 * 1024 * 1024 // bytes
 
   private val libuast = new Libuast
-
   private val treeOrder = libuast.getTreeOrders
+  private val uastFormat = libuast.getUastFormats
 
+  // Lift tree order as constants
   val AnyOrder = treeOrder.AnyOrder
   val PreOrder = treeOrder.PreOrder
   val PostOrder = treeOrder.PostOrder
   val LevelOrder = treeOrder.LevelOrder
   val ChildrenOrder = treeOrder.ChildrenOrder
   val PositionOrder = treeOrder.PositionOrder
+
+  // Lift UAST decoding / encoding formats as constants
+  val uastBinary = uastFormat.UastBinary
+  val uastYaml = uastFormat.UastYaml
 
   def apply(
     host: String, port: Int,
@@ -127,15 +132,16 @@ object BblfshClient {
 
   /**
     * Decodes bytes from wired format of bblfsh protocol.v2.
-    * Requires a buffer in Direct mode.
+    * Requires a buffer in Direct mode, and the format
+    * to decode from
     *
     * Since v2.
     */
-  def decode(buf: ByteBuffer): ContextExt = Libuast.synchronized {
+  def decode(buf: ByteBuffer, fmt: Int = uastBinary): ContextExt = Libuast.synchronized {
     if (!buf.isDirect()) {
       throw new RuntimeException("Only directly-allocated buffer decoding is supported.")
     }
-    libuast.decode(buf)
+    libuast.decode(buf, fmt)
   }
 
   /** Enables API: resp.uast.decode() */
@@ -146,10 +152,10 @@ object BblfshClient {
       * Always copies memory to a new buffer in Direct mode,
       * to be able to pass it to JNI.
       */
-    def decode(): ContextExt = {
+    def decode(fmt: Int = uastBinary): ContextExt = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
       buf.copyTo(bufDirectCopy)
-      val result = BblfshClient.decode(bufDirectCopy)
+      val result = BblfshClient.decode(bufDirectCopy, fmt)
       // Sometimes the direct buffer can take a lot to deallocate,
       // causing Out of Memory, because it is not allocated in
       // in the JVM heap and will only be deallocated them when
@@ -164,8 +170,8 @@ object BblfshClient {
 
   /** Enables API: resp.get() */
   implicit class ResponseMethods(val resp: ParseResponse) {
-    def get(): JNode = {
-      val ctx = resp.uast.decode()
+    def get(fmt: Int = uastBinary): JNode = {
+      val ctx = resp.uast.decode(fmt)
       val node = ctx.root().load()
       ctx.dispose()
       node
@@ -203,4 +209,3 @@ object BblfshClient {
   }
 
 }
-

@@ -12,6 +12,7 @@ extern const char CLS_CTX[];
 extern const char CLS_OBJ[];
 extern const char CLS_RE[];
 extern const char CLS_TO[];
+extern const char CLS_ENCS[];
 
 // Fully qualified class names for Bablefish UAST types
 extern const char CLS_JNODE[];

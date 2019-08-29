@@ -26,10 +26,10 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter
 /*
  * Class:     org_bblfsh_client_v2_Context
  * Method:    encode
- * Signature: (Lorg/bblfsh/client/v2/JNode;)Ljava/nio/ByteBuffer;
+ * Signature: (Lorg/bblfsh/client/v2/JNode;I)Ljava/nio/ByteBuffer;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jobject, jint);
 
 /*
  * Class:     org_bblfsh_client_v2_Context
