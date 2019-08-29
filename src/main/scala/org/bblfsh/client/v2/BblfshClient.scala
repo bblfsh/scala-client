@@ -137,11 +137,21 @@ object BblfshClient {
     *
     * Since v2.
     */
-  def decode(buf: ByteBuffer, fmt: Int = uastBinary): ContextExt = Libuast.synchronized {
+  def decode(buf: ByteBuffer, fmt: Int): ContextExt = Libuast.synchronized {
     if (!buf.isDirect()) {
       throw new RuntimeException("Only directly-allocated buffer decoding is supported.")
     }
     libuast.decode(buf, fmt)
+  }
+
+  /**
+    * Decodes bytes from wired binary format of bblfsh protocol.v2.
+    * Requires a buffer in Direct mode
+    *
+    * Since v2.
+    */
+  def decode(buf: ByteBuffer): ContextExt = Libuast.synchronized {
+    decode(buf, uastBinary)
   }
 
   /** Enables API: resp.uast.decode() */
@@ -152,7 +162,7 @@ object BblfshClient {
       * Always copies memory to a new buffer in Direct mode,
       * to be able to pass it to JNI.
       */
-    def decode(fmt: Int = uastBinary): ContextExt = {
+    def decode(fmt: Int): ContextExt = {
       val bufDirectCopy = ByteBuffer.allocateDirect(buf.size)
       buf.copyTo(bufDirectCopy)
       val result = BblfshClient.decode(bufDirectCopy, fmt)
@@ -166,15 +176,28 @@ object BblfshClient {
       System.gc()
       result
     }
+
+    /**
+      * Decodes in binary format
+      */
+    def decode(): ContextExt = {
+      decode(uastBinary)
+    }
   }
 
   /** Enables API: resp.get() */
   implicit class ResponseMethods(val resp: ParseResponse) {
-    def get(fmt: Int = uastBinary): JNode = {
+    /** Gets the root decoding the tree in binary format */
+    def get(fmt: Int): JNode = {
       val ctx = resp.uast.decode(fmt)
       val node = ctx.root().load()
       ctx.dispose()
       node
+    }
+
+    /** Gets the root node decoding the tree in binary format */
+    def get(): JNode = {
+      get(uastBinary)
     }
   }
 

@@ -23,6 +23,15 @@ object Libuast {
     UastYaml: Int
   )
 
+  case class TreeOrder(
+    AnyOrder: Int,
+    PreOrder: Int,
+    PostOrder: Int,
+    LevelOrder: Int,
+    ChildrenOrder: Int,
+    PositionOrder: Int
+  )
+
   /**
     * Skeletal Node iterator implementation that delegates to Libuast.
     *

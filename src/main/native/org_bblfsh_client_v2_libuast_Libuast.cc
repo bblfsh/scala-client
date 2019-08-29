@@ -631,8 +631,8 @@ class Context {
 // ==========================================
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
-    JNIEnv *env, jobject self, jobject directBuf) {
-  UastFormat format = UAST_BINARY;  // TODO: make it arg
+    JNIEnv *env, jobject self, jobject directBuf, jint fmt) {
+  UastFormat format = (UastFormat) fmt;
 
   // works only with ByteBuffer.allocateDirect()
   void *buf = env->GetDirectBufferAddress(directBuf);
@@ -825,11 +825,11 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
-    JNIEnv *env, jobject self, jobject jnode) {
-  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
+    JNIEnv *env, jobject self, jobject jnode, jint fmt) {
+  UastFormat format = (UastFormat) fmt;  // TODO(#107): make it argument
 
   Context *p = getHandle<Context>(env, self, nativeContext);
-  return p->Encode(jnode, fmt);
+  return p->Encode(jnode, format);
 }
 
 JNIEXPORT jlong JNICALL
@@ -865,11 +865,11 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_filter(
 }
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
-    JNIEnv *env, jobject self, jobject node) {
-  UastFormat fmt = UAST_BINARY;  // TODO(#107): make it argument
+    JNIEnv *env, jobject self, jobject node, jint fmt) {
+  UastFormat format = (UastFormat) fmt;
 
   ContextExt *p = getHandle<ContextExt>(env, self, nativeContext);
-  return p->Encode(node, fmt);
+  return p->Encode(node, format);
 }
 
 JNIEXPORT void JNICALL
