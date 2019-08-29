@@ -1,5 +1,5 @@
 package org.bblfsh.client.v2
-	
+
 import java.nio.ByteBuffer
 
 import org.bblfsh.client.v2.libuast.Libuast.{UastIter, UastIterExt}
@@ -13,7 +13,7 @@ case class ContextExt(nativeContext: Long) {
     // @native def load(): JNode // TODO(bzz): clarify when it's needed VS just .root().load()
     @native def root(): NodeExt
     @native def filter(query: String): UastIterExt
-    @native def encode(n: NodeExt): ByteBuffer
+    @native def encode(n: NodeExt, fmt: Int): ByteBuffer
     @native def dispose()
     override def finalize(): Unit = {
         this.dispose()
@@ -29,7 +29,7 @@ case class ContextExt(nativeContext: Long) {
 case class Context(nativeContext: Long) {
     @native def root(): JNode
     @native def filter(query: String, node: JNode): UastIter
-    @native def encode(n: JNode): ByteBuffer
+    @native def encode(n: JNode, fmt: Int): ByteBuffer
     @native def dispose()
     override def finalize(): Unit = {
       this.dispose()

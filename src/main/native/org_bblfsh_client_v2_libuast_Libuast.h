@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
  * Method:    decode
- * Signature: (Ljava/nio/ByteBuffer;)Lorg/bblfsh/client/v2/ContextExt;
+ * Signature: (Ljava/nio/ByteBuffer;I)Lorg/bblfsh/client/v2/ContextExt;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
-  (JNIEnv *, jobject, jobject);
+  (JNIEnv *, jobject, jobject, jint);
 
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
@@ -21,6 +21,14 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
  * Signature: ()Lorg/bblfsh/client/v2/TreeOrder;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getTreeOrders
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_bblfsh_client_v2_libuast_Libuast
+ * Method:    getUastFormats
+ * Signature: ()Lorg/bblfsh/client/v2/libuast/Libuast/UastFormat;
+ */
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getUastFormats
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

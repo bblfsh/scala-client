@@ -18,6 +18,10 @@ object Libuast {
     Libuast.loadBinaryLib("libscalauast")
   }
 
+  case class UastFormat(
+    UastBinary: Int,
+    UastYaml: Int
+  )
 
   /**
     * Skeletal Node iterator implementation that delegates to Libuast.
@@ -137,9 +141,14 @@ object Libuast {
 class Libuast {
   Libuast
 
-  /** Decode UAST from a byte array */
-  @native def decode(buf: ByteBuffer): ContextExt
+  /** Decode UAST from a byte array
+    * Receives the buffer to decode and the format it is encoded in
+    */
+  @native def decode(buf: ByteBuffer, fmt: Int): ContextExt
 
   /** Lifts the tree order values from the libuast */
-  @native def getTreeOrders(): TreeOrder
+  @native def getTreeOrders: TreeOrder
+
+  /** Lifts the uast decoding / encoding options from the libuast */
+  @native def getUastFormats: Libuast.UastFormat
 }
