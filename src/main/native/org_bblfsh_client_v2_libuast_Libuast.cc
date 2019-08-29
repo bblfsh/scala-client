@@ -824,7 +824,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
   return iter;
 }
 
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_encode(
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_nativeEncode(
     JNIEnv *env, jobject self, jobject jnode, jint fmt) {
   UastFormat format = (UastFormat) fmt;  // TODO(#107): make it argument
 
@@ -864,7 +864,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_filter(
   return filterUastIterExt(ctx, self, jquery, env);
 }
 
-JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_encode(
+JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_ContextExt_nativeEncode(
     JNIEnv *env, jobject self, jobject node, jint fmt) {
   UastFormat format = (UastFormat) fmt;
 

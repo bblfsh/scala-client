@@ -10,14 +10,18 @@ import org.bblfsh.client.v2.libuast.Libuast.{UastIter, UastIterExt}
   * This is equivalent of pyuast.ContextExt API
   */
 case class ContextExt(nativeContext: Long) {
-    import BblfshClient.uastBinary
+    import BblfshClient.{UastFormat, UastBinary}
+
     // @native def load(): JNode // TODO(bzz): clarify when it's needed VS just .root().load()
     @native def root(): NodeExt
     @native def filter(query: String): UastIterExt
+    @native def nativeEncode(n: NodeExt, fmt: Int): ByteBuffer
+    def encode(n: NodeExt, fmt: UastFormat): ByteBuffer = {
+      nativeEncode(n, fmt)
+    }
     // encode using binary format
-    @native def encode(n: NodeExt, fmt: Int): ByteBuffer
     def encode(n: NodeExt): ByteBuffer = {
-      encode(n, uastBinary)
+      encode(n, UastBinary)
     }
     @native def dispose()
     override def finalize(): Unit = {
@@ -25,27 +29,30 @@ case class ContextExt(nativeContext: Long) {
     }
 }
 
-
 /**
   * Represents JVM-side constructed tree
   *
   * This is equivalent of pyuast.Context API
   */
 case class Context(nativeContext: Long) {
-    import BblfshClient.uastBinary
+    import BblfshClient.{UastFormat, UastBinary}
 
     @native def root(): JNode
     @native def filter(query: String, node: JNode): UastIter
-    @native def encode(n: JNode, fmt: Int): ByteBuffer
+    @native def nativeEncode(n: JNode, fmt: Int): ByteBuffer
+    def encode(n: JNode, fmt: UastFormat): ByteBuffer = {
+      nativeEncode(n, fmt)
+    }
     // encode using binary format
     def encode(n: JNode): ByteBuffer = {
-      encode(n, uastBinary)
+      encode(n, UastBinary)
     }
     @native def dispose()
     override def finalize(): Unit = {
       this.dispose()
     }
 }
+
 object Context {
     @native def create(): Long
     def apply(): Context = new Context(create())
