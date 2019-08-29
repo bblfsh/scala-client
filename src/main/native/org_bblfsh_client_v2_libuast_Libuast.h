@@ -18,7 +18,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode
 /*
  * Class:     org_bblfsh_client_v2_libuast_Libuast
  * Method:    getTreeOrders
- * Signature: ()Lorg/bblfsh/client/v2/TreeOrder;
+ * Signature: ()Lorg/bblfsh/client/v2/libuast/Libuast/TreeOrder;
  */
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getTreeOrders
   (JNIEnv *, jobject);

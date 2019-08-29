@@ -28,7 +28,7 @@ JNIEnv *getJNIEnv() {
 const char CLS_NODE[] = "org/bblfsh/client/v2/NodeExt";
 const char CLS_CTX_EXT[] = "org/bblfsh/client/v2/ContextExt";
 const char CLS_CTX[] = "org/bblfsh/client/v2/Context";
-const char CLS_TO[] = "org/bblfsh/client/v2/TreeOrder";
+const char CLS_TO[] = "org/bblfsh/client/v2/libuast/Libuast$TreeOrder";
 const char CLS_ENCS[] = "org/bblfsh/client/v2/libuast/Libuast$UastFormat";
 const char CLS_OBJ[] = "java/lang/Object";
 const char CLS_RE[] = "java/lang/RuntimeException";
