@@ -1,7 +1,6 @@
 package org.bblfsh.client.v2
 
 import java.nio.ByteBuffer
-
 import scala.io.Source
 
 class BblfshClientParseTest extends BblfshClientBaseTest {
@@ -72,5 +71,36 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
   }
 
+  "BblfshClient.decode" should "decode in binary format" in {
+    val defaultDecoded = resp.uast.decode()
+    val binaryDecoded = resp.uast.decode(UastBinary)
+    val default = defaultDecoded.root().load()
+    val binary = binaryDecoded.root().load()
+
+    default shouldEqual binary
+  }
+
+  "BblfshClient.decode" should "be the inverse for ContextExt.encode" in {
+    for (fmt <- Seq(UastBinary)) {
+      val fileName = "src/test/resources/Tiny.java"
+      val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
+      val resp = client.parse(fileName, fileContent)
+      val ctx: ContextExt = resp.uast.decode()
+      val tree = ctx.root()
+      val bytes = ctx.encode(tree, fmt)
+      val decoded = BblfshClient.decode(bytes, fmt)
+
+      ctx.root().load() shouldEqual decoded.root().load()
+    }
+  }
+
+  "BblfshClient.decode with invalid number" should "use binary format" in {
+    val invalidNumDec = resp.uast.decode(-1)
+    val binaryDecoded = resp.uast.decode(UastBinary)
+    val invalidNum = invalidNumDec.root().load()
+    val binary = binaryDecoded.root().load()
+
+    invalidNum shouldEqual binary
+  }
 
 }
