@@ -3,6 +3,16 @@ package org.bblfsh.client.v2.libuast
 import org.bblfsh.client.v2.{BblfshClient, JArray, JInt, JNode, JObject, JString}
 // TODO import org.bblfsh.client.v2.nodes._
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll, FlatSpec, Matchers}
+import org.scalatest.prop.TableDrivenPropertyChecks._
+import BblfshClient.{
+  TreeOrder,
+  PreOrder,
+  PostOrder,
+  ChildrenOrder,
+  PositionOrder,
+  AnyOrder,
+  LevelOrder
+}
 
 class IteratorManagedTest extends FlatSpec
   with Matchers
@@ -23,7 +33,7 @@ class IteratorManagedTest extends FlatSpec
   }
 
   "Managed UAST iterator" should "return non-empty results on JVM objects" in {
-    iter = BblfshClient.iterator(mangedRootNode, BblfshClient.PreOrder)
+    iter = BblfshClient.iterator(mangedRootNode, PreOrder)
     iter.hasNext() should be(true)
 
     val nodes = iter.toList
@@ -36,7 +46,7 @@ class IteratorManagedTest extends FlatSpec
   }
 
   "Managed UAST iterator" should "go though all nodes of small object" in {
-    iter = BblfshClient.iterator(mangedRootNode, BblfshClient.PreOrder)
+    iter = BblfshClient.iterator(mangedRootNode, PreOrder)
     val nodes = iter.toList
 
     nodes.size should be(3) // number of composite nodes
@@ -107,30 +117,67 @@ class IteratorManagedTest extends FlatSpec
       .map(_ ("@type").asInstanceOf[JString].str)
       .toList
 
-  // Equivalent of the test.py#testIteratorPreOrder
-  // https://github.com/bblfsh/python-client/blob/15ffb98bfa09e6aae4d1580f0e4f02eb2a530205/bblfsh/test.py#L270
-  "Managed UAST iterator" should "return nodes in PreOrder" in {
-    val preIter = BblfshClient.iterator(testTree, BblfshClient.PreOrder)
-    val nodes = getNodeTypes(preIter)
+  def getNodePositions(iterator: Libuast.UastIter): List[(Long, Long, Long)] = {
+    def positionToTuple(pos: JObject): Option[(Long, Long, Long)] = {
+      val offset = pos.get("offset")
+      val line = pos.get("line")
+      val col = pos.get("col")
+      val maybePos = (offset, line, col)
 
-    val poActual = Seq("root", "son1", "son1_1", "son1_2", "son2", "son2_1", "son2_2")
-    nodes should have size (poActual.size)
-    nodes shouldEqual poActual
-
-    preIter.close()
+      maybePos match {
+        case (Some(o: JInt), Some(l: JInt), Some(c: JInt)) =>
+          Some(o.num, l.num, c.num)
+        case _ => None
+      }
+    }
+    
+    // Filter only the nodes which correspond to
+    // positions and have a start field 
+    iterator
+      .collect { case node: JObject =>
+        node.get("@pos").collect { case pos: JObject =>
+          pos.get("start").collect { case start: JObject =>
+            positionToTuple(start)
+          // The result of this is an Option[Option]. Convert it to a single option
+          }.flatten
+          // Likewise
+        }.flatten
+      }
+      .collect { case Some(pos) => pos }
+      .toList
   }
 
-  "Managed UAST iterator" should "return nodes in PostOrder" in {
-    val postIter = BblfshClient.iterator(testTree, BblfshClient.PostOrder)
-    val nodes = getNodeTypes(postIter)
+  val iterators =
+    Table(
+      ("order", "expected"),
+      (PreOrder, Seq("root", "son1", "son1_1", "son1_2", "son2", "son2_1", "son2_2")),
+      (PostOrder, Seq("son1_1", "son1_2", "son1", "son2_1", "son2_2", "son2", "root")),
+      (LevelOrder, Seq("root", "son1", "son2", "son1_1", "son1_2", "son2_1", "son2_2")),
+      (PositionOrder, Seq("root", "son1", "son2_1", "son1_1", "son1_2", "son2_2", "son2")),
+      (AnyOrder, Seq("root", "son1", "son2_1", "son1_1", "son1_2", "son2_2", "son2")),
+      (ChildrenOrder, Seq("son1", "son2"))
+    )
 
-    val poActual = Seq("son1_1", "son1_2", "son1", "son2_1", "son2_2", "son2", "root")
-    nodes should have size (poActual.size)
-    nodes shouldEqual poActual
+  forAll (iterators) { (order: TreeOrder, expected: Seq[String]) =>
+    val iter = BblfshClient.iterator(testTree, order)
+    val nodes = getNodeTypes(iter)
 
-    postIter.close()
+    order match {
+      case AnyOrder =>
+        nodes.toSet shouldEqual expected.toSet
+      case _ =>
+        nodes shouldEqual expected
+    }
+
+    iter.close()
   }
 
-  // TODO(#108) more tests coverage for other iteration orders, refactor to a table-driven test
+  "Positions in PositionOrder" should "actually be ordered" in {
+    val posIter = BblfshClient.iterator(testTree, PositionOrder)
+    val positions = getNodePositions(posIter)
+    val expected = Seq((0,1,1), (2,2,2), (5,5,1), (10,10,1), (10,10,1), (15,15,1), (100,100,1))
+    positions shouldEqual expected
 
+    posIter.close()
+  }
 }

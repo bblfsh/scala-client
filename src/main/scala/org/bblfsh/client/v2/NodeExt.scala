@@ -158,7 +158,14 @@ case class JBool(value: Boolean) extends JNode
 
 case class JObject(obj: mutable.Buffer[JField]) extends JNode {
   def this() = this(mutable.Buffer[JField]())
-  def filter(p: ((String, JNode)) => Boolean) = this.obj.filter(p)
+  def filter(p: JField => Boolean) = obj.filter(p)
+  def keys(): mutable.Buffer[String] = {
+    obj.map{ case (key, value) => key }
+  }
+  // Gets only the first ocurrence
+  def get(key: String): Option[JNode] = {
+    obj.collectFirst { case (k, v) if k == key => v }
+  }
   def add(k: String, v: JNode) = {
     obj += ((k, v))
   }
