@@ -209,17 +209,17 @@ object BblfshClient {
   implicit class BblfshClientMethods(val client: BblfshClient) {
     def filter(node: NodeExt, query: String) = BblfshClient.filter(node, query)
     def filter(node: JNode, query: String) = BblfshClient.filter(node, query)
-    def iterator(node: NodeExt, treeOrder: Int) = BblfshClient.iterator(node, treeOrder)
-    def iterator(node: JNode, treeOrder: Int) = BblfshClient.iterator(node, treeOrder)
+    def iterator(node: NodeExt, treeOrder: TreeOrder) = BblfshClient.iterator(node, treeOrder)
+    def iterator(node: JNode, treeOrder: TreeOrder) = BblfshClient.iterator(node, treeOrder)
   }
 
   /** Factory method for iterator over an external/native node */
-  def iterator(node: NodeExt, treeOrder: Int): Libuast.UastIterExt = {
+  def iterator(node: NodeExt, treeOrder: TreeOrder): Libuast.UastIterExt = {
     Libuast.UastIterExt(node, treeOrder)
   }
 
   /** Factory method for iterator over an managed node */
-  def iterator(node: JNode, treeOrder: Int): Libuast.UastIter = {
+  def iterator(node: JNode, treeOrder: TreeOrder): Libuast.UastIter = {
     Libuast.UastIter(node, treeOrder)
   }
 
