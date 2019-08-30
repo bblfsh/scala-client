@@ -180,4 +180,15 @@ class IteratorManagedTest extends FlatSpec
 
     posIter.close()
   }
+
+  "Managed UAST iterator with invalid numeric order" should "use AnyOrder" in {
+    val invalidNumIter = BblfshClient.iterator(testTree, -1)
+    val anyOrderIter = BblfshClient.iterator(testTree, AnyOrder)
+    val nodesNumIter = getNodeTypes(invalidNumIter)
+    val nodesAnyIter = getNodeTypes(anyOrderIter)
+    nodesNumIter shouldEqual nodesAnyIter
+
+    invalidNumIter.close()
+    anyOrderIter.close()
+  }
 }

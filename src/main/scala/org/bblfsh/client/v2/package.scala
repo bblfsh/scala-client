@@ -30,7 +30,7 @@ package object v2 {
   }
 
   /** Allow to use methods
-    * f(order: UastOrder) as f(0), f(1), f(2), ...
+    * f(order: TreeOrder) as f(0), f(1), f(2), ...
     * g(order: Int) as g(AnyOrder), g(PreOrder), g(PostOrder)
     */
   implicit def orderToInt(order: TreeOrder): Int = {
