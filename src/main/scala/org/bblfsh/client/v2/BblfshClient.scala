@@ -6,7 +6,7 @@ import com.google.protobuf.ByteString
 import gopkg.in.bblfsh.sdk.v2.protocol.driver._
 import io.grpc.ManagedChannelBuilder
 import org.bblfsh.client.v2.libuast.Libuast
-
+import scala.reflect.ClassTag
 
 class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
   private val DEFAULT_TIMEOUT_SEC = 5
@@ -209,6 +209,11 @@ object BblfshClient {
   implicit class BblfshClientMethods(val client: BblfshClient) {
     def filter(node: NodeExt, query: String) = BblfshClient.filter(node, query)
     def filter(node: JNode, query: String) = BblfshClient.filter(node, query)
+    def filterBool(node: JNode, query: String) = BblfshClient.filterBool(node, query)
+    def filterString(node: JNode, query: String) = BblfshClient.filterString(node, query)
+    def filterInt(node: JNode, query: String) = BblfshClient.filterInt(node, query)
+    def filterUint(node: JNode, query: String) = BblfshClient.filterUint(node, query)
+    def filterFloat(node: JNode, query: String) = BblfshClient.filterFloat(node, query)
     def iterator(node: NodeExt, treeOrder: TreeOrder) = BblfshClient.iterator(node, treeOrder)
     def iterator(node: JNode, treeOrder: TreeOrder) = BblfshClient.iterator(node, treeOrder)
   }
@@ -218,21 +223,40 @@ object BblfshClient {
     Libuast.UastIterExt(node, treeOrder)
   }
 
-  /** Factory method for iterator over an managed node */
+  /** Factory method for iterator over a managed node */
   def iterator(node: JNode, treeOrder: TreeOrder): Libuast.UastIter = {
     Libuast.UastIter(node, treeOrder)
   }
 
-  /** Factory method for iterator over an native node, filtered by XPath query */
-  def filter(node: NodeExt, query: String):  Libuast.UastIterExt = Libuast.synchronized {
+  /** Factory method for iterator over a native node, filtered by XPath query */
+  def filter(node: NodeExt, query: String): Libuast.UastIterExt = Libuast.synchronized {
     node.filter(query)
   }
 
-  /** Factory method for iterator over an managed node, filtered by XPath query */
-  def filter(node: JNode, query: String):  Libuast.UastIter = Libuast.synchronized {
+  /** Factory method for iterator over a managed node, filtered by XPath query */
+  def filter(node: JNode, query: String): Libuast.UastIter = Libuast.synchronized {
     val ctx = Context()
     ctx.filter(query, node)
     // do not dispose the context, iterator steals it
   }
 
+  // Method to filter managed nodes based on type
+  // The aim is to not return a JNode but a specialized subclass of JNode, as JBool,
+  // for example, when T = JBool
+  private def filterOnType[T : ClassTag](node: JNode, query: String): Iterator[T] = {
+    val it = filter(node, query)
+    // Filter only the nodes that are of type T
+    it.collect {
+      case node : T => node
+    }
+  }
+
+  /** Factory methods for iterators over managed nodes of type JBool, JString,
+    * JInt, JUint, JFloat, filtered by an XPath query
+    */
+  def filterBool(node: JNode, query: String) = filterOnType[JBool](node, query)
+  def filterString(node: JNode, query: String) = filterOnType[JString](node, query)
+  def filterInt(node: JNode, query: String) = filterOnType[JInt](node, query)
+  def filterUint(node: JNode, query: String) = filterOnType[JUint](node, query)
+  def filterFloat(node: JNode, query: String) = filterOnType[JFloat](node, query)
 }
