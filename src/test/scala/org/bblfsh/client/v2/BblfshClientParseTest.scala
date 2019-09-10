@@ -80,15 +80,14 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     default shouldEqual binary
   }
 
-  "BblfshClient.decode" should "be the inverse for ContextExt.encode" in {
-    for (fmt <- Seq(UastBinary, UastYaml)) {
-      val ctx: ContextExt = resp.uast.decode()
-      val tree = ctx.root()
-      val bytes = ctx.encode(tree, fmt)
-      val decoded = BblfshClient.decode(bytes, fmt)
+  "BblfshClient.decode" should "be the inverse for ContextExt.encode for binary format" in {
+    val fmt = UastBinary
+    val ctx: ContextExt = resp.uast.decode()
+    val tree = ctx.root()
+    val bytes = ctx.encode(tree, fmt)
+    val decoded = BblfshClient.decode(bytes, fmt)
 
-      ctx.root().load() shouldEqual decoded.root().load()
-    }
+    ctx.root().load() shouldEqual decoded.root().load()
   }
 
   "BblfshClient.decode with invalid number" should "use binary format" in {

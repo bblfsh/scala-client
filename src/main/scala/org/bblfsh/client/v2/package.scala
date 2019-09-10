@@ -24,7 +24,7 @@ package object v2 {
       case UastBinary.toInt => UastBinary
       case UastYaml.toInt => UastYaml
       case _ =>
-        println("warning: not valid numeric format, using UastBinary")
+        System.err.println("warning: not valid numeric format, using UastBinary")
         UastBinary
     }
   }
@@ -46,7 +46,7 @@ package object v2 {
       case ChildrenOrder.toInt => ChildrenOrder
       case PositionOrder.toInt => PositionOrder
       case _ =>
-        println("warning: not valid numeric order, using AnyOrder")
+        System.err.println("warning: not valid numeric order, using AnyOrder")
         AnyOrder
     }
   }
