@@ -2,6 +2,7 @@ package org.bblfsh.client.v2
 
 import gopkg.in.bblfsh.sdk.v2.protocol.driver.Mode
 import org.bblfsh.client.v2.libuast.Libuast
+import org.scalatest.prop.TableDrivenPropertyChecks._
 
 import scala.io.Source
 
@@ -9,39 +10,34 @@ class FilterManagedTest extends BblfshClientBaseTest {
 
   import BblfshClient._ // enables uast.* methods
 
-  var ctx: Context = _
+  val ctx: Context = Context()
   val managedRoot = JArray(
     JObject(
       "@type" -> JString("file"),
       "k1" -> JString("v1"),
       "k2" -> JObject(
-        "k3" -> JInt(24)
+        "k3" -> JInt(24),
+        "k4" -> JFloat(1.0),
+        "k5" -> JArray(
+          JObject(
+            "k6" -> JBool(true),
+            "k7" -> JString("v2"),
+            "k8" -> JObject(
+              "k9" -> JBool(false),
+              "k10" -> JFloat(2.0)
+            )
+          )
+        )
       )
-    ))
-
-  override def beforeAll() = {
-    super.beforeAll()
-    System.err.println(s"Libuast.loaded: ${Libuast.loaded}")
-    // to load native JNI lib \wo the full client
-  }
-
-  override def beforeEach() = {
-    super.beforeEach()
-    ctx = Context()
-  }
-
-  override def afterAll() = {
-    super.afterAll()
-    System.runFinalization()
-    System.gc()
-  }
+    )
+  )
 
   "XPath filter" should "find all positions under context" in {
     val it = ctx.filter("//file", managedRoot)
     it.hasNext() should be(true)
 
     val pos = it.toList
-    pos should have size (1) // Tiny.java contains 1 file node
+    pos should have size (1) // managedRoot contains only a node JObject
 
     it.close()
     it.hasNext() should be(false)
@@ -57,11 +53,26 @@ class FilterManagedTest extends BblfshClientBaseTest {
     iter.close()
   }
 
-  // TODO(#110) implement value type returns
-  //  "Filtering UAST" should "work for Value types" in {
-  //    val iter = BblfshClient.filterNumber(resp.get, "count(//*)")
-  //    iter.toList should have size (517) // total number of nodes (not the number of results which is 1)
-  //  }
+  val valueFilters =
+    Table(
+      ("filter", "expected"),
+      (BblfshClient.filterInt _, List(JInt(24))),
+      (BblfshClient.filterBool _, List(JBool(true), JBool(false))),
+      (BblfshClient.filterString _, List(JString("file"), JString("v1"), JString("v2"))),
+      (BblfshClient.filterFloat _, List(JFloat(1.0), JFloat(2.0)))
+    )
+
+  "Filtering UAST" should "work for Value types" in {
+    val iterCount = BblfshClient.filterInt(managedRoot, "count(//*)")
+    val allNodesIt = BblfshClient.filter(managedRoot, "//*")
+    val numNodes = allNodesIt.size
+    iterCount.toList should be (List(JInt(numNodes))) // number of nodes
+
+    forAll (valueFilters) { (filter, expected: List[JNode]) =>
+      val it = filter(managedRoot, "//*")
+      it.toList should be (expected)
+    }
+  }
 
   "Filtering UAST" should "work in Annotated mode" in {
     val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
