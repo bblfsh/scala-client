@@ -54,7 +54,6 @@ class BblfshClientParseTest extends BblfshClientBaseTest {
     encodedBytes shouldEqual resp.uast.asReadOnlyByteBuffer
   }
 
-
   "Encoding python UAST to a new Context" should "produce the same bytes" in {
     val fileName = "src/test/resources/python_file.py"
     val fileContent = Source.fromFile(fileName).getLines.mkString("\n")
