@@ -240,9 +240,10 @@ object BblfshClient {
     // do not dispose the context, iterator steals it
   }
 
-  // Method to filter managed nodes based on type
-  // The aim is to not return a JNode but a specialized subclass of JNode, as JBool,
-  // for example, when T = JBool
+  /** Method to filter managed nodes based on type
+    * The aim is to not return a JNode but a specialized subclass of JNode, as JBool,
+    * for example, when T = JBool
+    */
   private def filterOnType[T : ClassTag](node: JNode, query: String): Iterator[T] = {
     val it = filter(node, query)
     // Filter only the nodes that are of type T
