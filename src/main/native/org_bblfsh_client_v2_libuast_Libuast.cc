@@ -640,25 +640,31 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_decode(
 
   jlong len = env->GetDirectBufferCapacity(directBuf);
   checkJvmException("failed to get buffer capacity");
+  jobject jCtxExt = nullptr;
 
-  // another option (instead of XXX) is to use
-  // GetPrimitiveArrayCritical
-  uast::Buffer ubuf(buf, (size_t)(len));
-  uast::Context<NodeHandle> *ctx = uast::Decode(ubuf, format);
-  // ReleasePrimitiveArrayCritical
+  try {
+      // another option (instead of XXX) is to use
+      // GetPrimitiveArrayCritical
+      // Note the content of buf will be released by the JVM itself
+      uast::Buffer ubuf(buf, (size_t)(len));
+      uast::Context<NodeHandle> *ctx = uast::Decode(ubuf, format);
+      // ReleasePrimitiveArrayCritical
 
-  ContextExt *p = new ContextExt(ctx);
+      ContextExt *p = new ContextExt(ctx);
 
-  jobject jCtxExt = NewJavaObject(env, CLS_CTX_EXT, "(J)V", p);
+      jCtxExt = NewJavaObject(env, CLS_CTX_EXT, "(J)V", p);
 
-  // Saves weak reference to JVM ContextExt in the native ContextExt
-  p->setManagedContext(jCtxExt);
+      // Saves weak reference to JVM ContextExt in the native ContextExt
+      p->setManagedContext(jCtxExt);
 
-  if (env->ExceptionCheck() || !jCtxExt) {
-    jCtxExt = nullptr;
-    // This also deletes the underlying ctx
-    delete (p);
-    checkJvmException("failed to instantiate ContextExt class");
+      if (env->ExceptionCheck() || !jCtxExt) {
+          jCtxExt = nullptr;
+          // This also deletes the underlying ctx
+          delete (p);
+          checkJvmException("failed to instantiate ContextExt class");
+      }
+  } catch (const std::exception &e) {
+    ThrowByName(env, CLS_RE, e.what());
   }
 
   return jCtxExt;
