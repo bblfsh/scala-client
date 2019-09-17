@@ -5,11 +5,13 @@ import java.nio.ByteBuffer
 import com.google.protobuf.ByteString
 import gopkg.in.bblfsh.sdk.v2.protocol.driver._
 import io.grpc.ManagedChannelBuilder
+import java.util.concurrent.TimeUnit
 import org.bblfsh.client.v2.libuast.Libuast
 
 
 class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
-  private val DEFAULT_TIMEOUT_SEC = 5
+  // 1 minute default timeout
+  val DEFAULT_TIMEOUT_SEC = 60
 
   private val channel = ManagedChannelBuilder
     .forAddress(host, port)
@@ -46,7 +48,7 @@ class BblfshClient(host: String, port: Int, maxMsgSize: Int) {
       language = lang,
       mode = mode
     )
-    stub.parse(req)
+    stub.withDeadlineAfter(timeout, TimeUnit.SECONDS).parse(req)
   }
 
   /**
