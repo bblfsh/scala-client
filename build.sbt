@@ -75,7 +75,7 @@ credentials += Credentials(
 val SONATYPE_PASSPHRASE = scala.util.Properties.envOrElse("SONATYPE_PASSPHRASE", "not set")
 val JAVA_HOME = scala.util.Properties.envOrElse("JAVA_HOME", "/usr/lib/jvm/java-8-openjdk-amd64")
 val CPP_FLAGS = "-shared -Wall -fPIC -O2 -std=c++11"
-val GCC_FLAGS = "-Wl,-Bsymbolic"
+val LINUX_GCC_FLAGS = "-Wl,-Bsymbolic"
 
 useGpg := false
 pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg"
@@ -169,7 +169,7 @@ def compileUnix(sourceFiles: String) = {
   val osName = System.getProperty("os.name").toLowerCase()
 
   if (osName.contains("mac os x")) {
-    val cmd:String = "g++" + " " + GCC_FLAGS + " " + CPP_FLAGS + " " +
+    val cmd:String = "g++" +  " " + CPP_FLAGS + " " +
       "-I/usr/include " +
       "-I" + JAVA_HOME + "/include/ " +
       "-I" + JAVA_HOME + "/include/darwin " +
@@ -180,7 +180,7 @@ def compileUnix(sourceFiles: String) = {
 
     checkedProcess(cmd, "macOS build")
   } else {
-    val cmd:String = "g++" + " " + GCC_FLAGS + " " + CPP_FLAGS + " " +
+    val cmd:String = "g++" + " " + LINUX_GCC_FLAGS + " " + CPP_FLAGS + " " +
       "-I/usr/include " +
       "-I" + JAVA_HOME + "/include/ " +
       "-I" + JAVA_HOME + "/include/linux " +
