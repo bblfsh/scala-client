@@ -1,12 +1,7 @@
-dist: xenial
 language: scala
-jdk:
-  - openjdk8
-scala:
-   - 2.11.11
 
-services:
-  - docker
+scala:
+  - 2.11.11
 
 cache:
   directories:
@@ -14,76 +9,43 @@ cache:
     - $HOME/.sbt
 
 stages:
-  - name: test
+  - name: build
   - name: release
     if: tag IS present
 
-env:
-  global:
-   # TODO(#87): Improve CI
-   # OSXCROSS_PATCH_REV and OSXCROSS_REV versions of osxcross repo.
-   # OSXCROSS_REV is used to retrieve a version of that tool that does not include the .patch file for
-   # hash_table. Cannot use the most recent one for downloading the tool and the repo because it lacks
-   # some dependencies now. This boilerplate can be deleted if OSX_VERSION_MIN is bumped to 10.7.
-   # macOS SDK for that version does include stdlib, and we could just download osxcross without any
-   # patch (build.sh there does the work of patching as long as stlib is included in SDK)
-   - OSXCROSS_PATCH_REV=f67ce5033d0a01292c9ef156b95c025a3e1edcbc
-   - OSXCROSS_REV=3034f7149716d815bc473d0a7b35d17e4cf175aa
-   - XGO_REV=2d6d1848fb02b001c4019f4f4556720d4e8c4cea
-   - SDK_VERSION=10.11
-   - DARWIN_VERSION=15
-   - OSX_VERSION_MIN=10.6
-   - OSXCROSS_SDK_URL="https://s3.dockerproject.org/darwin/v2/MacOSX10.11.sdk.tar.xz"
-
 jobs:
   include:
-    - name: 'All tests'
-      stage: test
-      install: &test_setup_anchor
+    - &linux_build
+      name: 'Build in Linux'
+      stage: build
+      os: linux
+      dist: xenial
+      jdk:
+        - openjdk8
+      services:
+        - docker
+      before_install:
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
-        - sudo apt-get clean && sudo rm -r /var/lib/apt/lists/* && sudo apt-get update
-        - sudo apt-get install -y --no-install-recommends g++ gcc gcc-multilib libc6-dev libc6-dev-i386 patch xz-utils
       script:
         - ./sbt assembly test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
         - ls hs_* 1> /dev/null 2>&1 && cat hs_*
 
-    - &release
-      name: 'Cross-compile, release & publish to Sonatype'
-      stage: release
-      env:
-         - OSXCROSS_PATH="$HOME/osxcross"
+    - &osx_build
+      name: 'Build in OSX'
+      stage: build
+      os: osx
+      osx_image: xcode9.3
       before_install:
-        - sudo apt-get clean && sudo rm -r /var/lib/apt/lists/* && sudo apt-get update
-        - sudo apt-get install -y --no-install-recommends clang mingw-w64
-      install:
-        - mkdir -p /tmp/osxcross
-        - cd /tmp/osxcross
-        # This downloads osxcross and builds the cross compiler
-        - curl -sSL "https://codeload.github.com/tpoechtrager/osxcross/tar.gz/${OSXCROSS_REV}" | tar -C "${PWD}" --strip=1 -xzf -
-        - curl -sSL -o tarballs/MacOSX${SDK_VERSION}.sdk.tar.xz ${OSXCROSS_SDK_URL}
-        - sudo tools/get_dependencies.sh
-        - UNATTENDED=yes ./build.sh >/dev/null
-        # This is the stdlib. Since we are using min Mac OS 10.6, we need one
-        - curl -sSL "https://github.com/karalabe/xgo/blob/${XGO_REV}/docker/base/patch.tar.xz?raw=true" | xz -dc - | tar -xf -
-        - mv v1 "target/SDK/MacOSX${SDK_VERSION}.sdk/usr/include/c++/v1"
-        # Fixes __hash_table file with a patch included in osxcross
-        # If this patch is not applied, we cannot import unordered_map in our .cpp files
-        - curl -sSL "https://github.com/tpoechtrager/osxcross/blob/${OSXCROSS_PATCH_REV}/patches/libcxx__hash_table.patch?raw=true" -o hash_table.patch
-        - patch -d target/SDK/MacOSX${SDK_VERSION}.sdk/ -N -p1 < hash_table.patch
-        - mv target "${OSXCROSS_PATH}"
-        - rm -rf /tmp/osxcross "${OSXCROSS_PATH}/SDK/MacOSX${SDK_VERSION}.sdk/usr/share/man"
-        - cd $TRAVIS_BUILD_DIR
+        # travis osx support includes oraclejdk8 not openjdk8
+        - export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_112.jdk/Contents/Home/
       script:
-        - ./sbt assembly || travis_terminate 1
-        - ./sbt publishLocal
-        - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
-        - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
-        - ./sbt publishSigned sonatypeRelease
+        - ./sbt assembly
 
-    - <<: *release
-      name: 'Check that project can be cross-compiled correctly'
-      stage: test
-      script: ./sbt assembly
+    - <<: *linux_build
+      name: 'Release to Maven'
+      stage: release
+      script:
+        - ./sbt assembly
