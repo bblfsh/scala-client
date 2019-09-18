@@ -6,4 +6,5 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "0.99.16")
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.9.3")
 addSbtPlugin("ch.jodersky" % "sbt-jni" % "1.2.6")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.1")
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.8.3"
