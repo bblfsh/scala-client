@@ -13,6 +13,16 @@ stages:
   - name: release
     if: tag IS present
 
+deploy:
+  provider: releases
+  api_key:
+    secure: $GITHUB_TOKEN
+  file_glob: true
+  file: src/main/resources/lib/libscalauast*
+  skip_cleanup: true
+  on:
+    tags: true
+
 jobs:
   include:
     - &linux_build
@@ -38,8 +48,9 @@ jobs:
       stage: build
       os: osx
       osx_image: xcode9.3
-      before_install:
+      before_script:
         # travis osx support includes oraclejdk8 not openjdk8
+        - export MACOSX_DEPLOYMENT_TARGET=10.7
         - export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_112.jdk/Contents/Home/
       script:
         - ./sbt assembly
@@ -47,5 +58,13 @@ jobs:
     - <<: *linux_build
       name: 'Release to Maven'
       stage: release
+      before_script:
+        - ASSETS_URL="https://github.com/bblfsh/scala-client/releases/download/$TRAVIS_TAG"
+        - DEST_FOLDER="src/main/resources/lib"
+        - wget $ASSETS_URL/libscalauast.dylib -o $DEST_FOLDER/libscalauast.dylib
+        - wget $ASSETS_URL/libscalauast.so -o $DEST_FOLDER/libscalauast.so
       script:
-        - ./sbt assembly
+        - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
+        - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc
+        - ./sbt publishLocal publishSigned sonatypeRelease
+      deploy: skip
