@@ -27,7 +27,10 @@ libraryDependencies ++= Seq(
 )
 
 assemblyMergeStrategy in assembly := {
-  case "META-INF/io.netty.versions.properties" => MergeStrategy.last
+  case "META-INF/io.netty.versions.properties" =>
+    MergeStrategy.last
+  case "META-INF\\io.netty.versions.properties" =>
+    MergeStrategy.last
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
@@ -106,7 +109,8 @@ getProtoFiles := {
 
     val unzip_dir = "sdk-" + sdkVersion.substring(1)
 
-    s"curl -SL https://github.com/bblfsh/sdk/archive/${sdkVersion}.tar.gz" #| "tar xz" #&&
+    s"curl -SL https://github.com/bblfsh/sdk/archive/${sdkVersion}.tar.gz -o ${sdkVersion}.tar.gz" #&&
+    s"tar xzf ${sdkVersion}.tar.gz" #&&
     s"cp ${unzip_dir}/protocol/driver.proto ${sdkProto}/protocol/" #&&
     s"cp ${unzip_dir}/uast/role/generated.proto ${sdkProto}/uast/role" #&&
     s"rm -rf ${unzip_dir}" !
@@ -116,9 +120,17 @@ getProtoFiles := {
 
 val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
 getLibuast := {
-    val os = if (System.getProperty("os.name").toLowerCase.contains("mac os x")) "darwin" else "linux"
+    val osName = System.getProperty("os.name").toLowerCase
 
-    downloadUnpackLibuast(os)
+    if (osName.contains("mac os x")) {
+      downloadUnpackLibuast("darwin")
+    } else if (osName.contains("linux")) {
+      downloadUnpackLibuast("linux")
+    } else if (osName.contains("windows")) {
+      downloadUnpackLibuast("windows")
+    } else {
+      println(s"OS not recognized: ${osName}")
+    }
 }
 
 def downloadUnpackLibuast(os: String) = {
@@ -140,9 +152,9 @@ def downloadUnpackLibuast(os: String) = {
 
     "find src/main/resources"!
 
-    "nm src/main/resources/libuast/libuast.a" #| "grep -c UastDecode"!
+    //"nm src/main/resources/libuast/libuast.a" #| "grep -c UastDecode"!
 
-    "nm src/main/resources/libuast/libuast.a" #| "wc -l"!
+    //"nm src/main/resources/libuast/libuast.a" #| "wc -l"!
 
     println(s"Done unpacking libuast for ${os}")
 }
@@ -167,7 +179,7 @@ def compileTarget(sourceFiles: String) = {
   val osName = System.getProperty("os.name").toLowerCase()
 
   if (osName.contains("mac os x")) {
-    val cmd:String = "g++" +  " " + CPP_FLAGS + " " +
+    val cmd:String = "g++" + " " + "-stdlib=libc++" + " " + CPP_FLAGS + " " +
       "-I/usr/include " +
       "-I" + JAVA_HOME + "/include/ " +
       "-I" + JAVA_HOME + "/include/darwin " +
@@ -190,6 +202,18 @@ def compileTarget(sourceFiles: String) = {
     checkedProcess(cmd, "Linux build")
 
     "nm src/main/resources/lib/libscalauast.so" #| "grep -c UastDecode"!
+  } else if (osName.contains("windows")) {
+
+    val cmd:String = "g++" + " " + CPP_FLAGS + " " +
+      "-I/usr/include " +
+      "-I" + "\"" + JAVA_HOME + "/include/" + "\"" + " " +
+      "-I" + "\"" + JAVA_HOME + "/include/win32" + "\"" + " " +
+      "-Isrc/main/resources/libuast " +
+      "-o src/main/resources/lib/libscalauast.dll " +
+      sourceFiles +
+    "src/main/resources/libuast/libuast.lib "
+
+    checkedProcess(cmd, "Windows build")
   } else {
     println(s"OS not recognized: ${osName}")
   }
@@ -211,4 +235,9 @@ cleanFiles ++= Seq(
   baseDirectory.value / s"${protoDir}/github.com/bblfsh"
 )
 
-mainClass := Def.sequential(getProtoFiles, getLibuast, compileScalaLibuast, (mainClass in Compile)).value
+mainClass := Def.sequential(
+  getProtoFiles,
+  getLibuast,
+  compileScalaLibuast,
+  (mainClass in Compile)
+).value
