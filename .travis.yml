@@ -26,7 +26,7 @@ deploy:
 jobs:
   include:
     - &linux_build
-      name: 'Build in Linux'
+      name: 'Build and test in Linux'
       stage: build
       os: linux
       dist: xenial
@@ -55,6 +55,19 @@ jobs:
       script:
         - ./sbt assembly
 
+    - &windows_build
+      name: 'Build in Windows'
+      os: windows
+      # scala is not available, default one is ruby
+      language: cpp
+      before_script:
+        - choco install adoptopenjdk8 sbt
+        - echo $PATH
+        - ls -l /
+        - export PATH=$PATH:"/C/Program Files/AdoptOpenJDK/jdk8u222-b10/bin"
+        - java -version
+        - ./sbt assembly
+
     - <<: *linux_build
       name: 'Release to Maven'
       stage: release
@@ -63,6 +76,7 @@ jobs:
         - DEST_FOLDER="src/main/resources/lib"
         - wget $ASSETS_URL/libscalauast.dylib -o $DEST_FOLDER/libscalauast.dylib
         - wget $ASSETS_URL/libscalauast.so -o $DEST_FOLDER/libscalauast.so
+        - wget $ASSETS_URL/libscalauast.dll -o $DEST_FOLDER/libscalauast.dll
       script:
         - openssl aes-256-cbc -K $encrypted_97aef7f4ae04_key -iv $encrypted_97aef7f4ae04_iv -in key.asc.enc -out key.asc -d
         - gpg --no-default-keyring --primary-keyring ./project/.gnupg/pubring.gpg --secret-keyring ./project/.gnupg/secring.gpg --keyring ./project/.gnupg/pubring.gpg --fingerprint --import key.asc

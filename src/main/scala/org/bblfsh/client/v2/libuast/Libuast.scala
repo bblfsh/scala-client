@@ -121,7 +121,12 @@ object Libuast {
 
   // Extract the native module from the jar
   private final def loadBinaryLib(name: String) = {
-    val ext = if (System.getProperty("os.name").toLowerCase == "mac os x") ".dylib" else ".so"
+    val osName = System.getProperty("os.name").toLowerCase
+    val ext = osName match {
+      case "mac os x" => ".dylib"
+      case "linux" => ".so"
+      case "windows" => ".dll"
+    }
     val fullLibName = name + ext
     val path = Paths.get("lib", fullLibName).toString
     val in = getClass.getClassLoader.getResourceAsStream(path)
