@@ -48,14 +48,15 @@ sonatypeProfileName := "org.bblfsh"
 homepage := Some(url("https://github.com/bblfsh/scala-client"))
 scmInfo := Some(ScmInfo(url("https://github.com/bblfsh/scala-client"),
                             "git@github.com:bblfsh/scala-client.git"))
-developers += Developer("juanjux",
-                        "Juanjo Álvarez",
-                        "juanjo@sourced.tech",
-                        url("https://github.com/juanjux"))
 developers += Developer("bzz",
                         "Alexander Bezzubov",
-                        "Alex@sourced.tech",
+                        "alex@sourced.tech",
                         url("https://github.com/bzz"))
+developers += Developer("ncordon",
+                        "Nacho Cordón",
+                        "nacho@sourced.tech",
+                        url("https://github.com/ncordon"))
+
 
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0"))
 pomIncludeRepository := (_ => false)
@@ -159,11 +160,10 @@ compileScalaLibuast := {
     val nativeSourceFiles = "src/main/native/org_bblfsh_client_v2_libuast_Libuast.cc " +
         "src/main/native/jni_utils.cc "
 
-    compileUnix(nativeSourceFiles)
-    crossCompileMacOS(nativeSourceFiles)
+    compileTarget(nativeSourceFiles)
 }
 
-def compileUnix(sourceFiles: String) = {
+def compileTarget(sourceFiles: String) = {
   import sys.process._
 
   val osName = System.getProperty("os.name").toLowerCase()
@@ -179,7 +179,7 @@ def compileUnix(sourceFiles: String) = {
       "src/main/resources/libuast/libuast.a "
 
     checkedProcess(cmd, "macOS build")
-  } else {
+  } else if (osName.contains("linux")) {
     val cmd:String = "g++" + " " + LINUX_GCC_FLAGS + " " + CPP_FLAGS + " " +
       "-I/usr/include " +
       "-I" + JAVA_HOME + "/include/ " +
@@ -192,48 +192,14 @@ def compileUnix(sourceFiles: String) = {
     checkedProcess(cmd, "Linux build")
 
     "nm src/main/resources/lib/libscalauast.so" #| "grep -c UastDecode"!
+  } else {
+    println(s"OS not recognized: ${osName}")
   }
-}
-
-def crossCompileMacOS(sourceFiles: String): Unit = {
-  val osName = System.getProperty("os.name").toLowerCase()
-  if (osName.contains("mac os x")) {
-      println("Skipping cross-compilation for macOS on macOS")
-      return
-  }
-
-  val osxHome = System.getenv("OSXCROSS_PATH")
-  // This is defined in .travis.yml
-  val sdkVersion = System.getenv("SDK_VERSION")
-
-  if (osxHome == null || osxHome.isEmpty) {
-    println("OSXCROSS_PATH variable not defined, not cross-compiling for macOS")
-    return
-  }
-
-  if (sdkVersion == null || sdkVersion.isEmpty) {
-    println("SDK_VERSION variable not defined, it should be to cross-compile for macOS")
-    return
-  }
-
-  downloadUnpackLibuast("darwin")
-
-  val cmd = osxHome + "/bin/o64-clang++-libc++" + " " + CPP_FLAGS + " " +
-      "-I" + osxHome + s"/SDK/MacOSX${sdkVersion}.sdk/usr/include/ " +
-      "-I" + JAVA_HOME + "/include " +
-      "-I" + JAVA_HOME + "/include/linux " +
-      "-Isrc/main/resources/libuast " +
-      "-o src/main/resources/lib/libscalauast.dylib " +
-      sourceFiles +
-      "src/main/resources/libuast/libuast.a "
-
-  checkedProcess(cmd, "macOS cross-compile build")
 }
 
 def checkedProcess(cmd: String, name: String) {
   import sys.process._
 
-  println(cmd)
   val out = cmd !
 
   if (out != 0) {
