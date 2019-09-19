@@ -832,7 +832,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_filter(
 
 JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_nativeEncode(
     JNIEnv *env, jobject self, jobject jnode, jint fmt) {
-  UastFormat format = (UastFormat) fmt;  // TODO(#107): make it argument
+  UastFormat format = (UastFormat) fmt;
 
   Context *p = getHandle<Context>(env, self, nativeContext);
   return p->Encode(jnode, format);
@@ -840,8 +840,8 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_nativeEncode(
 
 JNIEXPORT jlong JNICALL
 Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
-  auto c = new Context();
-  return (long)c;
+  Context *c = new Context();
+  return (jlong) c;
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
