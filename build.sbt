@@ -211,7 +211,7 @@ def compileTarget(sourceFiles: String) = {
       "-Isrc/main/resources/libuast " +
       "-o src/main/resources/lib/libscalauast.dll " +
       sourceFiles +
-    "src/main/resources/libuast/libuast.lib "
+      "src/main/resources/libuast/libuast.lib "
 
     checkedProcess(cmd, "Windows build")
   } else {
