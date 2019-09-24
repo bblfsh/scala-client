@@ -23,6 +23,10 @@ deploy:
   on:
     tags: true
 
+before_install:
+  - chmod +x build.sh
+  - ./build.sh --clean --get-dependencies
+
 jobs:
   include:
     - &linux_build
@@ -36,8 +40,11 @@ jobs:
       before_install:
         - docker run --privileged -d -p 9432:9432 --name bblfsh bblfsh/bblfshd
         - docker exec -it bblfsh bblfshctl driver install --recommended
+        - chmod +x build.sh
+        - ./build.sh --clean --get-dependencies
       script:
-        - ./sbt assembly test
+        - ./build.sh --all
+        - ./sbt test
       after_failure: &failure_logs_anchor
         - docker logs bblfsh
         - ls hs_* 1> /dev/null 2>&1 && cat hs_*
@@ -53,7 +60,7 @@ jobs:
         # Travis osx support includes oraclejdk8 not openjdk8
         - export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_112.jdk/Contents/Home/
       script:
-        - ./sbt assembly
+        - ./build.sh --all
 
     - &windows_build
       name: 'Build in Windows'
