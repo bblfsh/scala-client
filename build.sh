@@ -113,13 +113,19 @@ function compileNativeCode {
     echo "[native-code] Done compiling libuast bindings..."
 }
 
+function compileScalaCode {
+    echo "[scala-code] Compiling library uber .jar"
+    ./sbt assembly
+    echo "[scala-code] Done compiling!"
+}
+
 # Correctly set compilation environment for host OS
 setOSEnv
 
 # Parse arguments, execution depends on the order
 # we feed the arguments to the script
 function usage() {
-    echo "Usage: $0 [--clean|--get-dependencies|--compile-native]"
+    echo "Usage: $0 [--clean|--get-dependencies|--native|--all]"
     exit -3
 }
 
@@ -132,8 +138,12 @@ for arg in "$@"; do
             getSDKFiles
             getLibuast
             ;;
-        "--compile-native")
+        "--native")
             compileNativeCode
+            ;;
+        "--all")
+            compileNativeCode
+            compileScalaCode
             ;;
         *)
             echo "Wrong argument: $arg"
