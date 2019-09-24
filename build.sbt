@@ -3,12 +3,7 @@ organization := "org.bblfsh"
 
 git.useGitDescribe := true
 enablePlugins(GitVersioning)
-
 scalaVersion := "2.11.11"
-val libuastVersion = "3.4.2"
-val sdkMajor = "v3"
-val sdkVersion = s"${sdkMajor}.1.0"
-val protoDir = "src/main/proto"
 
 target in assembly := file("build")
 
@@ -68,16 +63,12 @@ exportJars := true
 
 val SONATYPE_USERNAME = scala.util.Properties.envOrElse("SONATYPE_USERNAME", "NOT_SET")
 val SONATYPE_PASSWORD = scala.util.Properties.envOrElse("SONATYPE_PASSWORD", "NOT_SET")
+val SONATYPE_PASSPHRASE = scala.util.Properties.envOrElse("SONATYPE_PASSPHRASE", "NOT_SET")
 credentials += Credentials(
   "Sonatype Nexus Repository Manager",
   "oss.sonatype.org",
   SONATYPE_USERNAME,
   SONATYPE_PASSWORD)
-
-val SONATYPE_PASSPHRASE = scala.util.Properties.envOrElse("SONATYPE_PASSPHRASE", "not set")
-val JAVA_HOME = scala.util.Properties.envOrElse("JAVA_HOME", "/usr/lib/jvm/java-8-openjdk-amd64")
-val CPP_FLAGS = "-shared -Wall -fPIC -O2 -std=c++11"
-val LINUX_GCC_FLAGS = "-Wl,-Bsymbolic"
 
 useGpg := false
 pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg"
@@ -93,151 +84,3 @@ publishTo := {
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
-
-val getProtoFiles = TaskKey[Unit]("getProtoFiles", "Retrieve protobuf files")
-getProtoFiles := {
-    import sys.process._
-
-    println(s"Downloading and installing SDK$sdkMajor protocol buffer files...")
-
-    val bblfshProto = s"${protoDir}/github.com/bblfsh"
-    val sdkProto = s"${bblfshProto}/sdk/${sdkMajor}"
-
-    s"mkdir -p ${sdkProto}/protocol" !
-
-    s"mkdir -p ${sdkProto}/uast/role" !
-
-    val unzip_dir = "sdk-" + sdkVersion.substring(1)
-
-    s"curl -SL https://github.com/bblfsh/sdk/archive/${sdkVersion}.tar.gz -o ${sdkVersion}.tar.gz" #&&
-    s"tar xzf ${sdkVersion}.tar.gz" #&&
-    s"cp ${unzip_dir}/protocol/driver.proto ${sdkProto}/protocol/" #&&
-    s"cp ${unzip_dir}/uast/role/generated.proto ${sdkProto}/uast/role" #&&
-    s"rm -rf ${unzip_dir}" !
-
-    println("Done unpacking SDK")
-}
-
-val getLibuast = TaskKey[Unit]("getLibuast", "Retrieve libuast")
-getLibuast := {
-    val osName = System.getProperty("os.name").toLowerCase
-
-    if (osName.contains("mac os x")) {
-      downloadUnpackLibuast("darwin")
-    } else if (osName.contains("linux")) {
-      downloadUnpackLibuast("linux")
-    } else if (osName.contains("windows")) {
-      downloadUnpackLibuast("windows")
-    } else {
-      println(s"OS not recognized: ${osName}")
-    }
-}
-
-def downloadUnpackLibuast(os: String) = {
-    import sys.process._
-
-    val ghUrl = "https://github.com/bblfsh/libuast"
-    val binaryReleaseUrl = s"${ghUrl}/releases/download/v${libuastVersion}/libuast-${os}-amd64.tar.gz"
-    println(s"Downloading libuast binary from ${binaryReleaseUrl}")
-
-    s"curl -sL ${binaryReleaseUrl} -o libuast-bin.tar.gz" #&&
-    "tar xzf libuast-bin.tar.gz" #&&
-    s"mv ${os}-amd64 libuast" #&&
-    "mkdir -p src/main/resources" #&&
-    "rm -rf src/main/resources/libuast" #&&
-    "mv libuast src/main/resources" #&&
-    "rm -f src/main/resources/libuast/libuast.so" #&& // always a static build
-    "rm -f src/main/resources/libuast/libuast.dylib" #&&
-    "rm libuast-bin.tar.gz" !
-
-    "find src/main/resources"!
-
-    //"nm src/main/resources/libuast/libuast.a" #| "grep -c UastDecode"!
-
-    //"nm src/main/resources/libuast/libuast.a" #| "wc -l"!
-
-    println(s"Done unpacking libuast for ${os}")
-}
-
-val compileScalaLibuast = TaskKey[Unit]("compileScalaLibuast", "Compile libScalaUast JNI library")
-compileScalaLibuast := {
-    import sys.process._
-
-    println("Compiling libuast bindings...")
-
-    "mkdir -p ./src/main/resources/lib/" !
-
-    val nativeSourceFiles = "src/main/native/org_bblfsh_client_v2_libuast_Libuast.cc " +
-        "src/main/native/jni_utils.cc "
-
-    compileTarget(nativeSourceFiles)
-}
-
-def compileTarget(sourceFiles: String) = {
-  import sys.process._
-
-  val osName = System.getProperty("os.name").toLowerCase()
-
-  if (osName.contains("mac os x")) {
-    val cmd:String = "g++" + " " + "-stdlib=libc++" + " " + CPP_FLAGS + " " +
-      "-I/usr/include " +
-      "-I" + JAVA_HOME + "/include/ " +
-      "-I" + JAVA_HOME + "/include/darwin " +
-      "-Isrc/main/resources/libuast " +
-      "-o src/main/resources/lib/libscalauast.dylib " + // sic, must be in the classpath for the test
-      sourceFiles +
-      "src/main/resources/libuast/libuast.a "
-
-    checkedProcess(cmd, "macOS build")
-  } else if (osName.contains("linux")) {
-    val cmd:String = "g++" + " " + LINUX_GCC_FLAGS + " " + CPP_FLAGS + " " +
-      "-I/usr/include " +
-      "-I" + JAVA_HOME + "/include/ " +
-      "-I" + JAVA_HOME + "/include/linux " +
-      "-Isrc/main/resources/libuast " +
-      "-o src/main/resources/lib/libscalauast.so " +
-      sourceFiles +
-      "src/main/resources/libuast/libuast.a "
-
-    checkedProcess(cmd, "Linux build")
-
-    "nm src/main/resources/lib/libscalauast.so" #| "grep -c UastDecode"!
-  } else if (osName.contains("windows")) {
-
-    val cmd:String = "g++" + " " + CPP_FLAGS + " " +
-      "-I/usr/include " +
-      "-I" + "\"" + JAVA_HOME + "/include/" + "\"" + " " +
-      "-I" + "\"" + JAVA_HOME + "/include/win32" + "\"" + " " +
-      "-Isrc/main/resources/libuast " +
-      "-o src/main/resources/lib/libscalauast.dll " +
-      sourceFiles +
-      "src/main/resources/libuast/libuast.lib "
-
-    checkedProcess(cmd, "Windows build")
-  } else {
-    println(s"OS not recognized: ${osName}")
-  }
-}
-
-def checkedProcess(cmd: String, name: String) {
-  import sys.process._
-
-  val out = cmd !
-
-  if (out != 0) {
-    throw new IllegalStateException(name + " failed (see previous messages)")
-  }
-}
-
-cleanFiles ++= Seq(
-  baseDirectory.value / "src/main/resources/libuast",
-  baseDirectory.value / "src/main/resources/lib",
-  baseDirectory.value / s"${protoDir}/github.com/bblfsh"
-)
-
-mainClass := Def.sequential(
-  getProtoFiles,
-  getLibuast,
-  compileScalaLibuast,
-  (mainClass in Compile)
-).value
