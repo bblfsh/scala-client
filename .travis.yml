@@ -72,7 +72,7 @@ jobs:
         - export JAVA_HOME="/C/Program Files/AdoptOpenJDK/jdk8u222-b10"
         - export PATH=$PATH:$JAVA_HOME:$JAVA_HOME/bin
       script:
-        - ./sbt assembly
+        - ./build.sh --all
 
     - <<: *linux_build
       name: 'Release to Maven'
