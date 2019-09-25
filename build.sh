@@ -23,7 +23,7 @@ function setOSEnv {
         "darwin"*)
             OS="darwin"
             COMPILER=g++
-            FLAGS=${CPP_FLAGS}
+            FLAGS="-stdlib=libc++ ${CPP_FLAGS}"
             OS_HEADERS="${JAVA_HOME}/include/darwin"
             LIBSCALAUAST_FMT=".dylib"
             LIBUAST_FMT=".a"
@@ -31,7 +31,7 @@ function setOSEnv {
         "msys"*)
             OS="windows"
             COMPILER=g++
-            FLAGS="-stdlib=libc++ ${CPP_FLAGS}"
+            FLAGS="${CPP_FLAGS}"
             OS_HEADERS="${JAVA_HOME}/include/win32"
             LIBSCALAUAST_FMT=".dll"
             LIBUAST_FMT=".lib"
@@ -142,7 +142,7 @@ for arg in "$@"; do
             compileNativeCode
             ;;
         "--all")
-            compileNativeCode
+            compileNativeCode && \
             compileScalaCode
             ;;
         *)
