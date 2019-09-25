@@ -14,23 +14,32 @@ The latest `scala-client` *v2.x* supports the [UASTv2 protocol](https://doc.bblf
 ```
 git clone https://github.com/bblfsh/scala-client.git
 cd scala-client
-./sbt assembly
+./build.sh --clean --get-dependencies --all
 ```
 
-gRPC/protobuf files are re-generate from `src/main/proto` on every `./sbt compile`
-and are stored under `./target/src_managed/`.
+This command would fetch dependencies for the package, compile native code (JNI) and the Scala code.
+gRPC/protobuf files are re-generate from `src/main/proto` on every `./sbt compile` and are stored under
+`./target/src_managed/`.
 
 The jar file and the native module are generated in the `build/` directory. If
 you move the jar file to some other path, the native (`.so` or `.dylib`)
 library must be in the same path.
 
-If the build fails because it can't find the `jni.h` header file, run it with:
+If the build fails because it can't find the `jni.h` header file, run it setting `JAVA_HOME` (appropriately
+setting it to the right location for your system):
 
 ```
-./sbt -java-home /usr/lib/jvm/java-8-openjdk-amd64 assembly
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+./build.sh --clean --get-dependencies --all
 ```
 
-Changing the JDK directory to the one right for your system.
+If the build fails with: `build.sh: Permission denied`, add execution permissions to the script:
+
+```
+chmod +x ./build.sh
+```
+
+`build.sh` script has been tested in Unix (Linux and macOS) and with [Git Bash](https://gitforwindows.org/) in Windows.
 
 For more developer documentation please check our [CONTRIBUTING](./CONTRIBUTING.md) guideline.
 
