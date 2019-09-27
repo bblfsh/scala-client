@@ -127,8 +127,8 @@ object Libuast {
       case os if (os.contains("linux")) => ".so"
       case os if (os.contains("windows")) => ".dll"
     }
-    val fullLibName = name + ext
-    val path = Paths.get("lib", fullLibName).toString
+    val libName = name + ext
+    val path = "lib/" + libName
     val in = getClass.getClassLoader.getResourceAsStream(path)
     if (null == in) {
       val msg = s"Failed to load library '$name' from '$path'"
