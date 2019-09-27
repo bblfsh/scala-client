@@ -145,7 +145,7 @@ setOSEnv
 # Parse arguments, execution depends on the order
 # we feed the arguments to the script
 function usage() {
-    echo "Usage: $0 [--clean|--get-dependencies|--native|--all]"
+    echo "Usage: $0 [--clean|--get-dependencies|--native|--all|--help]"
     exit -3
 }
 
