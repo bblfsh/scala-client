@@ -1,5 +1,12 @@
 language: scala
 
+# Build and test in Linux --> [if tag] Push .so to GH releases  -------|
+#                                                                      |
+# Build in OSX -------------> [if tag] Push .dylib to GH releases  ------> [if tag] Download so,dylib,dll,
+#                                                                      |            build, push to Maven
+# Build in Windows ---------> [if tag] Push .dll to GH releases -------|
+
+
 scala:
   - 2.11.11
 
@@ -68,6 +75,8 @@ jobs:
       # scala is not available, default one is ruby
       language: cpp
       before_script:
+        # Note the revision 8.222 could be changed as long as we update the JAVA_HOME
+        # variable appropriately. For sbt/scala jdk8 is needed.
         - choco install adoptopenjdk8 --version=8.222
         - export JAVA_HOME="/C/Program Files/AdoptOpenJDK/jdk8u222-b10"
         - export PATH=$PATH:$JAVA_HOME:$JAVA_HOME/bin

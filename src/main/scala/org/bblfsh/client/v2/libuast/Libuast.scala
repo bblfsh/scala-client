@@ -123,9 +123,9 @@ object Libuast {
   private final def loadBinaryLib(name: String) = {
     val osName = System.getProperty("os.name").toLowerCase
     val ext = osName match {
-      case "mac os x" => ".dylib"
-      case "linux" => ".so"
-      case "windows" => ".dll"
+      case os if (os.contains("mac os")) => ".dylib"
+      case os if (os.contains("linux")) => ".so"
+      case os if (os.contains("windows")) => ".dll"
     }
     val fullLibName = name + ext
     val path = Paths.get("lib", fullLibName).toString
