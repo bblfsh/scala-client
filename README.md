@@ -93,19 +93,8 @@ val resp = client.parse(filename, fileContent, Mode.SEMANTIC)
 println(resp.get)
 
 // Filtered response
-println(client.filter(resp.get, "//uast:Identifier"))
-```
-
-Command line:
-
-```
-java -jar build/bblfsh-client-assembly-*.jar -f <file.py>
-```
-
-or if you want to use a XPath query:
-
-```
-java -jar build/bblfsh-client-assembly-*.jar -f <file.py> -q "//uast:Identifier"
+val it = client.filter(resp.get, "//uast:Identifier")
+it.foreach(println)
 ```
 
 Please read the [Babelfish clients](https://doc.bblf.sh/user/language-clients.html)
