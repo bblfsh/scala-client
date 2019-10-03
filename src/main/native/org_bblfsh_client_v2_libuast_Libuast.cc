@@ -1,5 +1,4 @@
 #include <cassert>
-#include <unordered_map>
 
 #include "jni_utils.h"
 #include "org_bblfsh_client_v2_Context.h"
@@ -942,7 +941,6 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_libuast_Libuast_getUastForma
 }
 
 
-
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env;
   if (vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_8) != JNI_OK) {
@@ -950,5 +948,33 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   }
   jvm = vm;
 
+  jclass localRE = env->FindClass(CLS_RE);
+
+  if (env->ExceptionCheck() || !localRE) {
+    env->ExceptionClear();
+    env->Throw(env->ExceptionOccurred());
+    return JNI_ERR;
+  }
+
+  exceptionCls = (jclass) env->NewGlobalRef(localRE);
+  env->DeleteLocalRef(localRE);
+
+  exceptToString = env->GetMethodID(exceptionCls, "toString", METHOD_OBJ_TO_STR);
+
+  if (env->ExceptionCheck() || !exceptToString) {
+    env->ExceptionClear();
+    env->ThrowNew(exceptionCls, "failed to find method toString");
+    return JNI_ERR;
+  }
+
   return JNI_VERSION_1_8;
+}
+
+void JNI_OnUnLoad(JavaVM *vm, void *reserved) {
+  JNIEnv *env = getJNIEnv();
+
+  if (env) {
+    env->DeleteGlobalRef(exceptionCls);
+    clearClassCache(env);
+  }
 }
