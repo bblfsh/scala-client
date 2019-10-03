@@ -841,7 +841,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_Context_nativeEncode(
 JNIEXPORT jlong JNICALL
 Java_org_bblfsh_client_v2_Context_00024_create(JNIEnv *env, jobject self) {
   Context *c = new Context();
-  return (jlong) c;
+  return reinterpret_cast<jlong>(c);
 }
 
 JNIEXPORT void JNICALL Java_org_bblfsh_client_v2_Context_dispose(JNIEnv *env,
