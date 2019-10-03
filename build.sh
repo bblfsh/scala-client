@@ -10,6 +10,8 @@
 # --native: compiles the native code, with appropriate flags for each system
 # -all: compiles both the native code and the Scala code, in that order
 
+set -e
+
 PROTO_DIR="src/main/proto"
 SDK_MAJOR="v3"
 SDK_VERSION="${SDK_MAJOR}.1.0"
@@ -84,7 +86,7 @@ function getSDKFiles {
 # Checks that the library has been downloaded correctly
 function checkLibuastDownload {
     set -e
-    find src/main/resources
+    find src/main/resources 1>&2
     nm src/main/resources/libuast/libuast${LIBUAST_FMT} | grep -c UastDecode > /dev/null || exit -2
     nm src/main/resources/libuast/libuast${LIBUAST_FMT} | wc -l > /dev/null || exit -2
 }
