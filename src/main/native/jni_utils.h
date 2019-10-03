@@ -3,6 +3,10 @@
 
 #include <jni.h>
 #include <string>
+#include <unordered_map>
+
+template<class T>
+using Cache = std::unordered_map<std::string, T>;
 
 // Fully qualified Java class names
 extern const char CLS_NODE[];
@@ -43,6 +47,16 @@ extern const char METHOD_NODE_INIT[];
 extern const char FIELD_ITER_NODE[];
 extern const char FIELD_CTX[];
 extern const char FIELD_CTX_EXT[];
+
+// Cached classes and method ids
+static Cache<jclass> classCache;
+static Cache<Cache<Cache<jmethodID> > > methodCache;
+static jclass exceptionCls;
+static jmethodID exceptToString;
+
+// Cleans the cache of precomputed jclass references
+void cleanClassCache(JNIEnv *env);
+
 // Checks through JNI, if there is a pending excption on the JVM side.
 //
 // Throws new RuntimeException to the JVM in case there is,

@@ -1,5 +1,4 @@
 #include "jni_utils.h"
-#include <string>
 
 // TODO(bzz): double-check and document. Suggestion and more context at
 // https://github.com/bblfsh/scala-client/pull/84#discussion_r288347756
@@ -69,30 +68,38 @@ const char FIELD_ITER_NODE[] = "Ljava/lang/Object;";
 const char FIELD_CTX[] = "Lorg/bblfsh/client/v2/Context;";
 const char FIELD_CTX_EXT[] = "Lorg/bblfsh/client/v2/ContextExt;";
 
-// TODO(#114): cache classes&methods in JNI_OnLoad should speed this up
+
+void cleanClassCache(JNIEnv *env) {
+  for (auto cached : classCache)
+    env->DeleteGlobalRef(cached.second);
+}
+
+
+jclass findClass(JNIEnv *env, const char *className) {
+  jclass result = classCache[className];
+
+  if (!result) {
+    jclass localClassRef = env->FindClass(className);
+
+    if (!localClassRef)
+      checkJvmException(std::string("failed to find a class ").append(className));
+
+    result = (jclass) env->NewGlobalRef(localClassRef);
+    classCache[className] = result;
+    env->DeleteLocalRef(localClassRef);
+  }
+
+  return result;
+}
+
+
 void checkJvmException(std::string msg) {
   JNIEnv *env = getJNIEnv();
   auto err = env->ExceptionOccurred();
   if (err) {
     env->ExceptionClear();
 
-    auto exceptionCls = env->FindClass(CLS_RE);
-    if (env->ExceptionCheck() || !exceptionCls) {
-      env->ExceptionClear();
-      env->Throw(env->ExceptionOccurred());
-      return;
-    }
-
-    jmethodID toString =
-        env->GetMethodID(exceptionCls, "toString", METHOD_OBJ_TO_STR);
-    if (env->ExceptionCheck() || !toString) {
-      env->ExceptionClear();
-      env->ThrowNew(exceptionCls,
-                    msg.append(" - failed to find method toString").data());
-      return;
-    }
-
-    jstring s = (jstring)env->CallObjectMethod(err, toString);
+    jstring s = (jstring)env->CallObjectMethod(err, exceptToString);
     if (env->ExceptionCheck() || !s) {
       env->ExceptionClear();
       env->ThrowNew(exceptionCls,
@@ -105,8 +112,8 @@ void checkJvmException(std::string msg) {
     env->ReleaseStringUTFChars(s, utf);
 
     // new RuntimeException(jmsg, err)
-    jmethodID initId =
-        env->GetMethodID(exceptionCls, "<init>", METHOD_RE_INIT_CAUSE);
+    jmethodID initId = MethodID(env, "<init>", METHOD_RE_INIT_CAUSE, CLS_RE);
+
     if (env->ExceptionCheck() || !initId) {
       env->ExceptionClear();
       env->ThrowNew(exceptionCls,
@@ -134,10 +141,10 @@ void checkJvmException(std::string msg) {
 
 jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign,
                       ...) {
-  jclass cls = env->FindClass(className);
+  jclass cls = findClass(env, className);
   checkJvmException(std::string("failed to find a class ").append(className));
 
-  jmethodID initId = env->GetMethodID(cls, "<init>", initSign);
+  jmethodID initId = MethodID(env, "<init>", initSign, className);
   checkJvmException(std::string("failed to call a constructor with signature ")
                         .append(initSign)
                         .append(" for the class name ")
@@ -171,6 +178,7 @@ jfieldID FieldID(JNIEnv *env, jobject obj, const char *field,
 
   return fId;
 }
+
 jobject ObjectField(JNIEnv *env, jobject obj, const char *name,
                     const char *signature) {
   jfieldID fId = FieldID(env, obj, name, signature);
@@ -218,16 +226,22 @@ jint IntField(JNIEnv *env, jobject obj, const char *name,
 
 jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                    const char *className) {
-  jclass cls = env->FindClass(className);
-  checkJvmException(std::string("failed to find a class ").append(className));
+  jmethodID result = methodCache[className][method][signature];
 
-  jmethodID mId = env->GetMethodID(cls, method, signature);
-  checkJvmException(std::string("failed to get method ")
+  if (!result) {
+    jclass cls = findClass(env, className);
+    result = env->GetMethodID(cls, method, signature);
+
+    if (!result)
+      checkJvmException(std::string("failed to get method ")
                         .append(className)
                         .append(".")
                         .append(method));
 
-  return mId;
+    methodCache[className][method][signature] = result;
+  }
+
+  return result;
 }
 
 jint IntMethod(JNIEnv *env, const char *method, const char *signature,
