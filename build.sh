@@ -20,7 +20,7 @@ LIBUAST_VERSION="3.4.2"
 UNZIP_DIR="sdk-${SDK_VERSION:1}"
 BBLFSH_PROTO="${PROTO_DIR}/github.com/bblfsh"
 SDK_PROTO="${BBLFSH_PROTO}/sdk/${SDK_MAJOR}"
-CPP_FLAGS="-shared -Wall -fPIC -O2 -std=c++11"
+CPP_FLAGS="-shared -s -Wall -fPIC -O2 -std=c++11"
 
 function setOSEnv {
     case $OSTYPE in
@@ -127,7 +127,7 @@ function compileNativeCode {
         ${SRC_FILES} \
         src/main/resources/libuast/libuast${LIBUAST_FMT}
     find ${OUT_FOLDER}
-
+    
     echo "[native-code] Done compiling libuast bindings..." 1>&2
 }
 
