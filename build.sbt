@@ -24,10 +24,11 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 )
 
+// Exclude resources/libuast folder in .jar generated with sbt assembly
+excludeFilter in unmanagedResources := "libuast"
+
 assemblyMergeStrategy in assembly := {
-  case "META-INF/io.netty.versions.properties" =>
-    MergeStrategy.last
-  case "META-INF\\io.netty.versions.properties" =>
+  case "META-INF/io.netty.versions.properties" | "META-INF\\io.netty.versions.properties" =>
     MergeStrategy.last
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
