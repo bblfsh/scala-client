@@ -8,8 +8,11 @@
 # --get-dependencies: fetches SDK (which include RPC protocol files) and libuast and moves
 #                     them to appropriate directories for the compilations to succeed
 # --native: compiles the native code, with appropriate flags for each system
-# -all: compiles both the native code and the Scala code, in that order
+# --all: compiles both the native code and the Scala code, in that order
+# --compile-dev: compiles the native code with debug symbols. The other two options,
+#                --native and --all, strip all debug symbols when compiling
 
+# Make commands fail-fast
 set -e
 
 PROTO_DIR="src/main/proto"
@@ -20,7 +23,8 @@ LIBUAST_VERSION="3.4.2"
 UNZIP_DIR="sdk-${SDK_VERSION:1}"
 BBLFSH_PROTO="${PROTO_DIR}/github.com/bblfsh"
 SDK_PROTO="${BBLFSH_PROTO}/sdk/${SDK_MAJOR}"
-CPP_FLAGS="-shared -s -Wall -fPIC -O2 -std=c++11"
+CPP_FLAGS="-shared -Wall -std=c++11"
+DEBUG_FLAGS="-s -fPIC -O2"
 
 function setOSEnv {
     case $OSTYPE in
@@ -120,14 +124,14 @@ function compileNativeCode {
     SRC_FILES="${SRC_FOLDER}/org_bblfsh_client_v2_libuast_Libuast.cc ${SRC_FOLDER}/jni_utils.cc"
 
     mkdir -p ${OUT_FOLDER}
-    ${COMPILER} ${FLAGS} \
+    ${COMPILER} ${FLAGS} ${DEBUG_FLAGS}\
         -I/usr/include -I"${JAVA_HOME}/include/" -I"${OS_HEADERS}"  \
         -Isrc/main/resources/libuast \
         -o ${OUT_FOLDER}/libscalauast${LIBSCALAUAST_FMT} \
         ${SRC_FILES} \
         src/main/resources/libuast/libuast${LIBUAST_FMT}
     find ${OUT_FOLDER}
-    
+
     echo "[native-code] Done compiling libuast bindings..." 1>&2
 }
 
@@ -138,16 +142,13 @@ function compileScalaCode {
     echo "[scala-code] Done compiling!" 1>&2
 }
 
-# Make commands fail-fast
-set -e
-
 # Correctly set compilation environment for host OS
 setOSEnv
 
 # Parse arguments, execution depends on the order
 # we feed the arguments to the script
 function usage() {
-    echo "Usage: $0 [--clean|--get-dependencies|--native|--all|--help]"
+    echo "Usage: $0 [--clean|--get-dependencies|--native|--all|--compile-dev|--help]"
     exit -3
 }
 
@@ -168,6 +169,11 @@ for arg in "$@"; do
             compileNativeCode
             ;;
         "--all")
+            compileNativeCode && \
+            compileScalaCode
+            ;;
+        "--compile-dev")
+            DEBUG_FLAGS="-g2 -O0"
             compileNativeCode && \
             compileScalaCode
             ;;
