@@ -10,7 +10,7 @@ This section has more extended documentation for a brave developer willing to
 contribute by diving into and coding / debugging for the native glue code in `src/main/native`.
 
 ## Generate C headers for native code
-A method must be marked as `@native` in the Scala part for us to be able to code it natively in C. 
+A method must be marked as `@native` in the Scala part for us to be able to code it natively in C.
 Example:
 
 ```scala
@@ -37,17 +37,19 @@ Sadly, on non-linux OSes you might still experience issues with CGO due to https
 
 
 ## Build libscalauast with debug symbols
-Compiler flags need to be `-g -O0` used instead of `-fPIC -O2` that is used for releases:
+Compiler flags need to be `-g -O0` used instead of `-fPIC -O2` that is used for releases. `JAVA_HOME` needs to
+be correctly configured (see [README.md](README.md) for more details).
 ```
-$ g++ -shared -Wall -g -std=c++11 -O0 \
-      -I/usr/include \
-      "-I${JAVA_HOME}/include" \
-      "-I${JAVA_HOME}/include/${platform}" \
-      -Isrc/main/resources/libuast \
-      -o "src/main/resources/lib/libscalauast${platform_ext}" \
-      src/main/native/org_bblfsh_client_v2_libuast_Libuast.cc \
-      src/main/native/jni_utils.cc src/main/resources/libuast/libuast.a
+./build.sh --compile-dev
 ```
+
+Note if something fails, it may be necessary to do:
+```
+./build.sh --clean --get-dependencies
+```
+
+since that would fetch the `.proto` files needed to talk to `bblfshd`, and repeat from step
+[Build libuast with debug symbols](#build-libuast-with-debug-symbols)
 
 ## Run a single test under debugger
 To run a single test from CLI one can:
