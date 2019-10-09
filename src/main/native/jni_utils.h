@@ -57,6 +57,10 @@ static jmethodID exceptToString;
 // Clears the cache of precomputed jclass references
 void clearClassCache(JNIEnv *env);
 
+// Finds a class corresponding to the name 'className', null if it there is none
+// Returns a global reference
+jclass FindClass(JNIEnv *env, const char *className);
+
 // Checks through JNI, if there is a pending excption on the JVM side.
 //
 // Throws new RuntimeException to the JVM in case there is,
