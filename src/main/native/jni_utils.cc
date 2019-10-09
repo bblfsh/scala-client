@@ -76,7 +76,7 @@ void clearClassCache(JNIEnv *env) {
 }
 
 
-jclass findClass(JNIEnv *env, const char *className) {
+jclass FindClass(JNIEnv *env, const char *className) {
   jclass result = classCache[className];
 
   if (!result) {
@@ -84,8 +84,9 @@ jclass findClass(JNIEnv *env, const char *className) {
 
     if (!localClassRef) {
       checkJvmException(std::string("failed to find a class ").append(className));
+      return nullptr;
     }
-    
+
     result = (jclass) env->NewGlobalRef(localClassRef);
     classCache[className] = result;
     env->DeleteLocalRef(localClassRef);
@@ -143,7 +144,7 @@ void checkJvmException(std::string msg) {
 
 jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign,
                       ...) {
-  jclass cls = findClass(env, className);
+  jclass cls = FindClass(env, className);
   checkJvmException(std::string("failed to find a class ").append(className));
 
   jmethodID initId = MethodID(env, "<init>", initSign, className);
@@ -185,16 +186,11 @@ jobject ObjectField(JNIEnv *env, jobject obj, const char *name,
                     const char *signature) {
   jfieldID fId = FieldID(env, obj, name, signature);
   if (!fId) {
-    jstring jmsg =
-        env->NewStringUTF(std::string("failed to get field ID for field name '")
-                              .append(name)
-                              .append("' with signature '")
-                              .append(signature)
-                              .append("'")
-                              .c_str());
-    jthrowable re =
-        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
-    env->Throw(re);
+    checkJvmException(std::string("failed to get field ID for field name '")
+                          .append(name)
+                          .append("' with signature '")
+                          .append(signature)
+                          .append("'"));
     return nullptr;
   }
   jobject fld = env->GetObjectField(obj, fId);
@@ -208,16 +204,11 @@ jint IntField(JNIEnv *env, jobject obj, const char *name,
               const char *signature) {
   jfieldID fId = FieldID(env, obj, name, signature);
   if (!fId) {
-    jstring jmsg =
-        env->NewStringUTF(std::string("failed to get field ID for field name '")
-                              .append(name)
-                              .append("' with signature '")
-                              .append(signature)
-                              .append("'")
-                              .c_str());
-    jthrowable re =
-        (jthrowable)NewJavaObject(env, CLS_RE, METHOD_RE_INIT, jmsg);
-    env->Throw(re);
+    checkJvmException(std::string("failed to get field ID for field name '")
+                          .append(name)
+                          .append("' with signature '")
+                          .append(signature)
+                          .append("'"));
     return -1;
   }
   jint fld = env->GetIntField(obj, fId);
@@ -231,7 +222,7 @@ jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
   jmethodID result = methodCache[className][method][signature];
 
   if (!result) {
-    jclass cls = findClass(env, className);
+    jclass cls = FindClass(env, className);
     result = env->GetMethodID(cls, method, signature);
 
     if (!result) {
@@ -239,8 +230,9 @@ jmethodID MethodID(JNIEnv *env, const char *method, const char *signature,
                         .append(className)
                         .append(".")
                         .append(method));
+      return nullptr;
     }
-    
+
     methodCache[className][method][signature] = result;
   }
 
