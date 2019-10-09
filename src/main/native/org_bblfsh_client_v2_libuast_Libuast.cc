@@ -72,19 +72,14 @@ jobject asJvmBuffer(uast::Buffer buf) {
 // Checks if a given object is of ContextExt class
 bool isContext(jobject obj, JNIEnv *env) {
   if (!obj) return false;
-
-  jclass ctxCls = env->FindClass(CLS_CTX_EXT);
-  checkJvmException("failed to find class " + std::string(CLS_CTX_EXT));
-
+  jclass ctxCls = FindClass(env, CLS_CTX_EXT);
   return env->IsInstanceOf(obj, ctxCls);
 }
 
 bool assertNotContext(jobject obj) {
   JNIEnv *env = getJNIEnv();
   if (isContext(obj, env)) {
-    auto reCls = env->FindClass(CLS_RE);
-    checkJvmException("failed to find class " + std::string(CLS_RE));
-
+    auto reCls = FindClass(env, CLS_RE);
     env->ThrowNew(reCls, "cannot use UAST Context as a Node");
     return false;
   }
@@ -114,8 +109,7 @@ class ContextExt {
     if (!obj) return 0;
 
     JNIEnv *env = getJNIEnv();  // TODO: refactor to JNI util LongField()
-    jclass cls = env->FindClass(CLS_NODE);
-    checkJvmException("failed to find class " + std::string(CLS_NODE));
+    jclass cls = FindClass(env, CLS_NODE);
 
     if (!env->IsInstanceOf(obj, cls)) {
       auto err = std::string("ContextExt.toHandle() argument is not")
@@ -238,19 +232,19 @@ class Node : public uast::Node<Node *> {
   static NodeKind kindOf(jobject obj) {
     JNIEnv *env = getJNIEnv();
     // TODO(bzz): expose JNode.kind & replace type comparison \w a string test
-    if (!obj || env->IsInstanceOf(obj, env->FindClass(CLS_JNULL))) {
+    if (!obj || env->IsInstanceOf(obj, FindClass(env, CLS_JNULL))) {
       return NODE_NULL;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JSTR))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JSTR))) {
       return NODE_STRING;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JINT))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JINT))) {
       return NODE_INT;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JFLT))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JFLT))) {
       return NODE_FLOAT;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JBOOL))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JBOOL))) {
       return NODE_BOOL;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JUINT))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JUINT))) {
       return NODE_UINT;
-    } else if (env->IsInstanceOf(obj, env->FindClass(CLS_JARR))) {
+    } else if (env->IsInstanceOf(obj, FindClass(env, CLS_JARR))) {
       return NODE_ARRAY;
     }
     return NODE_OBJECT;
@@ -611,8 +605,10 @@ class Context {
     jobject jCtxExt = ObjectField(env, src, "ctx", FIELD_CTX_EXT);
     ContextExt *nodeExtCtx = getHandle<ContextExt>(env, jCtxExt, nativeContext);
 
-    checkJvmException("failed to get NodeExt.ctx");
-
+    if (!nodeExtCtx) {
+      checkJvmException("failed to get NodeExt.ctx");
+      return nullptr;
+    }
     auto sctx = nodeExtCtx->ctx;
     NodeHandle snode =
         reinterpret_cast<NodeHandle>(getHandle<NodeHandle>(env, src, "handle"));
@@ -956,7 +952,9 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_ERR;
   }
 
+  // Set exceptionCls also in the cache
   exceptionCls = (jclass) env->NewGlobalRef(localRE);
+  classCache[CLS_RE] = exceptionCls;
   env->DeleteLocalRef(localRE);
 
   exceptToString = env->GetMethodID(exceptionCls, "toString", METHOD_OBJ_TO_STR);
@@ -966,6 +964,9 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     env->ThrowNew(exceptionCls, "failed to find method toString");
     return JNI_ERR;
   }
+
+  // Set exceptionCls->toString also in the cache
+  methodCache[CLS_RE]["toString"][METHOD_OBJ_TO_STR] = exceptToString;
 
   return JNI_VERSION_1_8;
 }
