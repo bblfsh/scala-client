@@ -162,7 +162,7 @@ for arg in "$@"; do
             cleanFiles
             ;;
         "--get-dependencies")
-            getSDKFiles
+            getSDKFiles && \
             getLibuast
             ;;
         "--native")
@@ -185,4 +185,9 @@ for arg in "$@"; do
             usage
             ;;
     esac
+
+    # Avoids executing further commands if previous one failed
+    if [ $? -ne 0 ]; then
+        break;
+    fi
 done

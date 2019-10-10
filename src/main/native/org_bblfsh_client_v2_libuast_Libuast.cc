@@ -357,7 +357,6 @@ class Node : public uast::Node<Node *> {
   size_t Size() {
     jint size = IntMethod(getJNIEnv(), "size", "()I", CLS_JNODE, obj);
     assert(int32_t(size) >= 0);
-
     return size;
   }
   std::string *KeyAt(size_t i) {
@@ -370,7 +369,7 @@ class Node : public uast::Node<Node *> {
     const char *k = env->GetStringUTFChars(key, 0);
     std::string *s = new std::string(k);
     env->ReleaseStringUTFChars(key, k);
-
+    env->DeleteLocalRef(key);
     return s;
   }
   // Borrows the reference
@@ -381,10 +380,9 @@ class Node : public uast::Node<Node *> {
     jobject val =
         ObjectMethod(env, "valueAt", METHOD_JNODE_VALUE_AT, CLS_JNODE, obj, i);
     Node *result = lookupOrCreate(val);
-    getJNIEnv()->DeleteLocalRef(val);
+    env->DeleteLocalRef(val);
     return result;
   }
-
   void SetValue(size_t i, Node *val) {
     JNIEnv *env = getJNIEnv();
     jobject v = nullptr;
@@ -396,11 +394,12 @@ class Node : public uast::Node<Node *> {
       v = val->obj;
     }
 
-    ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, obj, v);
+    jobject res = ObjectMethod(getJNIEnv(), "add", METHOD_JARR_ADD, CLS_JARR, obj, v);
     checkJvmException(std::string("failed to call ")
                           .append(CLS_JARR)
                           .append(".add() from Node::SetValue()"));
 
+    env->DeleteLocalRef(res);
     if (isLocal)
       env->DeleteLocalRef(v);
   }
@@ -416,15 +415,14 @@ class Node : public uast::Node<Node *> {
     }
 
     jstring k = env->NewStringUTF(key.data());
-
-    ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, obj, k, v);
+    jobject res = ObjectMethod(env, "add", METHOD_JOBJ_ADD, CLS_JOBJ, obj, k, v);
     checkJvmException(
         std::string("failed to call JObject.add() from Node::SetKeyValue(")
             .append(key)
             .append(")"));
 
     env->DeleteLocalRef(k);
-
+    env->DeleteLocalRef(res);
     if (isLocal)
       env->DeleteLocalRef(v);
   }
@@ -498,17 +496,19 @@ class Interface : public uast::NodeCreator<Node *> {
 
   // abstract methods from NodeCreator
   Node *NewObject(size_t size) {
-    jobject m = NewJavaObject(getJNIEnv(), CLS_JOBJ, "()V");
+    JNIEnv *env = getJNIEnv();
+    jobject m = NewJavaObject(env, CLS_JOBJ, "()V");
     checkJvmException("failed to create new " + std::string(CLS_JOBJ));
     Node *result = create(NODE_OBJECT, m);
-    getJNIEnv()->DeleteLocalRef(m);
+    env->DeleteLocalRef(m);
     return result;
   }
   Node *NewArray(size_t size) {
-    jobject arr = NewJavaObject(getJNIEnv(), CLS_JARR, "(I)V", size);
+    JNIEnv *env = getJNIEnv();
+    jobject arr = NewJavaObject(env, CLS_JARR, "(I)V", size);
     checkJvmException("failed to create new " + std::string(CLS_JARR));
     Node *result = create(NODE_ARRAY, arr);
-    getJNIEnv()->DeleteLocalRef(arr);
+    env->DeleteLocalRef(arr);
     return result;
   }
   Node *NewString(std::string v) {
@@ -522,29 +522,35 @@ class Interface : public uast::NodeCreator<Node *> {
     return result;
   }
   Node *NewInt(int64_t v) {
-    jobject i = NewJavaObject(getJNIEnv(), CLS_JINT, "(J)V", v);
+    JNIEnv *env = getJNIEnv();
+    jobject i = NewJavaObject(env, CLS_JINT, "(J)V", v);
     checkJvmException("failed to create new " + std::string(CLS_JINT));
-    return create(NODE_INT, i);
+    Node *result = create(NODE_INT, i);
+    env->DeleteLocalRef(i);
+    return result;
   }
   Node *NewUint(uint64_t v) {
-    jobject i = NewJavaObject(getJNIEnv(), CLS_JUINT, "(J)V", v);
+    JNIEnv *env = getJNIEnv();
+    jobject i = NewJavaObject(env, CLS_JUINT, "(J)V", v);
     checkJvmException("failed to create new " + std::string(CLS_JUINT));
     Node *result = create(NODE_UINT, i);
-    getJNIEnv()->DeleteLocalRef(i);
+    env->DeleteLocalRef(i);
     return result;
   }
   Node *NewFloat(double v) {
-    jobject i = NewJavaObject(getJNIEnv(), CLS_JFLT, "(D)V", v);
+    JNIEnv *env = getJNIEnv();
+    jobject i = NewJavaObject(env, CLS_JFLT, "(D)V", v);
     checkJvmException("failed to create new " + std::string(CLS_JFLT));
     Node *result = create(NODE_FLOAT, i);
-    getJNIEnv()->DeleteLocalRef(i);
+    env->DeleteLocalRef(i);
     return result;
   }
   Node *NewBool(bool v) {
-    jobject i = NewJavaObject(getJNIEnv(), CLS_JBOOL, "(Z)V", v);
+    JNIEnv *env = getJNIEnv();
+    jobject i = NewJavaObject(env, CLS_JBOOL, "(Z)V", v);
     checkJvmException("failed to create new " + std::string(CLS_JBOOL));
     Node *result = create(NODE_BOOL, i);
-    getJNIEnv()->DeleteLocalRef(i);
+    env->DeleteLocalRef(i);
     return result;
   }
 };
@@ -717,8 +723,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
   // this.ctx = Context(ctx);
   setObjectField(env, self, jCtx, "ctx", FIELD_CTX);
-  env->DeleteLocalRef(jnode);
-  env->DeleteLocalRef(jCtx);
+  
   return;
 }
 
@@ -784,9 +789,6 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIterExt_nativeInit(
   setHandle<uast::Iterator<NodeHandle>>(env, self, it, "iter");
   // this.ctx = jCtxExt;
   setObjectField(env, self, jCtxExt, "ctx", FIELD_CTX_EXT);
-
-  env->DeleteLocalRef(nodeExt);
-  env->DeleteLocalRef(jCtxExt);
 
   return;
 }
@@ -927,7 +929,7 @@ JNIEXPORT jobject JNICALL Java_org_bblfsh_client_v2_NodeExt_load(JNIEnv *env,
   // If we do not copy node in a local ref, we return a null, whereas copying it in
   // a local ref ensures the native part returns the value to Scala and after that
   // disposes of the local refs
-  jobject result = getJNIEnv()->NewLocalRef(node);
+  jobject result = env->NewLocalRef(node);
   delete (ctx);
   return result;
 }
@@ -986,6 +988,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 
   // Set exceptionCls also in the cache
   exceptionCls = (jclass) env->NewGlobalRef(localRE);
+  // Set exceptionCls also in the cache
   classCache[CLS_RE] = exceptionCls;
   env->DeleteLocalRef(localRE);
 
