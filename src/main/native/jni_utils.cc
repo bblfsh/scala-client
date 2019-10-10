@@ -144,6 +144,7 @@ void checkJvmException(std::string msg) {
 
 jobject NewJavaObject(JNIEnv *env, const char *className, const char *initSign,
                       ...) {
+  // global ref
   jclass cls = FindClass(env, className);
   checkJvmException(std::string("failed to find a class ").append(className));
 
@@ -179,6 +180,7 @@ jfieldID FieldID(JNIEnv *env, jobject obj, const char *field,
                         .append(typeSignature)
                         .append("'"));
 
+  env->DeleteLocalRef(cls);
   return fId;
 }
 
