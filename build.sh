@@ -153,7 +153,7 @@ function usage() {
 }
 
 if [ "$#" -eq 0 ]; then
-    usage && exit -4
+    usage
 fi
 
 for arg in "$@"; do

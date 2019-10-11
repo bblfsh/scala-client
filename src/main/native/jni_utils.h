@@ -74,6 +74,7 @@ void checkJvmException(std::string);
 JNIEnv *getJNIEnv();
 
 // Constructs new Java object of a given className and constructor signature.
+// Returns a local reference.
 jobject NewJavaObject(JNIEnv *, const char *, const char *, ...);
 
 // Returns the field ID of the field of the given object.
@@ -86,6 +87,7 @@ jint IntField(JNIEnv *, jobject, const char *, const char *);
 
 // Reads the value of an Object field of a given object.
 // The field is specified by its name and signature.
+// Returns a local reference.
 jobject ObjectField(JNIEnv *, jobject, const char *, const char *);
 
 // Returns the method ID for a method of a given class or interface name.
@@ -99,6 +101,7 @@ jint IntMethod(JNIEnv *, const char *, const char *, const char *,
 
 // Calls a method of the given class or interface name that returns an Object.
 // The method is determined by its name and signature.
+// Returns a local reference.
 jobject ObjectMethod(JNIEnv *, const char *, const char *, const char *,
                      const jobject, ...);
 
