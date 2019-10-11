@@ -386,9 +386,11 @@ class Node : public uast::Node<Node *> {
   void SetValue(size_t i, Node *val) {
     JNIEnv *env = getJNIEnv();
     jobject v = nullptr;
-    bool isLocal = !(val && val->obj);
+    bool createLocal = !(val && val->obj);
 
-    if (isLocal) {
+    // If val->obj does not exist, create a local reference
+    // otherwise v would contain a global reference to val->obj
+    if (createLocal) {
       v = NewJavaObject(env, CLS_JNULL, "()V");
     } else {
       v = val->obj;
@@ -400,15 +402,17 @@ class Node : public uast::Node<Node *> {
                           .append(".add() from Node::SetValue()"));
 
     env->DeleteLocalRef(res);
-    if (isLocal)
+    if (createLocal)
       env->DeleteLocalRef(v);
   }
   void SetKeyValue(std::string key, Node *val) {
     JNIEnv *env = getJNIEnv();
     jobject v = nullptr;
-    bool isLocal = !(val && val->obj);
+    bool createLocal = !(val && val->obj);
 
-    if (isLocal) {
+    // If val->obj does not exist, create a local reference
+    // otherwise v would contain a global reference to val->obj
+    if (createLocal) {
       v = NewJavaObject(env, CLS_JNULL, "()V");
     } else {
       v = val->obj;
@@ -423,7 +427,7 @@ class Node : public uast::Node<Node *> {
 
     env->DeleteLocalRef(k);
     env->DeleteLocalRef(res);
-    if (isLocal)
+    if (createLocal)
       env->DeleteLocalRef(v);
   }
 };
@@ -723,7 +727,7 @@ Java_org_bblfsh_client_v2_libuast_Libuast_00024UastIter_nativeInit(
   setHandle<uast::Iterator<Node *>>(env, self, it, "iter");
   // this.ctx = Context(ctx);
   setObjectField(env, self, jCtx, "ctx", FIELD_CTX);
-  
+
   return;
 }
 
