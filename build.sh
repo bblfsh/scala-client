@@ -17,8 +17,8 @@ set -e
 
 PROTO_DIR="src/main/proto"
 SDK_MAJOR="v3"
-SDK_VERSION="${SDK_MAJOR}.1.0"
-LIBUAST_VERSION="3.4.2"
+SDK_VERSION="${SDK_MAJOR}.3.1"
+LIBUAST_VERSION="3.4.3"
 # sdk-x.y.z
 UNZIP_DIR="sdk-${SDK_VERSION:1}"
 BBLFSH_PROTO="${PROTO_DIR}/github.com/bblfsh"
