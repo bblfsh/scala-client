@@ -10,6 +10,8 @@ The latest `scala-client` *v2.x* supports the [UASTv2 protocol](https://doc.bblf
 
 ### Installation
 
+Currently we offer support for Scala *2.11*. We recomend using `scalaVersion := "2.11.11"` or upper in your `build.sbt` file. This library is not compatible with Scala *2.12* or *2.13*.
+
 #### Building from sources
 ```
 git clone https://github.com/bblfsh/scala-client.git
