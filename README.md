@@ -10,7 +10,22 @@ The latest `scala-client` *v2.x* supports the [UASTv2 protocol](https://doc.bblf
 
 ### Installation
 
+#### Requirements
+
+##### Java SDK 8
+
+You need to install the Java SDK and its header files. The command for Debian and derived distributions would be:
+
+```
+sudo apt install openjdk-8 openjdk-8-jdk-headless
+```
+
+##### Scala 2.11
+
+Currently we support [Scala](https://www.scala-lang.org/) *2.11*. We recommend using `scalaVersion := "2.11.11"` or above in your `build.sbt` file. This library is not compatible with Scala *2.12* or *2.13*.
+
 #### Building from sources
+
 ```
 git clone https://github.com/bblfsh/scala-client.git
 cd scala-client
@@ -63,15 +78,6 @@ at Maven central's dependency information.
 
 ```
 libraryDependencies += "org.bblfsh" % "bblfsh-client" % version
-```
-
-### Dependencies
-
-You need to install the Java SDK and its header files. The command for
-Debian and derived distributions would be:
-
-```
-sudo apt install openjdk-8 openjdk-8-jdk-headless
 ```
 
 ### Usage
